@@ -1,9 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { PlaceholderScreen } from '@/components/ui/Screen';
 import { AlarmEditScreen } from '@/features/alarm/AlarmEditScreen';
 import { AlarmListScreen } from '@/features/alarm/AlarmListScreen';
-import { PlaceholderScreen } from '@/components/ui/Screen';
+import { AlarmRingingScreen } from '@/features/alarm/AlarmRingingScreen';
+import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
+import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -48,6 +51,31 @@ export function RootNavigator() {
           headerStyle: { backgroundColor: '#020617' },
           headerTintColor: '#f8fafc',
         })}
+      />
+      <Stack.Screen
+        name="AlarmRinging"
+        component={AlarmRingingScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="MathMission"
+        component={MathMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="ShakeMission"
+        component={ShakeMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
       />
     </Stack.Navigator>
   );

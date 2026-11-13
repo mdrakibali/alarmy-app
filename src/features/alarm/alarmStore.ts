@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { NativeAlarm } from '@/native/AlarmModule';
 import { zustandStorage } from '@/storage/mmkv';
 import type { Alarm } from './types';
 
@@ -9,31 +10,70 @@ interface AlarmState {
   updateAlarm: (id: string, patch: Partial<Alarm>) => void;
   removeAlarm: (id: string) => void;
   toggleAlarm: (id: string) => void;
+  rescheduleAll: () => void;
 }
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export const useAlarmStore = create<AlarmState>()(
   persist(
-    set => ({
+    (set, get) => ({
       alarms: [],
       addAlarm: alarm => {
         const id = newId();
-        set(s => ({ alarms: [...s.alarms, { ...alarm, id }] }));
+        const newAlarm: Alarm = { ...alarm, id };
+        set(s => ({ alarms: [...s.alarms, newAlarm] }));
+        if (newAlarm.enabled) {
+          NativeAlarm.scheduleAlarm(newAlarm);
+        }
         return id;
       },
-      updateAlarm: (id, patch) =>
-        set(s => ({
-          alarms: s.alarms.map(a => (a.id === id ? { ...a, ...patch } : a)),
-        })),
-      removeAlarm: id =>
-        set(s => ({ alarms: s.alarms.filter(a => a.id !== id) })),
-      toggleAlarm: id =>
-        set(s => ({
-          alarms: s.alarms.map(a =>
-            a.id === id ? { ...a, enabled: !a.enabled } : a,
-          ),
-        })),
+      updateAlarm: (id, patch) => {
+        set(s => {
+          const nextAlarms = s.alarms.map(a =>
+            a.id === id ? { ...a, ...patch } : a,
+          );
+          const updated = nextAlarms.find(a => a.id === id);
+          if (updated) {
+            if (updated.enabled) {
+              NativeAlarm.scheduleAlarm(updated);
+            } else {
+              NativeAlarm.cancelAlarm(id);
+            }
+          }
+          return { alarms: nextAlarms };
+        });
+      },
+      removeAlarm: id => {
+        NativeAlarm.cancelAlarm(id);
+        set(s => ({ alarms: s.alarms.filter(a => a.id !== id) }));
+      },
+      toggleAlarm: id => {
+        set(s => {
+          const nextAlarms = s.alarms.map(a => {
+            if (a.id === id) {
+              const nextEnabled = !a.enabled;
+              const nextAlarm = { ...a, enabled: nextEnabled };
+              if (nextEnabled) {
+                NativeAlarm.scheduleAlarm(nextAlarm);
+              } else {
+                NativeAlarm.cancelAlarm(id);
+              }
+              return nextAlarm;
+            }
+            return a;
+          });
+          return { alarms: nextAlarms };
+        });
+      },
+      rescheduleAll: () => {
+        const { alarms } = get();
+        for (const alarm of alarms) {
+          if (alarm.enabled) {
+            NativeAlarm.scheduleAlarm(alarm);
+          }
+        }
+      },
     }),
     {
       name: 'alarms',

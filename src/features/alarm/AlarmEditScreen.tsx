@@ -261,7 +261,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
       <Section title="Mission">
         <Text className="px-4 pt-3 text-sm text-slate-400">
-          Saved now. Missions start working in a later step.
+          Select a mission to complete before the alarm can be dismissed.
         </Text>
         <View className="flex-row flex-wrap px-4 py-3">
           {(Object.keys(MISSION_LABEL) as MissionType[]).map(mission => (

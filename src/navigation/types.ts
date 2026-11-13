@@ -8,4 +8,7 @@ export type TabParamList = {
 export type RootStackParamList = {
   Tabs: undefined;
   AlarmEdit: { id?: string } | undefined;
+  AlarmRinging: { id?: string } | undefined;
+  MathMission: { alarmId?: string } | undefined;
+  ShakeMission: { alarmId?: string } | undefined;
 };

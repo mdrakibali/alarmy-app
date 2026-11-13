@@ -100,7 +100,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
     <View className="flex-1 items-center justify-center px-6">
       <Text className="text-lg font-semibold text-white">No alarms yet</Text>
       <Text className="mb-6 mt-2 text-center text-sm text-slate-400">
-        Add an alarm. It will be saved on this phone. Ringing starts in the next step.
+        Add an alarm. It will ring reliably even when the app is closed or the screen is locked.
       </Text>
       <Button label="Add alarm" onPress={onAdd} />
     </View>
