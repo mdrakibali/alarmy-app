@@ -3,10 +3,14 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "lint": "eslint .",
     "start": "react-native start",
+    "connect": "adb connect 192.168.1.56:37459",
+    "dev": "adb reverse tcp:8081 tcp:8081 && scrcpy & adb shell am start -n com.alarmyclone/.MainActivity && react-native start",
+    "android": "adb reverse tcp:8081 tcp:8081 && react-native run-android",
+    "ios": "react-native run-ios",
+    "build:apk": "cd android && ./gradlew assembleRelease && cd ..",
+    "clean": "adb shell pm clear com.alarmyclone && cd android && ./gradlew clean && cd ..",
+    "lint": "eslint .",
     "test": "jest"
   },
   "dependencies": {
