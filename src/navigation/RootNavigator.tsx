@@ -1,20 +1,18 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { PlaceholderScreen } from '@/components/ui/Screen';
 import { AlarmEditScreen } from '@/features/alarm/AlarmEditScreen';
 import { AlarmListScreen } from '@/features/alarm/AlarmListScreen';
 import { AlarmRingingScreen } from '@/features/alarm/AlarmRingingScreen';
 import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
 import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
+import { MorningScreen } from '@/features/morning/MorningScreen';
+import { SleepScreen } from '@/features/sleep/SleepScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const MorningScreen = () => <PlaceholderScreen title="Morning" />;
-const SleepScreen = () => <PlaceholderScreen title="Sleep" />;
 
 function Tabs() {
   return (

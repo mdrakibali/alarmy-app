@@ -216,3 +216,4 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             .emit(eventName, params)
     }
 }
+

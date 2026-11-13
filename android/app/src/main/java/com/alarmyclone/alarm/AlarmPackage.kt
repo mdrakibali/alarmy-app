@@ -16,3 +16,4 @@ class AlarmPackage : ReactPackage {
         return emptyList()
     }
 }
+

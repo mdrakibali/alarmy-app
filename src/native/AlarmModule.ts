@@ -127,3 +127,4 @@ class AlarmModuleBridge {
 }
 
 export const NativeAlarm = new AlarmModuleBridge();
+

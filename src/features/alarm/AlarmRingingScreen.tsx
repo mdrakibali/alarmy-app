@@ -134,3 +134,4 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     </View>
   );
 }
+

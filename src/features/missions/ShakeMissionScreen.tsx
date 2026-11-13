@@ -90,3 +90,4 @@ export function ShakeMissionScreen({ navigation }: Props) {
     </View>
   );
 }
+
