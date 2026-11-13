@@ -71,7 +71,7 @@ function App() {
   return (
     <GestureHandlerRootView className="flex-1">
       <SafeAreaProvider>
-        <StatusBar barStyle="light-content" backgroundColor="#020617" />
+        <StatusBar barStyle="light-content" />
         <NavigationContainer
           ref={navigationRef}
           theme={{

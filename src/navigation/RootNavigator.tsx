@@ -7,6 +7,7 @@ import { AlarmListScreen } from '@/features/alarm/AlarmListScreen';
 import { AlarmRingingScreen } from '@/features/alarm/AlarmRingingScreen';
 import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
 import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
+import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -14,7 +15,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const MorningScreen = () => <PlaceholderScreen title="Morning" />;
 const SleepScreen = () => <PlaceholderScreen title="Sleep" />;
-const SettingsScreen = () => <PlaceholderScreen title="Settings" />;
 
 function Tabs() {
   return (
