@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { Screen } from '@/components/ui/Screen';
@@ -43,8 +43,8 @@ export function SleepScreen() {
     const interval = setInterval(async () => {
       const status = await NativeAlarm.getSleepMusicStatus();
       if (status) {
-        setIsPlaying(status.isPlaying);
-        setCurrentPlayingId(status.currentSoundId);
+        setIsPlaying(prev => (prev !== status.isPlaying ? status.isPlaying : prev));
+        setCurrentPlayingId(prev => (prev !== status.currentSoundId ? status.currentSoundId : prev));
       }
     }, 1500);
 
@@ -120,12 +120,13 @@ export function SleepScreen() {
               </Text>
               <View className="flex-row">
                 {TIMER_OPTIONS.map(opt => (
-                  <Pressable
+                  <TouchableOpacity
                     key={opt.minutes}
+                    activeOpacity={0.75}
                     onPress={() => handleTimerChange(opt.minutes)}
                     className={`px-2.5 py-1 rounded-lg ml-1.5 border ${
                       timerMinutes === opt.minutes
-                        ? 'bg-[#0284C7] border-[#0284C7]'
+                        ? 'bg-[#4E7D5B] border-[#4E7D5B]'
                         : 'bg-slate-100 border-slate-100'
                     }`}
                   >
@@ -136,7 +137,7 @@ export function SleepScreen() {
                     >
                       {opt.label}
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -147,12 +148,13 @@ export function SleepScreen() {
               </Text>
               <View className="flex-row">
                 {[0.4, 0.7, 1.0].map((vol, i) => (
-                  <Pressable
+                  <TouchableOpacity
                     key={vol}
+                    activeOpacity={0.75}
                     onPress={() => handleVolumeChange(vol)}
                     className={`px-3 py-1 rounded-lg ml-1.5 border ${
                       volume === vol
-                        ? 'bg-[#0284C7] border-[#0284C7]'
+                        ? 'bg-[#4E7D5B] border-[#4E7D5B]'
                         : 'bg-slate-100 border-slate-100'
                     }`}
                   >
@@ -163,7 +165,7 @@ export function SleepScreen() {
                     >
                       {i === 0 ? 'Low' : i === 1 ? 'Med' : 'Max'}
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -177,13 +179,14 @@ export function SleepScreen() {
             contentContainerStyle={{ paddingHorizontal: 4 }}
           >
             {CATEGORIES.map(cat => (
-              <Pressable
+              <TouchableOpacity
                 key={cat}
+                activeOpacity={0.75}
                 onPress={() => setSelectedCategory(cat)}
                 className={`mr-2 px-4 py-2 rounded-2xl border ${
                   selectedCategory === cat
-                    ? 'bg-[#0F172A] border-[#0F172A]'
-                    : 'bg-white border-slate-200/80 active:bg-slate-50'
+                    ? 'bg-[#1A2E22] border-[#1A2E22]'
+                    : 'bg-white border-slate-200/80'
                 }`}
               >
                 <Text
@@ -193,7 +196,7 @@ export function SleepScreen() {
                 >
                   {cat}
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             ))}
           </ScrollView>
 
@@ -211,8 +214,10 @@ export function SleepScreen() {
             {filteredItems.map(sound => {
               const isThisPlaying = currentPlayingId === sound.id && isPlaying;
               return (
-                <View
+                <TouchableOpacity
                   key={sound.id}
+                  activeOpacity={0.8}
+                  onPress={() => togglePlay(sound.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
                     isThisPlaying
                       ? 'bg-[#EBF3ED] border-[#6B8F71]/40 shadow-sm'
@@ -248,13 +253,11 @@ export function SleepScreen() {
                   </View>
 
                   {/* Direct Play / Stop Button on the Card */}
-                  <Pressable
-                    onPress={() => togglePlay(sound.id)}
-                    hitSlop={8}
+                  <View
                     className={`px-3.5 py-2 rounded-xl flex-row items-center shadow-xs ${
                       isThisPlaying
-                        ? 'bg-rose-500 active:bg-rose-600'
-                        : 'bg-[#0284C7] active:bg-[#0369A1]'
+                        ? 'bg-rose-500'
+                        : 'bg-[#4E7D5B]'
                     }`}
                   >
                     <Text className="text-white text-xs font-black mr-1">
@@ -263,8 +266,8 @@ export function SleepScreen() {
                     <Text className="text-white text-xs font-black">
                       {isThisPlaying ? 'Stop' : 'Play'}
                     </Text>
-                  </Pressable>
-                </View>
+                  </View>
+                </TouchableOpacity>
               );
             })}
           </View>

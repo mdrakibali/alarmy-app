@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
-  Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -83,8 +83,8 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
   onSelect,
 }: WallpaperCardProps) {
   return (
-    <Pressable
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    <TouchableOpacity
+      activeOpacity={0.85}
       onPress={() => onSelect(id)}
       className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
         isSelected
@@ -97,14 +97,10 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
         source={source}
         className="absolute inset-0 w-full h-full"
         resizeMode="cover"
-        pointerEvents="none"
       />
 
       {/* Top Right Check Badge */}
-      <View
-        className="w-full flex-row justify-end p-2.5 z-10"
-        pointerEvents="none"
-      >
+      <View className="w-full flex-row justify-end p-2.5 z-10">
         {isSelected ? (
           <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center shadow-md">
             <Text className="text-white text-xs font-black">✓</Text>
@@ -117,10 +113,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
       </View>
 
       {/* Bottom Title Bar */}
-      <View
-        className="w-full items-center py-2 px-1.5 bg-black/75 z-10 border-t border-white/10"
-        pointerEvents="none"
-      >
+      <View className="w-full items-center py-2 px-1.5 bg-black/75 z-10 border-t border-white/10">
         <Text
           className={`text-xs font-black ${
             isSelected ? 'text-[#E2A938]' : 'text-white'
@@ -130,7 +123,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
           ♪ {name}
         </Text>
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 });
 
@@ -202,13 +195,14 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       >
         <View className="flex-row items-center justify-between mb-3">
           {step > 1 ? (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={handleBack}
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-              className="mr-3 py-1.5 px-3 rounded-full bg-slate-100 active:opacity-60"
+              className="mr-3 py-1.5 px-3 rounded-full bg-slate-100"
             >
               <Text className="text-slate-700 font-extrabold text-xs">‹ Back</Text>
-            </Pressable>
+            </TouchableOpacity>
           ) : null}
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -293,14 +287,14 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {ALARM_SOUND_ITEMS.slice(0, 10).map(s => {
               const isSelected = selectedSound === s.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={s.id}
-                  hitSlop={8}
+                  activeOpacity={0.8}
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
                       ? 'bg-[#EBF3ED] border-[#6B8F71]/40'
-                      : 'bg-white border-slate-100 active:bg-slate-50'
+                      : 'bg-white border-slate-100'
                   }`}
                 >
                   <View className="flex-row items-center flex-1 pr-3">
@@ -331,7 +325,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       <View className="h-2 w-2 rounded-full bg-white" />
                     )}
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -347,14 +341,14 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {MISSIONS.map(m => {
               const isSelected = selectedMission === m.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={m.id}
-                  hitSlop={8}
+                  activeOpacity={0.8}
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
                       ? 'bg-[#EBF3ED] border-[#4E7D5B]'
-                      : 'bg-white border-slate-100 active:bg-slate-50'
+                      : 'bg-white border-slate-100'
                   }`}
                 >
                   <View className="flex-row items-center justify-between mb-2">
@@ -379,7 +373,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   <Text className="text-xs text-slate-500 font-medium leading-relaxed pl-10">
                     {m.desc}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -391,15 +385,15 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
         className="bg-white border-t border-slate-100 shadow-md px-5 pt-3 z-50"
       >
-        <Pressable
+        <TouchableOpacity
+          activeOpacity={0.85}
           onPress={handleNext}
-          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:opacity-80"
+          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Next: Required Permissions 🔐' : 'Next'}
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     </View>
   );

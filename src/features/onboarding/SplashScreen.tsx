@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
+import { NativeAlarm } from '@/native/AlarmModule';
 import { storage } from '@/storage/mmkv';
 import { useAppInsets } from '@/utils/safeArea';
 
@@ -34,17 +35,41 @@ export function SplashScreen({ navigation }: Props) {
       }),
     ]).start();
 
-    // Transition after 1.4s
-    const timer = setTimeout(() => {
-      const hasCompleted = storage.getBoolean('hasCompletedWelcome');
-      if (hasCompleted) {
-        navigation.replace('Tabs');
-      } else {
-        navigation.replace('WelcomeWizard');
-      }
-    }, 1400);
+    let isCancelled = false;
 
-    return () => clearTimeout(timer);
+    // Check if an alarm is already ringing on launch
+    NativeAlarm.getCurrentlyRingingAlarm().then(ringing => {
+      if (isCancelled) return;
+      if (ringing && ringing.id) {
+        // Direct jump to ringing alarm! Do not replace with Tabs or WelcomeWizard
+        navigation.replace('AlarmRinging', { id: ringing.id });
+        return;
+      }
+
+      // If no alarm is ringing, transition normally after 1.2s
+      const timer = setTimeout(async () => {
+        if (isCancelled) return;
+        const stillRinging = await NativeAlarm.getCurrentlyRingingAlarm();
+        if (stillRinging) {
+          // If an alarm triggered during splash animation, do not go to Tabs!
+          navigation.replace('AlarmRinging', { id: stillRinging.id });
+          return;
+        }
+
+        const hasCompleted = storage.getBoolean('hasCompletedWelcome');
+        if (hasCompleted) {
+          navigation.replace('Tabs');
+        } else {
+          navigation.replace('WelcomeWizard');
+        }
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [fadeAnim, scaleAnim, navigation]);
 
   return (

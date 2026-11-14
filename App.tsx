@@ -63,7 +63,15 @@ function App() {
     // Listen to real-time alarm trigger event from background service
     const ringSub = NativeAlarm.onAlarmRinging(alarmId => {
       if (navigationRef.current) {
-        navigationRef.current.navigate('AlarmRinging', { id: alarmId || undefined });
+        const currentRoute = navigationRef.current.getCurrentRoute();
+        // Prevent kicking user off screen if already on AlarmRinging or solving a mission
+        if (
+          currentRoute?.name !== 'AlarmRinging' &&
+          !currentRoute?.name?.endsWith('Mission') &&
+          currentRoute?.name !== 'SnoozeCountdown'
+        ) {
+          navigationRef.current.navigate('AlarmRinging', { id: alarmId || undefined });
+        }
       }
     });
 

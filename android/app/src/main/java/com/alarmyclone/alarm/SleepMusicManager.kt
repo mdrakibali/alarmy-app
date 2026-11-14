@@ -119,9 +119,9 @@ object SleepMusicManager {
             clearFade()
 
             mediaPlayer?.let {
-                if (it.isPlaying) {
-                    it.stop()
-                }
+                try {
+                    it.reset()
+                } catch (e: Exception) {}
                 it.release()
             }
         } catch (e: Exception) {
