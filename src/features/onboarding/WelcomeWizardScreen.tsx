@@ -13,89 +13,10 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import type { MissionType } from '../alarm/types';
 
+import { WALLPAPERS } from '@/data/wallpapers';
+import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
+
 type Props = NativeStackScreenProps<RootStackParamList, 'WelcomeWizard'>;
-
-interface WallpaperItem {
-  id: string;
-  title: string;
-  category: 'KPOP Trending' | 'Trending' | 'Daily Motivation';
-  icon: string;
-  source: any;
-  bgGradient: string[];
-}
-
-const WALLPAPERS: WallpaperItem[] = [
-  // Trending
-  {
-    id: 'cats',
-    title: 'Dancing Cat',
-    category: 'Trending',
-    icon: '🐱',
-    source: require('../../assets/images/backgrounds/bg_cats.gif'),
-    bgGradient: ['#FEF3C7', '#FDE68A'],
-  },
-  {
-    id: 'ocean',
-    title: 'Ocean Waves',
-    category: 'Trending',
-    icon: '🌊',
-    source: require('../../assets/images/backgrounds/bg_ocean.gif'),
-    bgGradient: ['#E0F2FE', '#BAE6FD'],
-  },
-  {
-    id: 'galaxy',
-    title: 'Cosmic Galaxy',
-    category: 'Trending',
-    icon: '✨',
-    source: require('../../assets/images/backgrounds/bg_galaxy.gif'),
-    bgGradient: ['#F3E8FF', '#E9D5FF'],
-  },
-  // KPOP Trending
-  {
-    id: 'kpop',
-    title: 'ILLIT Stage',
-    category: 'KPOP Trending',
-    icon: '🎀',
-    source: require('../../assets/images/backgrounds/bg_kpop.gif'),
-    bgGradient: ['#FCE7F3', '#FBCFE8'],
-  },
-  {
-    id: 'wonhee',
-    title: 'WONHEE',
-    category: 'KPOP Trending',
-    icon: '🌸',
-    source: require('../../assets/images/backgrounds/bg_kpop.gif'),
-    bgGradient: ['#FCE7F3', '#FBCFE8'],
-  },
-  // Daily Motivation
-  {
-    id: 'sunrise',
-    title: 'Golden Sunrise',
-    category: 'Daily Motivation',
-    icon: '🌄',
-    source: require('../../assets/images/backgrounds/bg_sunrise.gif'),
-    bgGradient: ['#FFEDD5', '#FED7AA'],
-  },
-  {
-    id: 'night_sky',
-    title: 'Starry Night',
-    category: 'Daily Motivation',
-    icon: '🌌',
-    source: require('../../assets/images/backgrounds/bg_night_sky.gif'),
-    bgGradient: ['#1E1B4B', '#312E81'],
-  },
-];
-
-const SOUNDS = [
-  { id: 'alarm_classic', name: 'Classic Twin Bell', icon: '⏰', category: 'Currently Using' },
-  { id: 'alarm_electronic', name: "[ILLIT] Electronic Arpeggio", icon: '🎵', category: 'KPOP Trending' },
-  { id: 'alarm_rooster', name: 'Rooster Cock-a-doodle-doo', icon: '🐓', category: 'Trending' },
-  { id: 'alarm_siren', name: 'Emergency Loud Siren', icon: '🚨', category: 'Trending' },
-  { id: 'alarm_gentle', name: 'Gentle Morning Chimes', icon: '🍃', category: 'Relaxing' },
-  { id: 'alarm_piano', name: 'Uplifting Piano Chords', icon: '🎹', category: 'Relaxing' },
-  { id: 'alarm_digital', name: 'Digital Watch Alarm', icon: '⌚', category: 'Currently Using' },
-  { id: 'alarm_birds', name: 'Forest Songbirds', icon: '🐦', category: 'Relaxing' },
-];
 
 const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[] = [
   {
@@ -125,8 +46,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   // Wizard state
   const [selectedHour, setSelectedHour] = useState(7);
   const [selectedMinute, setSelectedMinute] = useState(0);
-  const [selectedWallpaper, setSelectedWallpaper] = useState('sunrise');
-  const [selectedSound, setSelectedSound] = useState('alarm_rooster');
+  const [selectedWallpaper, setSelectedWallpaper] = useState('kpop_wonhee');
+  const [selectedSound, setSelectedSound] = useState('alarm_gentle_morning');
   const [selectedMission, setSelectedMission] = useState<MissionType>('shake');
 
   // Stop audio preview on unmount
@@ -197,7 +118,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 16,
-          paddingBottom: 110 + bottomInset,
+          paddingBottom: 24,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -284,7 +205,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
               Tap any sound to hear the audio preview immediately
             </Text>
 
-            {SOUNDS.map(s => {
+            {ALARM_SOUND_ITEMS.slice(0, 12).map(s => {
               const isSelected = selectedSound === s.id;
               return (
                 <Pressable
@@ -304,7 +225,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                           isSelected ? 'text-white' : 'text-neutral-300'
                         }`}
                       >
-                        {s.name}
+                        {s.title}
                       </Text>
                       <Text className="text-xs text-neutral-500 font-medium mt-0.5">
                         {s.category}
@@ -378,18 +299,16 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         )}
       </ScrollView>
 
-      {/* Bottom Button with Safe Area */}
+      {/* Bottom Button with Safe Area - Flex sibling so it never gets covered or intercepts ScrollView */}
       <View
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           paddingBottom: bottomInset,
           paddingHorizontal: 20,
           paddingTop: 12,
+          elevation: 10,
+          zIndex: 100,
         }}
-        className="bg-black/95 border-t border-neutral-900"
+        className="bg-black border-t border-neutral-900"
       >
         <Pressable
           onPress={handleNext}

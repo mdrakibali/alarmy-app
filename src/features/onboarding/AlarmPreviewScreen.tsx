@@ -3,6 +3,7 @@ import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
+import { WALLPAPERS } from '@/data/wallpapers';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { formatTime } from '@/features/alarm/format';
 import type { MissionType } from '@/features/alarm/types';
@@ -69,7 +70,9 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   };
 
   const activeBg =
-    BACKGROUND_ITEMS.find(b => b.id === wallpaper) || BACKGROUND_ITEMS[0];
+    WALLPAPERS.find(w => w.id === wallpaper) ||
+    BACKGROUND_ITEMS.find(b => b.id === wallpaper) ||
+    WALLPAPERS[0];
   const bottomInset = insets.bottom + 8;
 
   return (

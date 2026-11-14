@@ -12,6 +12,7 @@ import { MorningScreen } from '@/features/morning/MorningScreen';
 import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
 import { WelcomeWizardScreen } from '@/features/onboarding/WelcomeWizardScreen';
 import { ReportScreen } from '@/features/report/ReportScreen';
+import { TabVectorIcon } from '@/components/ui/TabVectorIcon';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { SleepScreen } from '@/features/sleep/SleepScreen';
 import { WallpaperGalleryScreen } from '@/features/wallpaper/WallpaperGalleryScreen';
@@ -20,29 +21,6 @@ import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-function TabIcon({
-  icon,
-  focused,
-  hasBadge = false,
-}: {
-  icon: string;
-  focused: boolean;
-  hasBadge?: boolean;
-}) {
-  return (
-    <View className="items-center justify-center relative">
-      <Text
-        style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}
-      >
-        {icon}
-      </Text>
-      {hasBadge && (
-        <View className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-[#FF385C]" />
-      )}
-    </View>
-  );
-}
 
 function Tabs() {
   const insets = useAppInsets();
@@ -74,8 +52,8 @@ function Tabs() {
         component={AlarmListScreen}
         options={{
           tabBarLabel: 'Alarm',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="⏰" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <TabVectorIcon name="alarm" focused={focused} color={color} />
           ),
         }}
       />
@@ -84,8 +62,8 @@ function Tabs() {
         component={SleepScreen}
         options={{
           tabBarLabel: 'Sleep',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🌙" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <TabVectorIcon name="sleep" focused={focused} color={color} />
           ),
         }}
       />
@@ -94,8 +72,8 @@ function Tabs() {
         component={MorningScreen}
         options={{
           tabBarLabel: 'Morning',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="☀️" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <TabVectorIcon name="morning" focused={focused} color={color} />
           ),
         }}
       />
@@ -104,8 +82,8 @@ function Tabs() {
         component={ReportScreen}
         options={{
           tabBarLabel: 'Report',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="📊" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <TabVectorIcon name="report" focused={focused} color={color} />
           ),
         }}
       />
@@ -114,8 +92,13 @@ function Tabs() {
         component={SettingsScreen}
         options={{
           tabBarLabel: 'Setting',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="⚙️" focused={focused} hasBadge />
+          tabBarIcon: ({ focused, color }) => (
+            <TabVectorIcon
+              name="settings"
+              focused={focused}
+              color={color}
+              hasBadge
+            />
           ),
         }}
       />

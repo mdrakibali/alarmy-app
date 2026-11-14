@@ -187,7 +187,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 12,
-          paddingBottom: 110 + bottomInset,
+          paddingBottom: 24,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -627,18 +627,16 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Save Button with Safe Area Inset */}
+      {/* Fixed Bottom Save Button with Safe Area Inset - Flex sibling so it never obscures content */}
       <View
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           paddingBottom: bottomInset,
           paddingHorizontal: 20,
           paddingTop: 12,
+          elevation: 10,
+          zIndex: 100,
         }}
-        className="bg-white/95 border-t border-slate-100 shadow-lg"
+        className="bg-white border-t border-slate-100 shadow-lg"
       >
         <Pressable
           onPress={save}
