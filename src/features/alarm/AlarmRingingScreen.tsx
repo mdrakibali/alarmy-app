@@ -37,7 +37,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     });
   }, []);
 
-  const label = alarmFromStore?.label || activeInfo?.label || 'Wake up!';
+  const label = alarmFromStore?.label || activeInfo?.label || 'Wake up early';
   const missions = alarmFromStore?.missions || activeInfo?.missions || [];
   const snoozeEnabled =
     alarmFromStore?.snooze.enabled ?? activeInfo?.snoozeEnabled ?? true;
@@ -69,7 +69,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
       return;
     }
 
-    // No mission or other mission: direct dismiss
+    // No mission: direct dismiss
     await NativeAlarm.stopAlarm();
     navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
@@ -82,39 +82,48 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     : 'Complete Mission to Dismiss 🎯';
 
   return (
-    <View className="flex-1 bg-slate-950 items-center justify-between px-6 py-16">
+    <View className="flex-1 bg-[#F5F6F8] items-center justify-between px-6 py-16">
       {/* Top section: Alarm Label & Status */}
       <View className="items-center mt-6">
-        <View className="bg-amber-500/20 px-4 py-1.5 rounded-full mb-3">
-          <Text className="text-amber-400 font-semibold tracking-wider uppercase text-xs">
-            Alarm Ringing
+        <View className="bg-rose-50 border border-rose-200/60 px-4 py-1.5 rounded-full mb-3">
+          <Text className="text-[#FF385C] font-extrabold tracking-wider uppercase text-xs">
+            ALARM RINGING ⏰
           </Text>
         </View>
-        <Text className="text-3xl font-bold text-white text-center">
+        <Text className="text-3xl font-black text-slate-900 text-center">
           {label}
         </Text>
       </View>
 
-      {/* Middle section: Big pulsing clock */}
+      {/* Middle section: Big circular clock */}
       <View className="items-center justify-center my-8">
-        <View className="h-64 w-64 rounded-full border-2 border-amber-500/30 items-center justify-center bg-slate-900/60 shadow-2xl">
-          <Text className="text-6xl font-bold text-white tracking-tight">
+        <View
+          style={{
+            elevation: 10,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.08,
+            shadowRadius: 16,
+          }}
+          className="h-68 w-68 rounded-full border-4 border-white items-center justify-center bg-white shadow-lg"
+        >
+          <Text className="text-6xl font-black text-slate-900 tracking-tight">
             {time}
           </Text>
-          <Text className="text-xl font-semibold text-amber-400 mt-1">
+          <Text className="text-xl font-bold text-[#FF385C] mt-1">
             {period}
           </Text>
         </View>
       </View>
 
       {/* Bottom section: Actions */}
-      <View className="w-full space-y-4">
+      <View className="w-full">
         {/* Main Action (Dismiss or Mission) */}
         <Pressable
           onPress={handleDismissOrMission}
-          className="w-full bg-amber-500 py-5 rounded-2xl items-center active:opacity-90 shadow-lg"
+          className="w-full bg-[#FF385C] py-5 rounded-2xl items-center active:opacity-90 shadow-md mb-3"
         >
-          <Text className="text-slate-950 text-xl font-bold">
+          <Text className="text-white text-lg font-black tracking-wide">
             {hasMission ? missionButtonText : 'Dismiss Alarm'}
           </Text>
         </Pressable>
@@ -123,9 +132,9 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         {snoozeEnabled && (
           <Pressable
             onPress={handleSnooze}
-            className="w-full bg-slate-800 py-4 rounded-2xl items-center active:bg-slate-700 mt-3"
+            className="w-full bg-white border border-slate-200 py-4 rounded-2xl items-center active:bg-slate-50"
           >
-            <Text className="text-slate-200 text-base font-semibold">
+            <Text className="text-slate-700 text-base font-bold">
               Snooze ({snoozeInterval} min)
             </Text>
           </Pressable>
@@ -134,4 +143,3 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     </View>
   );
 }
-

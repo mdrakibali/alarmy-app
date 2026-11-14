@@ -21,37 +21,37 @@ export function MorningScreen() {
   return (
     <Screen padded={false}>
       <ScrollView
-        className="flex-1 bg-slate-950"
-        contentContainerClassName="px-5 pb-10 pt-2"
+        className="flex-1 bg-[#F5F6F8]"
+        contentContainerClassName="px-5 pb-12 pt-3"
       >
-        <Text className="text-3xl font-bold text-white">Morning</Text>
-        <Text className="text-sm text-slate-400 mt-1">
+        <Text className="text-3xl font-extrabold text-slate-900">Morning</Text>
+        <Text className="text-sm text-slate-500 mt-1">
           Start your day energized and focused
         </Text>
 
         {/* Wake-up Streak Card */}
-        <View className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 mt-5">
+        <View className="bg-white rounded-3xl p-6 mt-5 border border-slate-100 shadow-sm">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-xs uppercase font-bold tracking-wider text-amber-400">
+              <Text className="text-xs uppercase font-bold tracking-wider text-amber-500">
                 WAKE-UP STREAK
               </Text>
-              <Text className="text-4xl font-extrabold text-white mt-1">
+              <Text className="text-4xl font-black text-slate-900 mt-1">
                 5 Days 🔥
               </Text>
             </View>
-            <View className="h-12 w-12 rounded-full bg-amber-500 items-center justify-center">
-              <Text className="text-2xl">⚡</Text>
+            <View className="h-14 w-14 rounded-full bg-amber-50 items-center justify-center">
+              <Text className="text-3xl">⚡</Text>
             </View>
           </View>
-          <Text className="text-xs text-slate-300 mt-3">
+          <Text className="text-xs text-slate-500 mt-3">
             Waking up on time consistently improves dopamine and morning clarity.
           </Text>
         </View>
 
         {/* Morning Routine Checklist */}
         <View className="mt-6">
-          <Text className="text-lg font-bold text-white mb-3">
+          <Text className="text-lg font-bold text-slate-900 mb-3 px-1">
             Morning Routine
           </Text>
           {ROUTINE_ITEMS.map(item => {
@@ -60,19 +60,19 @@ export function MorningScreen() {
               <Pressable
                 key={item.id}
                 onPress={() => toggleRoutine(item.id)}
-                className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 ${
+                className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
                   isDone
-                    ? 'bg-slate-900/60 border border-slate-800'
-                    : 'bg-slate-900'
+                    ? 'bg-slate-50 border-slate-200/60'
+                    : 'bg-white border-slate-100 shadow-sm'
                 }`}
               >
                 <View className="flex-row items-center flex-1 pr-3">
                   <Text className="text-2xl mr-3">{item.icon}</Text>
                   <Text
-                    className={`text-base font-medium ${
+                    className={`text-base font-semibold ${
                       isDone
                         ? 'text-slate-400 line-through'
-                        : 'text-white'
+                        : 'text-slate-800'
                     }`}
                   >
                     {item.label}
@@ -81,12 +81,12 @@ export function MorningScreen() {
                 <View
                   className={`h-6 w-6 rounded-full items-center justify-center border ${
                     isDone
-                      ? 'bg-amber-500 border-amber-500'
-                      : 'border-slate-600'
+                      ? 'bg-[#38BDF8] border-[#38BDF8]'
+                      : 'border-slate-300 bg-white'
                   }`}
                 >
                   {isDone && (
-                    <Text className="text-slate-950 font-bold text-xs">✓</Text>
+                    <Text className="text-white font-bold text-xs">✓</Text>
                   )}
                 </View>
               </Pressable>
@@ -95,11 +95,11 @@ export function MorningScreen() {
         </View>
 
         {/* Daily Motivation */}
-        <View className="bg-slate-900 rounded-2xl p-5 mt-6 border border-slate-800">
+        <View className="bg-white rounded-3xl p-5 mt-4 border border-slate-100 shadow-sm">
           <Text className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
             DAILY QUOTE
           </Text>
-          <Text className="text-base text-slate-200 italic leading-relaxed">
+          <Text className="text-sm font-medium text-slate-700 italic leading-relaxed">
             "Every morning you have two choices: continue to sleep with your dreams, or wake up and chase them."
           </Text>
         </View>
@@ -107,4 +107,3 @@ export function MorningScreen() {
     </Screen>
   );
 }
-

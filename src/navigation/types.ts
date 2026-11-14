@@ -1,7 +1,8 @@
 export type TabParamList = {
   Alarm: undefined;
-  Morning: undefined;
   Sleep: undefined;
+  Morning: undefined;
+  Report: undefined;
   Settings: undefined;
 };
 

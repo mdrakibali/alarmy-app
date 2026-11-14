@@ -65,7 +65,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 val arr = alarmMap.getArray("missions")
                 if (arr != null) {
                     for (i in 0 until arr.size()) {
-                        missionsList.add(arr.getString(i))
+                        arr.getString(i)?.let { missionsList.add(it) }
                     }
                 }
             }
@@ -174,7 +174,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                 data = Uri.parse("package:${reactContext.packageName}")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             reactContext.startActivity(intent)
         }
@@ -197,13 +197,13 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             try {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                     data = Uri.parse("package:${reactContext.packageName}")
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 reactContext.startActivity(intent)
             } catch (e: Exception) {
                 // Fallback to battery optimization settings
                 val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 reactContext.startActivity(fallbackIntent)
             }

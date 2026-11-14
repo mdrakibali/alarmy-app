@@ -41,7 +41,7 @@ object AlarmScheduler {
 
         // PendingIntent to launch app when clicking alarm info
         val showIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         val showPendingIntent = PendingIntent.getActivity(
             context,

@@ -60,10 +60,12 @@ class AlarmReceiver : BroadcastReceiver() {
         val activityIntent = Intent(context, MainActivity::class.java).apply {
             action = ACTION_ALARM_RINGING
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            )
         }
         try {
             context.startActivity(activityIntent)

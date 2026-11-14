@@ -9,7 +9,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
-  DarkTheme,
+  DefaultTheme,
   NavigationContainer,
   NavigationContainerRef,
 } from '@react-navigation/native';
@@ -71,18 +71,18 @@ function App() {
   return (
     <GestureHandlerRootView className="flex-1">
       <SafeAreaProvider>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="dark-content" />
         <NavigationContainer
           ref={navigationRef}
           theme={{
-            ...DarkTheme,
+            ...DefaultTheme,
             colors: {
-              ...DarkTheme.colors,
-              background: '#020617',
-              card: '#020617',
-              primary: '#f59e0b',
-              text: '#f8fafc',
-              border: '#1e293b',
+              ...DefaultTheme.colors,
+              background: '#F5F6F8',
+              card: '#FFFFFF',
+              primary: '#FF385C',
+              text: '#0F172A',
+              border: '#F1F5F9',
             },
           }}
         >

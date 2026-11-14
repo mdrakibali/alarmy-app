@@ -15,13 +15,15 @@ export function Chip({
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`mr-2 mb-2 rounded-full px-3.5 py-2 ${
-        selected ? 'bg-amber-500' : 'bg-slate-800'
+      className={`mr-2 mb-2 rounded-2xl px-4 py-2.5 border ${
+        selected
+          ? 'bg-[#E0F2FE] border-[#BAE6FD]'
+          : 'bg-slate-100 border-slate-100 active:bg-slate-200'
       }`}
     >
       <Text
-        className={`text-sm font-medium ${
-          selected ? 'text-slate-950' : 'text-slate-200'
+        className={`text-sm font-semibold ${
+          selected ? 'text-[#0284C7]' : 'text-slate-600'
         }`}
       >
         {label}

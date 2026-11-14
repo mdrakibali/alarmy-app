@@ -12,7 +12,7 @@ export function Screen({
   return (
     <SafeAreaView
       edges={['top']}
-      className={`flex-1 bg-slate-950 ${padded ? 'px-5' : ''}`}
+      className={`flex-1 bg-[#F5F6F8] ${padded ? 'px-4' : ''}`}
     >
       {children}
     </SafeAreaView>
@@ -23,8 +23,8 @@ export function PlaceholderScreen({ title }: { title: string }) {
   return (
     <Screen>
       <View className="flex-1 items-center justify-center">
-        <Text className="text-xl font-semibold text-white">{title}</Text>
-        <Text className="mt-2 text-sm text-slate-400">Coming later</Text>
+        <Text className="text-xl font-semibold text-slate-800">{title}</Text>
+        <Text className="mt-2 text-sm text-slate-400">Coming soon</Text>
       </View>
     </Screen>
   );

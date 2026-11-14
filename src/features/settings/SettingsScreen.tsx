@@ -36,7 +36,7 @@ export function SettingsScreen() {
     // 10 seconds from now
     now.setSeconds(now.getSeconds() + 10);
 
-    const testId = addAlarm({
+    addAlarm({
       hour: now.getHours(),
       minute: now.getMinutes(),
       label: 'Test Alarm ⏰',
@@ -58,15 +58,17 @@ export function SettingsScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-950"
-      contentContainerClassName="px-5 pb-12 pt-4"
+      className="flex-1 bg-[#F5F6F8]"
+      contentContainerClassName="px-5 pb-16 pt-3"
     >
-      <Text className="text-3xl font-bold text-white mb-6">Settings</Text>
+      <Text className="text-3xl font-extrabold text-slate-900 mb-6">
+        Settings
+      </Text>
 
       {/* Test Alarm Section */}
       <Section title="Quick Verification">
-        <View className="px-4 py-4">
-          <Text className="text-sm text-slate-300 mb-3">
+        <View className="p-4">
+          <Text className="text-sm text-slate-600 mb-4 leading-relaxed">
             Schedule a test alarm right now to verify that audio, lock screen, and wake-up missions work properly on your device.
           </Text>
           <Button label="Test Alarm (with Math Mission)" onPress={testAlarmIn5Seconds} />
@@ -78,10 +80,10 @@ export function SettingsScreen() {
         <Section title="System Reliability">
           <Row>
             <View className="flex-1 pr-3">
-              <Text className="text-base text-white font-medium">
+              <Text className="text-sm text-slate-800 font-bold">
                 Exact Alarm Permission
               </Text>
-              <Text className="text-xs text-slate-400 mt-0.5">
+              <Text className="text-xs text-slate-500 mt-0.5">
                 {exactAlarmAllowed
                   ? 'Granted ✅ - Alarms trigger at exact seconds'
                   : 'Restricted ❌ - Alarms may be delayed'}
@@ -90,19 +92,19 @@ export function SettingsScreen() {
             {!exactAlarmAllowed && (
               <Pressable
                 onPress={() => NativeAlarm.openExactAlarmSettings()}
-                className="bg-amber-500 px-3 py-1.5 rounded-lg active:opacity-80"
+                className="bg-[#38BDF8] px-3.5 py-1.5 rounded-xl active:opacity-80"
               >
-                <Text className="text-xs font-bold text-slate-950">Grant</Text>
+                <Text className="text-xs font-bold text-white">Grant</Text>
               </Pressable>
             )}
           </Row>
 
           <Row last>
             <View className="flex-1 pr-3">
-              <Text className="text-base text-white font-medium">
+              <Text className="text-sm text-slate-800 font-bold">
                 Battery Optimization Bypass
               </Text>
-              <Text className="text-xs text-slate-400 mt-0.5">
+              <Text className="text-xs text-slate-500 mt-0.5">
                 {batteryIgnored
                   ? 'Ignored ✅ - Background killer bypassed'
                   : 'Restricted ⚠️ - App might be killed in sleep'}
@@ -111,9 +113,9 @@ export function SettingsScreen() {
             {!batteryIgnored && (
               <Pressable
                 onPress={() => NativeAlarm.requestIgnoreBatteryOptimizations()}
-                className="bg-amber-500 px-3 py-1.5 rounded-lg active:opacity-80"
+                className="bg-[#38BDF8] px-3.5 py-1.5 rounded-xl active:opacity-80"
               >
-                <Text className="text-xs font-bold text-slate-950">Disable</Text>
+                <Text className="text-xs font-bold text-white">Disable</Text>
               </Pressable>
             )}
           </Row>
@@ -122,15 +124,15 @@ export function SettingsScreen() {
 
       {/* Device Guides */}
       <Section title="OEM Kill Prevention">
-        <View className="px-4 py-3">
-          <Text className="text-sm text-slate-400 leading-relaxed mb-3">
+        <View className="p-4">
+          <Text className="text-sm text-slate-600 leading-relaxed mb-3">
             Manufacturers like Xiaomi (MIUI/HyperOS), Samsung, OnePlus, and Huawei aggressively kill alarm apps in deep sleep. Make sure Auto-Start is ON.
           </Text>
           <Pressable
             onPress={() => Linking.openURL('https://dontkillmyapp.com')}
-            className="flex-row items-center py-2"
+            className="flex-row items-center py-1"
           >
-            <Text className="text-sm font-semibold text-amber-400">
+            <Text className="text-sm font-bold text-[#FF385C]">
               Read guide on Don't Kill My App ↗
             </Text>
           </Pressable>
@@ -139,8 +141,8 @@ export function SettingsScreen() {
 
       {/* About */}
       <Section title="About">
-        <View className="px-4 py-3">
-          <Text className="text-white font-semibold">Alarmy Clone</Text>
+        <View className="p-4">
+          <Text className="text-slate-900 font-bold">Alarmy Clone</Text>
           <Text className="text-xs text-slate-400 mt-1">
             Version 1.0.0 • React Native 0.88 + Kotlin Engine
           </Text>
@@ -149,4 +151,3 @@ export function SettingsScreen() {
     </ScrollView>
   );
 }
-

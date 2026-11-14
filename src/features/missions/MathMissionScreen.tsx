@@ -96,51 +96,51 @@ export function MathMissionScreen({ navigation }: Props) {
   };
 
   return (
-    <View className="flex-1 bg-slate-950 px-6 py-10 justify-between">
+    <View className="flex-1 bg-[#F5F6F8] px-6 py-10 justify-between">
       {/* Top Section: Progress & Header */}
-      <View className="items-center mt-4">
-        <Text className="text-amber-400 font-bold tracking-wider uppercase text-xs">
+      <View className="items-center mt-2">
+        <Text className="text-[#FF385C] font-extrabold tracking-wider uppercase text-xs">
           Math Wake-up Mission
         </Text>
-        <Text className="text-slate-400 text-sm mt-1">
+        <Text className="text-slate-500 text-sm font-semibold mt-1">
           Problem {problemIndex + 1} of {TOTAL_PROBLEMS}
         </Text>
 
         {/* Progress Bar */}
-        <View className="w-full bg-slate-800 h-2 rounded-full mt-4 overflow-hidden">
+        <View className="w-full bg-slate-200 h-2.5 rounded-full mt-4 overflow-hidden">
           <View
-            className="bg-amber-500 h-full rounded-full"
+            className="bg-[#FF385C] h-full rounded-full"
             style={{ width: `${((problemIndex + 1) / TOTAL_PROBLEMS) * 100}%` }}
           />
         </View>
       </View>
 
-      {/* Middle Section: Math Formula & Answer Input */}
-      <View className="items-center my-6">
-        <Text className="text-5xl font-bold text-white tracking-wide">
+      {/* Middle Section: Math Formula & Answer Card */}
+      <View className="items-center my-6 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm w-full">
+        <Text className="text-5xl font-black text-slate-900 tracking-wide">
           {currentProblem.num1} {currentProblem.operator} {currentProblem.num2}
         </Text>
 
-        <View className="h-16 w-56 border-b-2 border-amber-500 items-center justify-center mt-6">
-          <Text className="text-4xl font-bold text-amber-400">
+        <View className="h-16 w-56 border-b-2 border-[#38BDF8] items-center justify-center mt-6">
+          <Text className="text-4xl font-extrabold text-[#0284C7]">
             {userInput || '?'}
           </Text>
         </View>
 
         {errorMsg ? (
-          <Text className="text-red-400 font-medium text-sm mt-3">
+          <Text className="text-rose-500 font-bold text-sm mt-3">
             {errorMsg}
           </Text>
         ) : (
-          <Text className="text-slate-500 text-xs mt-3">
-            Solve correctly to advance
+          <Text className="text-slate-400 text-xs font-semibold mt-3">
+            Solve correctly to wake your brain up
           </Text>
         )}
       </View>
 
       {/* Bottom Section: Custom Numeric Keypad */}
-      <View className="w-full mb-4">
-        <View className="flex-row justify-between mb-3">
+      <View className="w-full mb-2">
+        <View className="flex-row justify-between mb-2.5">
           {[1, 2, 3].map(n => (
             <KeypadButton
               key={n}
@@ -149,7 +149,7 @@ export function MathMissionScreen({ navigation }: Props) {
             />
           ))}
         </View>
-        <View className="flex-row justify-between mb-3">
+        <View className="flex-row justify-between mb-2.5">
           {[4, 5, 6].map(n => (
             <KeypadButton
               key={n}
@@ -158,7 +158,7 @@ export function MathMissionScreen({ navigation }: Props) {
             />
           ))}
         </View>
-        <View className="flex-row justify-between mb-3">
+        <View className="flex-row justify-between mb-2.5">
           {[7, 8, 9].map(n => (
             <KeypadButton
               key={n}
@@ -167,7 +167,7 @@ export function MathMissionScreen({ navigation }: Props) {
             />
           ))}
         </View>
-        <View className="flex-row justify-between mb-4">
+        <View className="flex-row justify-between mb-3.5">
           <KeypadButton label="C" variant="danger" onPress={handleClear} />
           <KeypadButton label="0" onPress={() => handleKeyPress('0')} />
           <KeypadButton label="⌫" variant="secondary" onPress={handleBackspace} />
@@ -176,9 +176,11 @@ export function MathMissionScreen({ navigation }: Props) {
         {/* Submit Button */}
         <Pressable
           onPress={handleSubmit}
-          className="w-full bg-amber-500 py-4 rounded-2xl items-center active:opacity-90"
+          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-sm"
         >
-          <Text className="text-slate-950 text-lg font-bold">Submit Answer</Text>
+          <Text className="text-white text-base font-extrabold tracking-wide">
+            Submit Answer
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -196,25 +198,24 @@ function KeypadButton({
 }) {
   const bg =
     variant === 'danger'
-      ? 'bg-red-500/20 active:bg-red-500/30'
+      ? 'bg-rose-50 border border-rose-200 active:bg-rose-100'
       : variant === 'secondary'
-      ? 'bg-slate-800 active:bg-slate-700'
-      : 'bg-slate-900 active:bg-slate-800';
+      ? 'bg-slate-100 border border-slate-200 active:bg-slate-200'
+      : 'bg-white border border-slate-100 shadow-sm active:bg-slate-50';
 
   const textCol =
     variant === 'danger'
-      ? 'text-red-400'
+      ? 'text-rose-500'
       : variant === 'secondary'
-      ? 'text-slate-300'
-      : 'text-white';
+      ? 'text-slate-600'
+      : 'text-slate-900';
 
   return (
     <Pressable
       onPress={onPress}
       className={`h-16 w-24 items-center justify-center rounded-2xl ${bg}`}
     >
-      <Text className={`text-2xl font-bold ${textCol}`}>{label}</Text>
+      <Text className={`text-2xl font-black ${textCol}`}>{label}</Text>
     </Pressable>
   );
 }
-
