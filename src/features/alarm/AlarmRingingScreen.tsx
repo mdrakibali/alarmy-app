@@ -91,20 +91,13 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         navigation.navigate('ShakeMission', { alarmId: id, missionIndex: 0, missions });
         return;
       }
-      if (firstMission === 'qr') {
-        navigation.navigate('BarcodeMission', { alarmId: id, missionIndex: 0, missions });
-        return;
-      }
-      if (firstMission === 'typing') {
-        navigation.navigate('TypingMission', { alarmId: id, missionIndex: 0, missions });
-        return;
-      }
-      if (firstMission === 'memory') {
-        navigation.navigate('MemoryMission', { alarmId: id, missionIndex: 0, missions });
-        return;
-      }
       if (firstMission === 'step') {
-        navigation.navigate('StepMission', { alarmId: id, missionIndex: 0, missions });
+        navigation.navigate('StepMission', {
+          alarmId: id,
+          missionIndex: 0,
+          missions,
+          stepTarget: alarmFromStore?.stepTarget ?? 20,
+        });
         return;
       }
       if (firstMission === 'photo') {
@@ -117,8 +110,30 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         });
         return;
       }
+      if (firstMission === 'qr') {
+        navigation.navigate('BarcodeMission', {
+          alarmId: id,
+          missionIndex: 0,
+          missions,
+          registeredCode: alarmFromStore?.barcodeValue,
+        });
+        return;
+      }
       if (firstMission === 'squat') {
-        navigation.navigate('SquatMission', { alarmId: id, missionIndex: 0, missions });
+        navigation.navigate('SquatMission', {
+          alarmId: id,
+          missionIndex: 0,
+          missions,
+          squatTarget: alarmFromStore?.squatTarget ?? 10,
+        });
+        return;
+      }
+      if (firstMission === 'typing') {
+        navigation.navigate('TypingMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
+      if (firstMission === 'memory') {
+        navigation.navigate('MemoryMission', { alarmId: id, missionIndex: 0, missions });
         return;
       }
     }

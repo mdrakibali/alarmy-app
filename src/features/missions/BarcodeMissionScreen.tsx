@@ -137,17 +137,22 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   };
 
-  const acceptValue = (value: string) => {
+  const registeredCode = route.params?.registeredCode?.trim() ?? '';
+  const acceptValue = (value: string, fromText: boolean) => {
     if (accepted.current) return;
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    if (trimmed === selectedTarget.code || trimmed.includes(selectedTarget.code)) {
-      accepted.current = true;
-      setLens(null);
-      completeMission();
+    if (!registeredCode) {
+      setErrorMsg('Register a QR or barcode while editing the alarm. This scan was not accepted.');
       return;
     }
-    setErrorMsg('That code does not match the registered barcode.');
+    const trimmed = value.trim();
+    const matched = fromText ? trimmed.includes(registeredCode) : trimmed === registeredCode;
+    if (!matched) {
+      setErrorMsg('That code does not match the registered value. Try again.');
+      return;
+    }
+    accepted.current = true;
+    setLens(null);
+    completeMission();
   };
 
   const openLens = async (next: 'barcode' | 'text') => {
@@ -201,7 +206,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
                 {selectedTarget.label}
               </Text>
               <Text className="text-slate-500 font-mono text-xs mt-0.5">
-                Code: {selectedTarget.code}
+                Code: {registeredCode || 'Not registered'}
               </Text>
             </View>
             <View className="bg-emerald-100 px-2.5 py-1 rounded-lg">
@@ -219,7 +224,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
               barcodeFormats={['qr-code', 'ean-13', 'ean-8', 'code-128', 'upc-a', 'upc-e']}
               onBarcodeScanned={codes => {
                 const value = codes.find(code => code.rawValue)?.rawValue;
-                if (value) acceptValue(value);
+                if (value) acceptValue(value, false);
               }}
               onError={() => setErrorMsg('Barcode scanner could not read the camera.')}
             />
@@ -229,7 +234,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
               style={{ width: '100%', height: '100%' }}
               isActive
               onTextRecognized={result => {
-                if (result.text) acceptValue(result.text);
+                if (result.text) acceptValue(result.text, true);
               }}
               onError={() => setErrorMsg('Text recognition could not read the camera.')}
             />

@@ -16,9 +16,8 @@ import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SquatMission'>;
 
-const TARGET_SQUATS = 10;
-
 export function SquatMissionScreen({ navigation, route }: Props) {
+  const target = route.params?.squatTarget ?? 10;
   const insets = useAppInsets();
   const logAlarmDismissed = useReportStore(s => s.logAlarmDismissed);
 
@@ -94,16 +93,16 @@ export function SquatMissionScreen({ navigation, route }: Props) {
   const [poseBlocked, setPoseBlocked] = useState(false);
 
   const startPose = useCallback(async () => {
-    const result = await NativeAlarm.openCameraMission({ mode: 'squat', target: TARGET_SQUATS });
+    const result = await NativeAlarm.openCameraMission({ mode: 'squat', target });
     if (result?.completed) {
-      setSquatsDone(result.count ?? TARGET_SQUATS);
+      setSquatsDone(result.count ?? target);
       completeMission();
       return;
     }
     setPoseBlocked(true);
   }, [completeMission]);
 
-  const progressPct = Math.min(100, Math.round((squatsDone / TARGET_SQUATS) * 100));
+  const progressPct = Math.min(100, Math.round((squatsDone / target) * 100));
 
   return (
     <AppBackground target="mission">
@@ -122,7 +121,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
             </Text>
           </View>
           <Text className="text-2xl font-black text-[#1A2E22] text-center">
-            Complete {TARGET_SQUATS} Squats
+            Complete {target} Squats
           </Text>
           <Text className="text-xs text-[#5E7166] font-semibold mt-1 text-center">
             Hold your phone to your chest and squat down & up
@@ -136,7 +135,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
               {squatsDone}
             </Text>
             <Text className="text-sm font-bold text-[#5E7166] mt-1">
-              / {TARGET_SQUATS} SQUATS
+              / {target} SQUATS
             </Text>
             <View className="mt-3 px-3 py-1 rounded-full bg-[#EBF3ED]">
               <Text className="text-xs font-black text-[#4E7D5B]">

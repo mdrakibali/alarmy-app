@@ -31,7 +31,6 @@ class CameraMissionActivity : ComponentActivity() {
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private var imageCapture: ImageCapture? = null
     private var squatReps = 0
-    private var squatDown = false
     private var finished = false
 
     private val permissionLauncher = registerForActivityResult(
@@ -165,6 +164,8 @@ class CameraMissionActivity : ComponentActivity() {
         val analysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
+        var phase = "standing"
+        var missing = 0
         analysis.setAnalyzer(cameraExecutor) { imageProxy ->
             val media = imageProxy.image
             if (media == null || finished) {
@@ -174,28 +175,51 @@ class CameraMissionActivity : ComponentActivity() {
             val image = InputImage.fromMediaImage(media, imageProxy.imageInfo.rotationDegrees)
             detector.process(image)
                 .addOnSuccessListener { pose ->
-                    val knee = kneeAngle(pose.getPoseLandmark(PoseLandmark.LEFT_HIP),
+                    val knee = kneeAngle(
+                        pose.getPoseLandmark(PoseLandmark.LEFT_HIP),
                         pose.getPoseLandmark(PoseLandmark.LEFT_KNEE),
-                        pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE))
-                        ?: kneeAngle(pose.getPoseLandmark(PoseLandmark.RIGHT_HIP),
-                            pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE),
-                            pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE))
-                    if (knee != null && !finished) {
-                        if (!squatDown && knee < 100) squatDown = true
-                        if (squatDown && knee > 155) {
-                            squatDown = false
-                            squatReps += 1
-                            runOnUiThread { label.text = "Squats $squatReps / $target" }
-                            if (squatReps >= target) {
-                                finished = true
-                                val data = intent.apply {
-                                    putExtra(EXTRA_COUNT, squatReps)
-                                    putExtra(EXTRA_COMPLETED, true)
-                                }
-                                setResult(RESULT_OK, data)
-                                finish()
-                            }
+                        pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE),
+                    ) ?: kneeAngle(
+                        pose.getPoseLandmark(PoseLandmark.RIGHT_HIP),
+                        pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE),
+                        pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE),
+                    )
+                    if (finished) return@addOnSuccessListener
+                    if (knee == null) {
+                        missing += 1
+                        if (missing > 20) {
+                            runOnUiThread { label.text = "No person in frame. Step back and face the camera." }
                         }
+                        return@addOnSuccessListener
+                    }
+                    missing = 0
+                    when (phase) {
+                        "standing" -> if (knee < 150) phase = "descending"
+                        "descending" -> when {
+                            knee < 95 -> phase = "bottom"
+                            knee > 165 -> phase = "standing"
+                        }
+                        "bottom" -> if (knee > 120) phase = "ascending"
+                        "ascending" -> if (knee > 160) {
+                            phase = "standing"
+                            squatReps += 1
+                        }
+                    }
+                    val status = when (phase) {
+                        "descending" -> "Going down"
+                        "bottom" -> "Squat depth reached"
+                        "ascending" -> "Standing up"
+                        else -> "Standing"
+                    }
+                    runOnUiThread { label.text = "$status\n$squatReps / $target" }
+                    if (squatReps >= target) {
+                        finished = true
+                        val data = intent.apply {
+                            putExtra(EXTRA_COUNT, squatReps)
+                            putExtra(EXTRA_COMPLETED, true)
+                        }
+                        setResult(RESULT_OK, data)
+                        finish()
                     }
                 }
                 .addOnCompleteListener { imageProxy.close() }

@@ -16,6 +16,8 @@ import { WALLPAPERS } from '@/data/wallpapers';
 import { ALBA_BACKGROUNDS, findAlbaBackground } from '@/data/albaBackgrounds';
 import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
+import { useCameraPermission } from 'react-native-vision-camera';
+import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useToast } from '@/components/ui/AppToast';
@@ -54,6 +56,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [showSoundPicker, setShowSoundPicker] = useState(false);
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [registeringCode, setRegisteringCode] = useState(false);
+  const { hasPermission, requestPermission } = useCameraPermission();
   const [isPlayingSound, setIsPlayingSound] = useState(false);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
@@ -689,22 +693,96 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
       {/* Mission capture setup */}
       {draft.missions.includes('photo') ? (
-        <TouchableOpacity
-          onPress={async () => {
-            const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
-            if (shot?.path) {
-              patch({ photoReferencePath: shot.path, photoMatchThreshold: 72 });
-            }
-          }}
-          className="bg-white rounded-3xl p-4 mb-4 border border-slate-100"
-        >
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
+          <TouchableOpacity
+            onPress={async () => {
+              const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
+              if (shot?.path) {
+                patch({ photoReferencePath: shot.path });
+              }
+            }}
+          >
+            <Text className="text-sm font-bold text-[#1A2E22]">
+              {draft.photoReferencePath ? 'Reference photo saved. Tap to replace.' : 'Register reference photo'}
+            </Text>
+          </TouchableOpacity>
+          <View className="flex-row mt-3">
+            {[65, 72, 85].map(value => (
+              <TouchableOpacity
+                key={value}
+                onPress={() => patch({ photoMatchThreshold: value })}
+                className={`mr-2 px-3 py-2 rounded-full border ${
+                  (draft.photoMatchThreshold ?? 72) === value ? 'bg-[#1A2E22]' : 'bg-white border-slate-200'
+                }`}
+              >
+                <Text className={`text-xs font-bold ${(draft.photoMatchThreshold ?? 72) === value ? 'text-white' : 'text-[#1A2E22]'}`}>
+                  Match {value}%
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ) : null}
+      {draft.missions.includes('qr') ? (
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
           <Text className="text-sm font-bold text-[#1A2E22]">
-            {draft.photoReferencePath ? 'Reference photo saved' : 'Register reference photo'}
+            {draft.barcodeValue ? `Registered code: ${draft.barcodeValue}` : 'No QR or barcode registered'}
           </Text>
           <Text className="text-xs text-[#5E7166] mt-1">
-            The alarm accepts a new photo only when it matches this one.
+            Scan the real code during setup. Typed text is not saved.
           </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={async () => {
+              if (!hasPermission) {
+                const granted = await requestPermission();
+                if (!granted) return;
+              }
+              setRegisteringCode(true);
+            }}
+            className="mt-3 bg-[#6B8F71] py-3 rounded-2xl items-center"
+          >
+            <Text className="text-white font-bold">Scan code to register</Text>
+          </TouchableOpacity>
+          {registeringCode ? (
+            <View className="h-56 mt-3 rounded-2xl overflow-hidden">
+              <CodeScanner
+                style={{ width: '100%', height: '100%' }}
+                isActive={registeringCode}
+                barcodeFormats={['qr-code', 'ean-13', 'ean-8', 'code-128', 'upc-a']}
+                onBarcodeScanned={codes => {
+                  const value = codes.find(code => code.rawValue)?.rawValue;
+                  if (!value) return;
+                  patch({ barcodeValue: value.trim() });
+                  setRegisteringCode(false);
+                }}
+                onError={() => setRegisteringCode(false)}
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+      {draft.missions.includes('step') || draft.missions.includes('squat') ? (
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
+          <Text className="text-sm font-bold text-[#1A2E22] mb-2">Mission targets</Text>
+          {draft.missions.includes('step') ? (
+            <View className="flex-row mb-2">
+              {[20, 30, 50].map(value => (
+                <TouchableOpacity key={value} onPress={() => patch({ stepTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-[#FBFBF9] border border-[#6B8F71]">
+                  <Text className="text-xs font-bold text-[#1A2E22]">{value} steps</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {draft.missions.includes('squat') ? (
+            <View className="flex-row">
+              {[5, 10, 15].map(value => (
+                <TouchableOpacity key={value} onPress={() => patch({ squatTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-[#FBFBF9] border border-[#6B8F71]">
+                  <Text className="text-xs font-bold text-[#1A2E22]">{value} squats</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+        </View>
       ) : null}
 
       {/* Fixed Bottom Save Button with Safe Area Inset - Flex sibling so it never obscures content */}

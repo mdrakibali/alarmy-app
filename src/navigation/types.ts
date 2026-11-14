@@ -30,10 +30,7 @@ export type RootStackParamList = {
   SnoozeCountdown: { alarmId: string; intervalMin: number; wallpaper?: string };
   MathMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   ShakeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  StepMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  StepMission: { alarmId?: string; missionIndex?: number; missions?: string[]; stepTarget?: number } | undefined;
   PhotoMission: {
     alarmId?: string;
     missionIndex?: number;
@@ -41,8 +38,11 @@ export type RootStackParamList = {
     referencePath?: string;
     matchThreshold?: number;
   } | undefined;
-  SquatMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  SquatMission: { alarmId?: string; missionIndex?: number; missions?: string[]; squatTarget?: number } | undefined;
   WallpaperGallery: { pickForAlarm?: boolean } | undefined;
   WallpaperPreview: { wallpaperId: string; pickForAlarm?: boolean };
   Report: undefined;
+  BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[]; registeredCode?: string } | undefined;
+  TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
 };

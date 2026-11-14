@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   BackHandler,
-  Pressable,
+  PermissionsAndroid,
+  Platform,
   Text,
   Vibration,
   View,
@@ -16,10 +17,11 @@ import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StepMission'>;
 
-const TARGET_STEPS = 20;
+const DEFAULT_STEPS = 20;
 
 export function StepMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const target = route.params?.stepTarget ?? DEFAULT_STEPS;
   const [stepsWalked, setStepsWalked] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -123,18 +125,29 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
   const addStep = useCallback((count: number) => {
     setStepsWalked(count);
-    if (count >= TARGET_STEPS) {
+    if (count >= target) {
       completeMission();
     }
-  }, [completeMission]);
+  }, [completeMission, target]);
 
   const [sensorMissing, setSensorMissing] = useState(false);
 
   useEffect(() => {
     let stopped = false;
-    NativeAlarm.startStepCounter().then(ok => {
+    const start = async () => {
+      if (Platform.OS === 'android' && Platform.Version >= 29) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION,
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          if (!stopped) setSensorMissing(true);
+          return;
+        }
+      }
+      const ok = await NativeAlarm.startStepCounter();
       if (!ok && !stopped) setSensorMissing(true);
-    });
+    };
+    start();
     const unsub = NativeAlarm.onStepCount(count => addStep(count));
     const unsubMissing = NativeAlarm.onStepUnavailable(() => setSensorMissing(true));
     return () => {
@@ -145,7 +158,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
     };
   }, [addStep]);
 
-  const progressPct = Math.min(100, Math.round((stepsWalked / TARGET_STEPS) * 100));
+  const progressPct = Math.min(100, Math.round((stepsWalked / target) * 100));
 
   return (
     <AppBackground target="ringing">
@@ -164,7 +177,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
             </Text>
           </View>
           <Text className="text-2xl font-black text-slate-900 text-center">
-            Walk 20 Steps Out of Bed
+            Walk {target} Steps Out of Bed
           </Text>
           <Text className="text-xs text-slate-500 font-semibold mt-1">
             Physical movement breaks sleep inertia immediately
@@ -178,7 +191,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
               {stepsWalked}
             </Text>
             <Text className="text-sm font-bold text-slate-400 mt-1">
-              / {TARGET_STEPS} Steps
+              / {target} Steps
             </Text>
             <View className="mt-3 px-3 py-1 rounded-full bg-[#EBF3ED]">
               <Text className="text-xs font-black text-[#4E7D5B]">
