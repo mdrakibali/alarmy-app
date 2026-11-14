@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   Image,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -12,7 +12,6 @@ import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import type { MissionType } from '../alarm/types';
-
 import { WALLPAPERS } from '@/data/wallpapers';
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
 import { useThemeStore } from '@/storage/themeStore';
@@ -38,6 +37,22 @@ const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[]
     desc: 'Leave bed and scan your bathroom toothpaste or coffee mug to turn off!',
     icon: '📷',
   },
+  {
+    id: 'typing',
+    title: 'Typing Mission',
+    desc: 'Type motivational morning affirmations accurately to start your day!',
+    icon: '⌨️',
+  },
+];
+
+// Curated top 6 wallpapers for fast, 60fps rendering without memory overload
+const CURATED_WALLPAPER_IDS = [
+  'kpop_wonhee',
+  'anime_girl_lofi',
+  'aesthetic_neon_sunset',
+  'animals_happy_puppy',
+  'galaxy_aurora_borealis',
+  'kpop_illit_dance',
 ];
 
 export function WelcomeWizardScreen({ navigation }: Props) {
@@ -54,7 +69,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   // Stop audio preview on unmount
   useEffect(() => {
     return () => {
-      NativeAlarm.stopSoundPreview();
+      NativeAlarm.stopSoundPreview().catch(() => {});
     };
   }, []);
 
@@ -68,8 +83,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     if (step < 4) {
       setStep(prev => ((prev + 1) as 1 | 2 | 3 | 4));
     } else {
-      // Go to Preview Screen!
-      navigation.navigate('AlarmPreview', {
+      // Step 4 complete: Navigate to Permission Screen as requested!
+      navigation.navigate('Permission', {
         hour: selectedHour,
         minute: selectedMinute,
         wallpaper: selectedWallpaper,
@@ -85,6 +100,10 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     }
   };
 
+  const curatedWallpapers = CURATED_WALLPAPER_IDS.map(
+    id => WALLPAPERS.find(w => w.id === id) || WALLPAPERS[0],
+  );
+
   return (
     <View className="flex-1 bg-[#F5F6F8]">
       {/* Header with Progress Bar */}
@@ -94,13 +113,13 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       >
         <View className="flex-row items-center justify-between mb-3">
           {step > 1 ? (
-            <TouchableOpacity
-              activeOpacity={0.7}
+            <Pressable
               onPress={handleBack}
-              className="mr-3 py-1.5 px-3 rounded-full bg-slate-100"
+              hitSlop={10}
+              className="mr-3 py-1.5 px-3 rounded-full bg-slate-100 active:bg-slate-200"
             >
               <Text className="text-slate-700 font-extrabold text-xs">‹ Back</Text>
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -152,93 +171,65 @@ export function WelcomeWizardScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* STEP 2: WALLPAPERS */}
+        {/* STEP 2: WALLPAPERS (Fast 60fps Grid with Instant Selection) */}
         {step === 2 && (
           <View className="py-2">
-            {['KPOP Trending', 'Trending', 'Daily Motivation'].map(category => (
-              <View key={category} className="mb-6">
-                <Text className="text-slate-800 font-bold text-sm mb-3">
-                  {category === 'KPOP Trending' && '🔮 KPOP Trending'}
-                  {category === 'Trending' && '💖 Trending'}
-                  {category === 'Daily Motivation' && '🔥 Daily Motivation'}
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                >
-                  {WALLPAPERS.filter(w => w.category === category).slice(0, 6).map(w => {
-                    const isSelected = selectedWallpaper === w.id;
-                    return (
-                      <TouchableOpacity
-                        key={w.id}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                          setSelectedWallpaper(w.id);
-                          useThemeStore.getState().setBackground('alarm', w.id);
-                        }}
-                        className={`w-32 h-48 mr-3 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
-                          isSelected
-                            ? 'border-[#FF385C] shadow-lg'
-                            : 'border-slate-200 bg-slate-100'
+            <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
+              Tap any animated wallpaper to select your morning vibe
+            </Text>
+
+            <View className="flex-row flex-wrap justify-between">
+              {curatedWallpapers.map(w => {
+                const isSelected = selectedWallpaper === w.id;
+                return (
+                  <Pressable
+                    key={w.id}
+                    hitSlop={8}
+                    onPress={() => {
+                      setSelectedWallpaper(w.id);
+                      useThemeStore.getState().setBackground('alarm', w.id);
+                    }}
+                    className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
+                      isSelected
+                        ? 'border-[#FF385C] shadow-lg scale-102'
+                        : 'border-slate-200 bg-white shadow-xs active:scale-98'
+                    }`}
+                  >
+                    {/* Animated GIF Background */}
+                    <Image
+                      source={w.source}
+                      className="absolute inset-0 w-full h-full"
+                      resizeMode="cover"
+                    />
+
+                    {/* Top Right Check Badge */}
+                    <View className="w-full flex-row justify-end p-2.5 z-10">
+                      {isSelected ? (
+                        <View className="h-7 w-7 rounded-full bg-[#FF385C] border-2 border-white items-center justify-center shadow-md">
+                          <Text className="text-white text-xs font-black">✓</Text>
+                        </View>
+                      ) : (
+                        <View className="h-6 w-6 rounded-full bg-black/40 border border-white/60 items-center justify-center">
+                          <Text className="text-white/60 text-[10px]">○</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Bottom Title Bar */}
+                    <View className="w-full items-center py-2 px-1.5 bg-black/75 z-10 border-t border-white/10">
+                      <Text
+                        className={`text-xs font-black ${
+                          isSelected ? 'text-[#FF385C]' : 'text-white'
                         }`}
+                        numberOfLines={1}
                       >
-                        {/* Background Image inside non-interactive wrapper */}
-                        <View
-                          pointerEvents="none"
-                          className="absolute inset-0 w-full h-full"
-                        >
-                          <Image
-                            source={w.source}
-                            className="w-full h-full"
-                            resizeMode="cover"
-                          />
-                        </View>
-
-                        {/* Top Selected Badge */}
-                        <View
-                          pointerEvents="none"
-                          className="w-full flex-row justify-end p-2.5 z-20"
-                        >
-                          {isSelected ? (
-                            <View className="h-7 w-7 rounded-full bg-[#FF385C] border-2 border-white items-center justify-center shadow-md">
-                              <Text className="text-white text-xs font-black">✓</Text>
-                            </View>
-                          ) : (
-                            <View className="h-6 w-6 rounded-full bg-black/40 border border-white/60 items-center justify-center">
-                              <Text className="text-white/60 text-[10px]">○</Text>
-                            </View>
-                          )}
-                        </View>
-
-                        {/* Selected Red Glow Overlay */}
-                        {isSelected && (
-                          <View
-                            pointerEvents="none"
-                            className="absolute inset-0 border-4 border-[#FF385C] rounded-3xl bg-[#FF385C]/15"
-                          />
-                        )}
-
-                        {/* Bottom Title Bar */}
-                        <View
-                          pointerEvents="none"
-                          className="w-full items-center py-2 px-1.5 bg-black/75 z-20 border-t border-white/10"
-                        >
-                          <Text
-                            className={`text-xs font-black ${
-                              isSelected ? 'text-[#FF385C]' : 'text-white'
-                            }`}
-                            numberOfLines={1}
-                          >
-                            ♪ {w.title}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            ))}
+                        ♪ {w.name}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         )}
 
@@ -249,17 +240,17 @@ export function WelcomeWizardScreen({ navigation }: Props) {
               Tap any sound to hear the audio preview immediately
             </Text>
 
-            {ALARM_SOUND_ITEMS.slice(0, 12).map(s => {
+            {ALARM_SOUND_ITEMS.slice(0, 10).map(s => {
               const isSelected = selectedSound === s.id;
               return (
-                <TouchableOpacity
+                <Pressable
                   key={s.id}
-                  activeOpacity={0.7}
+                  hitSlop={8}
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
                       ? 'bg-rose-50/70 border-[#FF385C]'
-                      : 'bg-white border-slate-100'
+                      : 'bg-white border-slate-100 active:bg-slate-50'
                   }`}
                 >
                   <View className="flex-row items-center flex-1 pr-3">
@@ -290,7 +281,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       <View className="h-2 w-2 rounded-full bg-white" />
                     )}
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
@@ -306,14 +297,14 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {MISSIONS.map(m => {
               const isSelected = selectedMission === m.id;
               return (
-                <TouchableOpacity
+                <Pressable
                   key={m.id}
-                  activeOpacity={0.7}
+                  hitSlop={8}
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
                       ? 'bg-rose-50/70 border-[#FF385C]'
-                      : 'bg-white border-slate-100'
+                      : 'bg-white border-slate-100 active:bg-slate-50'
                   }`}
                 >
                   <View className="flex-row items-center justify-between mb-2">
@@ -338,7 +329,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   <Text className="text-xs text-slate-500 font-medium leading-relaxed pl-10">
                     {m.desc}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
@@ -347,20 +338,19 @@ export function WelcomeWizardScreen({ navigation }: Props) {
 
       {/* Bottom Button with Safe Area */}
       <View
-        style={{ paddingBottom: Math.max(insets.bottom + 14, 28) }}
+        style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
         className="bg-white border-t border-slate-100 shadow-md px-5 pt-3 z-50"
       >
-        <TouchableOpacity
-          activeOpacity={0.8}
+        <Pressable
           onPress={handleNext}
-          className="w-full bg-[#FF385C] py-3.5 rounded-2xl items-center shadow-md active:bg-[#E03150]"
+          hitSlop={15}
+          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-md active:bg-[#E03150]"
         >
           <Text className="text-white text-base font-black tracking-wide">
-            {step === 4 ? 'Preview Alarm 🚀' : 'Next'}
+            {step === 4 ? 'Next: Required Permissions 🔐' : 'Next'}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );
 }
-

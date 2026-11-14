@@ -158,6 +158,34 @@ class AlarmService : Service() {
         return START_STICKY
     }
 
+    private var volumeFadeHandler = Handler(Looper.getMainLooper())
+    private var volumeFadeRunnable: Runnable? = null
+
+    private fun startCrescendoVolume(player: MediaPlayer, targetVolume: Float) {
+        // Start gently at 10% volume
+        var currentVol = 0.10f.coerceAtMost(targetVolume)
+        try {
+            player.setVolume(currentVol, currentVol)
+        } catch (e: Exception) {}
+
+        volumeFadeRunnable?.let { volumeFadeHandler.removeCallbacks(it) }
+        volumeFadeRunnable = object : Runnable {
+            override fun run() {
+                try {
+                    if (isRinging && player.isPlaying && currentVol < targetVolume) {
+                        // Increase volume by 6% every 1.5 seconds until target volume
+                        currentVol = (currentVol + 0.06f).coerceAtMost(targetVolume)
+                        player.setVolume(currentVol, currentVol)
+                        if (currentVol < targetVolume) {
+                            volumeFadeHandler.postDelayed(this, 1500)
+                        }
+                    }
+                } catch (e: Exception) {}
+            }
+        }
+        volumeFadeHandler.postDelayed(volumeFadeRunnable!!, 1500)
+    }
+
     private fun startAlarmAudio(alarm: AlarmModel?) {
         try {
             mediaPlayer?.release()

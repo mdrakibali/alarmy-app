@@ -245,6 +245,23 @@ class AlarmModuleBridge {
     }
   }
 
+  async canDrawOverlays(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return true;
+    }
+    try {
+      return await AlarmModule.canDrawOverlays();
+    } catch {
+      return true;
+    }
+  }
+
+  openOverlaySettings(): void {
+    if (Platform.OS === 'android' && AlarmModule) {
+      AlarmModule.openOverlaySettings();
+    }
+  }
+
   async startShakeDetection(): Promise<boolean> {
     if (Platform.OS !== 'android' || !AlarmModule) {
       return false;

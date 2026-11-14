@@ -7,7 +7,6 @@ import {
   Switch,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
@@ -382,31 +381,26 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             {WALLPAPERS.slice(0, 12).map(w => {
               const isSelected = (draft.wallpaper || alarmBackground) === w.id;
               return (
-                <TouchableOpacity
+                <Pressable
                   key={w.id}
-                  activeOpacity={0.7}
+                  hitSlop={8}
                   onPress={() => {
                     patch({ wallpaper: w.id });
                     useThemeStore.getState().setBackground('alarm', w.id);
                   }}
                   className={`w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
-                      ? 'border-[#FF385C] shadow-md'
-                      : 'border-slate-200 bg-slate-100'
+                      ? 'border-[#FF385C] shadow-md scale-102'
+                      : 'border-slate-200 bg-slate-100 active:scale-98'
                   }`}
                 >
-                  <View pointerEvents="none" className="absolute inset-0 w-full h-full">
-                    <Image
-                      source={w.source}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
-                  </View>
+                  <Image
+                    source={w.source}
+                    className="absolute inset-0 w-full h-full"
+                    resizeMode="cover"
+                  />
                   {/* Selected Badge */}
-                  <View
-                    pointerEvents="none"
-                    className="w-full flex-row justify-end p-1.5 z-10"
-                  >
+                  <View className="w-full flex-row justify-end p-1.5 z-10">
                     {isSelected && (
                       <View className="h-5 w-5 rounded-full bg-[#FF385C] items-center justify-center shadow-sm">
                         <Text className="text-white text-[9px] font-black">✓</Text>
@@ -414,10 +408,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     )}
                   </View>
                   {/* Title Bar */}
-                  <View
-                    pointerEvents="none"
-                    className="w-full py-1.5 px-1 bg-black/60 backdrop-blur-sm z-10"
-                  >
+                  <View className="w-full py-1.5 px-1 bg-black/60 z-10">
                     <Text
                       className={`text-[10px] font-bold text-center ${
                         isSelected ? 'text-[#FF385C]' : 'text-white'
@@ -427,7 +418,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                       ♪ {w.name}
                     </Text>
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </ScrollView>

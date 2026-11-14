@@ -50,15 +50,15 @@ export function WallpaperPreviewModal({
 
   if (!wallpaper) return null;
 
-  const handleToggleAudio = async () => {
+  const handleToggleAudio = () => {
     if (!wallpaper.soundId) return;
 
     if (isPlayingAudio) {
-      await NativeAlarm.stopSoundPreview();
+      NativeAlarm.stopSoundPreview().catch(() => {});
       setIsPlayingAudio(false);
     } else {
       setIsPlayingAudio(true);
-      await NativeAlarm.previewSound(wallpaper.soundId);
+      NativeAlarm.previewSound(wallpaper.soundId).catch(() => {});
       // Reset after 4 seconds
       setTimeout(() => setIsPlayingAudio(false), 4500);
     }

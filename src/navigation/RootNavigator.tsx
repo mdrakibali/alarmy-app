@@ -17,6 +17,7 @@ import { MemoryMissionScreen } from '@/features/missions/MemoryMissionScreen';
 import { StepMissionScreen } from '@/features/missions/StepMissionScreen';
 import { MorningScreen } from '@/features/morning/MorningScreen';
 import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
+import { PermissionScreen } from '@/features/onboarding/PermissionScreen';
 import { SplashScreen } from '@/features/onboarding/SplashScreen';
 import { WelcomeWizardScreen } from '@/features/onboarding/WelcomeWizardScreen';
 import { ReportScreen } from '@/features/report/ReportScreen';
@@ -131,6 +132,11 @@ export function RootNavigator() {
       <Stack.Screen
         name="WelcomeWizard"
         component={WelcomeWizardScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Permission"
+        component={PermissionScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

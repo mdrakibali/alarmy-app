@@ -12,6 +12,13 @@ export type RootStackParamList = {
   Splash: undefined;
   Tabs: undefined;
   WelcomeWizard: undefined;
+  Permission: {
+    hour: number;
+    minute: number;
+    wallpaper: string;
+    soundId: string;
+    mission: MissionType;
+  };
   AlarmPreview: {
     hour: number;
     minute: number;
