@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -18,6 +17,8 @@ import { WALLPAPERS } from '@/data/wallpapers';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
+import { useToast } from '@/components/ui/AppToast';
+import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { useAlarmStore } from './alarmStore';
 import {
   MISSION_DETAILS,
@@ -35,6 +36,7 @@ const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export function AlarmEditScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const toast = useToast();
   const existingId = route.params?.id;
   const existing = useAlarmStore(s =>
     existingId ? s.alarms.find(a => a.id === existingId) : undefined,
@@ -50,11 +52,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [showSnoozePicker, setShowSnoozePicker] = useState(false);
   const [showSoundPicker, setShowSoundPicker] = useState(false);
   const [showMissionModal, setShowMissionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const currentWallpaper =
-    WALLPAPERS.find(w => w.id === alarmBackground) || WALLPAPERS[0];
+    WALLPAPERS.find(w => w.id === (draft.wallpaper || alarmBackground)) ||
+    WALLPAPERS[0];
 
   // Stop preview on unmount
   useEffect(() => {
@@ -130,25 +134,40 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     const next = { ...draft, label };
     if (existingId && existing) {
       updateAlarm(existingId, next);
+      toast.showToast({
+        title: 'Alarm Updated! ⏰',
+        message: `${label} scheduled for ${countdownText.toLowerCase()}`,
+        type: 'success',
+        icon: '⏰',
+      });
     } else {
       addAlarm(next);
+      toast.showToast({
+        title: 'Alarm Scheduled! ⏰',
+        message: `${label} set for ${countdownText.toLowerCase()}`,
+        type: 'success',
+        icon: '⏰',
+      });
     }
     navigation.goBack();
   };
 
   const confirmDelete = () => {
     if (!existingId) return;
-    Alert.alert('Delete alarm', 'This alarm will be removed from your device.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          removeAlarm(existingId);
-          navigation.goBack();
-        },
-      },
-    ]);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = () => {
+    if (!existingId) return;
+    removeAlarm(existingId);
+    setShowDeleteModal(false);
+    toast.showToast({
+      title: 'Alarm Deleted',
+      message: 'This alarm was removed from your schedule.',
+      icon: '🗑️',
+      type: 'info',
+    });
+    navigation.goBack();
   };
 
   const bottomInset = insets.bottom + 8;
@@ -184,6 +203,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
       <ScrollView
         className="flex-1"
+        nestedScrollEnabled={true}
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 12,
@@ -323,86 +343,92 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* Feature Badges Card */}
+        {/* Alarm Wallpaper Section (Directly Selectable Animated GIFs) */}
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm">
-          <View className="flex-row items-center justify-between py-2 border-b border-slate-100">
-            <View className="flex-row items-center">
-              <Text className="text-sm font-bold text-slate-800 mr-2">
-                Wake up check
+          <View className="flex-row items-center justify-between mb-3 px-1">
+            <View className="flex-1 pr-2">
+              <Text className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Alarm Wallpaper (Animated GIF)
               </Text>
-              <View className="rounded bg-rose-100 px-1.5 py-0.5">
-                <Text className="text-[9px] font-bold text-rose-600">HOT</Text>
-              </View>
-            </View>
-            <Text className="text-xs font-semibold text-slate-400">Off ›</Text>
-          </View>
-
-          <View className="flex-row items-center justify-between py-2.5">
-            <View className="flex-row items-center">
-              <Text className="text-sm font-bold text-slate-800 mr-2">
-                Prevent power-off
+              <Text className="text-sm font-black text-slate-800 mt-0.5" numberOfLines={1}>
+                {currentWallpaper.name} • {currentWallpaper.category}
               </Text>
-              <View className="rounded bg-slate-100 px-1.5 py-0.5">
-                <Text className="text-[9px] font-bold text-slate-500">BETA</Text>
-              </View>
             </View>
-            <Text className="text-xs font-semibold text-slate-400">Off ›</Text>
-          </View>
-        </View>
-
-        {/* Alarm Wallpaper Card (Animated GIF) */}
-        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm">
-          <View className="flex-row items-center justify-between mb-2 px-1">
-            <Text className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Alarm Wallpaper (GIF)
-            </Text>
             <Pressable
               onPress={() =>
                 navigation.navigate('WallpaperGallery', {
                   onSelect: (id: string) => {
+                    patch({ wallpaper: id });
                     useThemeStore.getState().setBackground('alarm', id);
                   },
                 })
               }
+              className="py-1 px-3 rounded-full bg-rose-50 border border-rose-100 active:bg-rose-100"
             >
               <Text className="text-xs font-bold text-[#FF385C]">
-                Change Wallpaper ›
+                Browse All (31+) ›
               </Text>
             </Pressable>
           </View>
 
-          <Pressable
-            onPress={() =>
-              navigation.navigate('WallpaperGallery', {
-                onSelect: (id: string) => {
-                  useThemeStore.getState().setBackground('alarm', id);
-                },
-              })
-            }
-            className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-2.5 border border-slate-100"
+          {/* Quick Horizontal Carousel of Wallpapers with Live Selection */}
+          <ScrollView
+            horizontal
+            nestedScrollEnabled={true}
+            showsHorizontalScrollIndicator={false}
+            className="-mx-4 px-4 py-1"
           >
-            <View className="flex-row items-center flex-1 mr-3">
-              <View className="h-14 w-11 rounded-xl overflow-hidden mr-3 bg-slate-200">
-                <Image
-                  source={currentWallpaper.source}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
-              </View>
-              <View className="flex-1">
-                <Text
-                  className="text-sm font-bold text-slate-800"
-                  numberOfLines={1}
+            {WALLPAPERS.map(w => {
+              const isSelected = (draft.wallpaper || alarmBackground) === w.id;
+              return (
+                <Pressable
+                  key={w.id}
+                  onPress={() => {
+                    patch({ wallpaper: w.id });
+                    useThemeStore.getState().setBackground('alarm', w.id);
+                  }}
+                  className={`mr-3 h-36 w-24 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
+                    isSelected
+                      ? 'border-[#FF385C] scale-102 shadow-md'
+                      : 'border-transparent bg-slate-100 active:scale-98'
+                  }`}
                 >
-                  {currentWallpaper.name}
-                </Text>
-                <Text className="text-[11px] text-slate-400 font-medium mt-0.5">
-                  Looping Animated GIF • {currentWallpaper.category}
-                </Text>
-              </View>
-            </View>
-            <Text className="text-xs font-bold text-slate-400 mr-1">›</Text>
-          </Pressable>
+                  <Image
+                    source={w.source}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    resizeMode="cover"
+                  />
+                  {/* Selected Badge */}
+                  <View className="w-full flex-row justify-end p-1.5 z-10">
+                    {isSelected && (
+                      <View className="h-5 w-5 rounded-full bg-[#FF385C] items-center justify-center shadow-sm">
+                        <Text className="text-white text-[9px] font-black">✓</Text>
+                      </View>
+                    )}
+                  </View>
+                  {/* Title Bar */}
+                  <View className="w-full py-1.5 px-1 bg-black/60 backdrop-blur-sm z-10">
+                    <Text
+                      className={`text-[10px] font-bold text-center ${
+                        isSelected ? 'text-[#FF385C]' : 'text-white'
+                      }`}
+                      numberOfLines={1}
+                    >
+                      ♪ {w.name}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* Alarm Sound Card */}
@@ -741,6 +767,19 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Custom Delete Confirmation Modal */}
+      <CustomConfirmModal
+        visible={showDeleteModal}
+        title="Delete this alarm?"
+        message="This alarm and all its scheduled wake-up missions will be permanently removed."
+        icon="🗑️"
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </View>
   );
 }

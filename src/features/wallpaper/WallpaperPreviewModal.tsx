@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -13,6 +12,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
 import type { WallpaperItem } from '@/data/wallpapers';
+import { useToast } from '@/components/ui/AppToast';
 
 interface Props {
   visible: boolean;
@@ -64,24 +64,27 @@ export function WallpaperPreviewModal({
     }
   };
 
+  const toast = useToast();
+
   const handleApplyTo = (target: 'all' | 'alarm' | 'ringing') => {
+    const targetLabel =
+      target === 'all'
+        ? 'all screens'
+        : target === 'alarm'
+        ? 'your alarm screen'
+        : 'the ringing alarm screen';
     setBackground(target, wallpaper.id);
     if (onApplyForAlarm) {
       onApplyForAlarm(wallpaper.id);
     }
     setShowApplySheet(false);
     onClose();
-    Alert.alert(
-      'Wallpaper Applied! ✨',
-      `"${wallpaper.name}" has been set for ${
-        target === 'all'
-          ? 'all screens'
-          : target === 'alarm'
-          ? 'your alarm screen'
-          : 'the ringing alarm screen'
-      }.`,
-      [{ text: 'OK' }],
-    );
+    toast.showToast({
+      title: 'Wallpaper Applied! ✨',
+      message: `"${wallpaper.name}" set for ${targetLabel}.`,
+      icon: '🖼️',
+      type: 'success',
+    });
   };
 
   return (

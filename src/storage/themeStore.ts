@@ -33,16 +33,16 @@ interface ThemeState {
 const STORAGE_KEY = 'alarmy_theme_settings';
 
 const defaultState = {
-  homeBackground: 'trending_dancing_cat',
-  alarmBackground: 'trending_dancing_cat',
-  ringingBackground: 'trending_dancing_cat',
-  sleepBackground: 'galaxy_nebula_swirl',
-  missionBackground: 'trending_dancing_cat',
+  homeBackground: 'kpop_wonhee',
+  alarmBackground: 'nature_mountain_view',
+  ringingBackground: 'galaxy_cosmic_portal',
+  sleepBackground: 'galaxy_starry_night',
+  missionBackground: 'motivation_fire_spirit',
   brightness: 1.0,
   overlayOpacity: 0.15,
   customImages: [],
-  favorites: ['trending_dancing_cat', 'kpop_stage', 'motivation_sunrise'],
-  recentlyViewed: ['trending_dancing_cat', 'kpop_stage'],
+  favorites: ['kpop_wonhee', 'nature_mountain_view', 'anime_girl_lofi'],
+  recentlyViewed: ['kpop_wonhee', 'nature_mountain_view'],
 };
 
 const loadState = () => {

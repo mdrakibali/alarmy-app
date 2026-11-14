@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
@@ -11,6 +11,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { storage } from '@/storage/mmkv';
 import { useThemeStore } from '@/storage/themeStore';
+import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AlarmPreview'>;
 
@@ -22,6 +23,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [mathSolved, setMathSolved] = useState(false);
   const [shakeCount, setShakeCount] = useState(10); // mini preview count
+  const [showActivatedModal, setShowActivatedModal] = useState(false);
 
   const { time, period } = formatTime(hour, minute);
 
@@ -48,6 +50,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       vibrate: true,
       snooze: { enabled: true, intervalMin: 5, maxCount: 3 },
       missions: [mission],
+      wallpaper,
     });
 
     // Apply chosen animated wallpaper to app theme
@@ -56,17 +59,12 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     // Mark welcome as completed
     storage.set('hasCompletedWelcome', true);
 
-    Alert.alert(
-      'Alarm Activated! 🎉',
-      `Your smart alarm is scheduled for ${time} ${period}. Alarmy will wake you up reliably!`,
-      [
-        {
-          text: "Let's Go!",
-          onPress: () =>
-            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] }),
-        },
-      ],
-    );
+    setShowActivatedModal(true);
+  };
+
+  const handleGoHome = () => {
+    setShowActivatedModal(false);
+    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
 
   const activeBg =
@@ -202,6 +200,17 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
           </Text>
         </Pressable>
       </View>
+
+      {/* Activated Modal */}
+      <CustomConfirmModal
+        visible={showActivatedModal}
+        title="Alarm Activated! 🎉"
+        message={`Your smart alarm is scheduled for ${time} ${period}. Alarmy will wake you up reliably!`}
+        icon="🚀"
+        confirmText="Let's Go!"
+        onConfirm={handleGoHome}
+        onCancel={handleGoHome}
+      />
     </View>
   );
 }

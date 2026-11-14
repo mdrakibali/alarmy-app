@@ -246,6 +246,7 @@ export function WallpaperGalleryScreen() {
         onApplyForAlarm={wallpaperId => {
           if (onSelectForAlarm) {
             onSelectForAlarm(wallpaperId);
+            navigation.goBack();
           }
         }}
       />

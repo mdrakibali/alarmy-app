@@ -19,6 +19,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { useToast } from '@/components/ui/AppToast';
 
 export function SettingsScreen() {
   const insets = useAppInsets();

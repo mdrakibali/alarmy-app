@@ -150,5 +150,6 @@ export function blankAlarm(): Omit<Alarm, 'id'> {
     vibrate: true,
     snooze: { enabled: true, intervalMin: 5, maxCount: 3 },
     missions: ['shake'],
+    wallpaper: 'nature_mountain_view',
   };
 }

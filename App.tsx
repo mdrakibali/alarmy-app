@@ -20,6 +20,7 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import type { RootStackParamList } from '@/navigation/types';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
+import { ToastProvider } from '@/components/ui/AppToast';
 
 function App() {
   const navigationRef =
@@ -74,23 +75,25 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StatusBar barStyle="dark-content" />
-        <NavigationContainer
-          ref={navigationRef}
-          theme={{
-            ...DefaultTheme,
-            colors: {
-              ...DefaultTheme.colors,
-              background: '#F5F6F8',
-              card: '#FFFFFF',
-              primary: '#FF385C',
-              text: '#0F172A',
-              border: '#F1F5F9',
-            },
-          }}
-        >
-          <RootNavigator />
-        </NavigationContainer>
+        <ToastProvider>
+          <StatusBar barStyle="dark-content" />
+          <NavigationContainer
+            ref={navigationRef}
+            theme={{
+              ...DefaultTheme,
+              colors: {
+                ...DefaultTheme.colors,
+                background: '#F5F6F8',
+                card: '#FFFFFF',
+                primary: '#FF385C',
+                text: '#0F172A',
+                border: '#F1F5F9',
+              },
+            }}
+          >
+            <RootNavigator />
+          </NavigationContainer>
+        </ToastProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
