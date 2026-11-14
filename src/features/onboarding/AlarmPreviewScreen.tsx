@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, Pressable, StatusBar, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
@@ -129,10 +129,11 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
 
   return (
     <View className="flex-1 relative bg-slate-900">
+      <StatusBar barStyle="light-content" />
       {/* 100% Edge-to-Edge Animated GIF Background (zero padding on root container) */}
       <Image
         source={activeBg.source}
-        className="absolute inset-0 w-full h-full opacity-85"
+        className="absolute inset-0 w-full h-full opacity-90"
         resizeMode="cover"
       />
       <View

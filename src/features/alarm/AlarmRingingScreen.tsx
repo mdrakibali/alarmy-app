@@ -86,6 +86,18 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         navigation.navigate('BarcodeMission', { alarmId: id, missionIndex: 0, missions });
         return;
       }
+      if (firstMission === 'typing') {
+        navigation.navigate('TypingMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
+      if (firstMission === 'memory') {
+        navigation.navigate('MemoryMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
+      if (firstMission === 'step') {
+        navigation.navigate('StepMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
     }
 
     // No mission: direct dismiss

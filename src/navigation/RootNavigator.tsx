@@ -12,6 +12,9 @@ import { SnoozeCountdownScreen } from '@/features/alarm/SnoozeCountdownScreen';
 import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
 import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
 import { BarcodeMissionScreen } from '@/features/missions/BarcodeMissionScreen';
+import { TypingMissionScreen } from '@/features/missions/TypingMissionScreen';
+import { MemoryMissionScreen } from '@/features/missions/MemoryMissionScreen';
+import { StepMissionScreen } from '@/features/missions/StepMissionScreen';
 import { MorningScreen } from '@/features/morning/MorningScreen';
 import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
 import { SplashScreen } from '@/features/onboarding/SplashScreen';
@@ -184,6 +187,30 @@ export function RootNavigator() {
       <Stack.Screen
         name="BarcodeMission"
         component={BarcodeMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="TypingMission"
+        component={TypingMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="MemoryMission"
+        component={MemoryMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="StepMission"
+        component={StepMissionScreen}
         options={{
           headerShown: false,
           gestureEnabled: false,

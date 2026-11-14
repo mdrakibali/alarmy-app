@@ -116,15 +116,15 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     patch({ missions: nextMissions });
   };
 
-  const toggleSoundPreview = async (soundId?: string) => {
+  const toggleSoundPreview = (soundId?: string, forcePlay = false) => {
     const targetId = soundId || draft.soundId;
-    if (isPlayingSound) {
-      await NativeAlarm.stopSoundPreview();
+    if (isPlayingSound && !forcePlay) {
+      NativeAlarm.stopSoundPreview().catch(() => {});
       setIsPlayingSound(false);
     } else {
       setIsPlayingSound(true);
-      await NativeAlarm.previewSound(targetId);
-      // Auto reset playing state after 3 seconds
+      NativeAlarm.previewSound(targetId).catch(() => {});
+      // Auto reset playing state after 3.5 seconds
       setTimeout(() => setIsPlayingSound(false), 3500);
     }
   };
@@ -480,7 +480,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   onPress={() => {
                     patch({ soundId: opt.id });
                     setShowSoundPicker(false);
-                    toggleSoundPreview(opt.id);
+                    toggleSoundPreview(opt.id, true);
                   }}
                   className={`flex-row items-center justify-between py-2.5 px-3 rounded-xl mb-1 ${
                     draft.soundId === opt.id ? 'bg-[#E0F2FE]' : 'active:bg-slate-50'

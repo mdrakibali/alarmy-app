@@ -58,17 +58,13 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     };
   }, []);
 
-  const handleSoundSelect = async (soundId: string) => {
+  const handleSoundSelect = (soundId: string) => {
     setSelectedSound(soundId);
-    await NativeAlarm.previewSound(soundId);
+    NativeAlarm.previewSound(soundId).catch(() => {});
   };
 
   const handleNext = () => {
-    try {
-      NativeAlarm.stopSoundPreview();
-    } catch {
-      // ignore preview errors
-    }
+    NativeAlarm.stopSoundPreview().catch(() => {});
     if (step < 4) {
       setStep(prev => ((prev + 1) as 1 | 2 | 3 | 4));
     } else {
@@ -351,13 +347,13 @@ export function WelcomeWizardScreen({ navigation }: Props) {
 
       {/* Bottom Button with Safe Area */}
       <View
-        style={{ paddingBottom: Math.max(insets.bottom + 12, 32) }}
+        style={{ paddingBottom: Math.max(insets.bottom + 14, 28) }}
         className="bg-white border-t border-slate-100 shadow-md px-5 pt-3 z-50"
       >
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleNext}
-          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-md active:bg-[#E03150]"
+          className="w-full bg-[#FF385C] py-3.5 rounded-2xl items-center shadow-md active:bg-[#E03150]"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Preview Alarm 🚀' : 'Next'}

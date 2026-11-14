@@ -25,5 +25,8 @@ export type RootStackParamList = {
   MathMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   ShakeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  StepMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   WallpaperGallery: { onSelect?: (wallpaperId: string) => void } | undefined;
 };

@@ -74,6 +74,30 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
         });
         return;
       }
+      if (nextMissionKey === 'typing') {
+        navigation.replace('TypingMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'memory') {
+        navigation.replace('MemoryMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'step') {
+        navigation.replace('StepMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
     }
 
     await NativeAlarm.stopAlarm();
