@@ -1,18 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   Switch,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
+import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAlarmStore } from './alarmStore';
 import {
+  MISSION_DETAILS,
   SNOOZE_COUNTS,
   SNOOZE_INTERVALS,
   SOUND_OPTIONS,
@@ -26,6 +31,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AlarmEdit'>;
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export function AlarmEditScreen({ navigation, route }: Props) {
+  const insets = useAppInsets();
   const existingId = route.params?.id;
   const existing = useAlarmStore(s =>
     existingId ? s.alarms.find(a => a.id === existingId) : undefined,
@@ -40,6 +46,15 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
   const [showSnoozePicker, setShowSnoozePicker] = useState(false);
   const [showSoundPicker, setShowSoundPicker] = useState(false);
+  const [showMissionModal, setShowMissionModal] = useState(false);
+  const [isPlayingSound, setIsPlayingSound] = useState(false);
+
+  // Stop preview on unmount
+  useEffect(() => {
+    return () => {
+      NativeAlarm.stopSoundPreview();
+    };
+  }, []);
 
   const patch = (next: Partial<Omit<Alarm, 'id'>>) =>
     setDraft(current => ({ ...current, ...next }));
@@ -77,16 +92,33 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     });
   };
 
-  const toggleMission = (mission: MissionType) => {
-    const has = draft.missions.includes(mission);
-    patch({
-      missions: has
-        ? draft.missions.filter(m => m !== mission)
-        : [...draft.missions, mission],
-    });
+  const addMission = (mission: MissionType) => {
+    if (!draft.missions.includes(mission) && draft.missions.length < 5) {
+      patch({ missions: [...draft.missions, mission] });
+    }
+    setShowMissionModal(false);
+  };
+
+  const removeMission = (index: number) => {
+    const nextMissions = draft.missions.filter((_, i) => i !== index);
+    patch({ missions: nextMissions });
+  };
+
+  const toggleSoundPreview = async (soundId?: string) => {
+    const targetId = soundId || draft.soundId;
+    if (isPlayingSound) {
+      await NativeAlarm.stopSoundPreview();
+      setIsPlayingSound(false);
+    } else {
+      setIsPlayingSound(true);
+      await NativeAlarm.previewSound(targetId);
+      // Auto reset playing state after 3 seconds
+      setTimeout(() => setIsPlayingSound(false), 3500);
+    }
   };
 
   const save = () => {
+    NativeAlarm.stopSoundPreview();
     const label = draft.label.trim() || 'Wake up early';
     const next = { ...draft, label };
     if (existingId && existing) {
@@ -112,12 +144,20 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     ]);
   };
 
+  const bottomInset = insets.bottom + 8;
+
   return (
     <View className="flex-1 bg-[#F5F6F8]">
-      {/* Top Navigation Bar */}
-      <View className="flex-row items-center justify-between px-5 pt-3 pb-2 bg-white border-b border-slate-100">
+      {/* Top Navigation Bar with Safe Area */}
+      <View
+        style={{ paddingTop: Math.max(insets.top, 12) }}
+        className="flex-row items-center justify-between px-5 pb-3 bg-white border-b border-slate-100"
+      >
         <Pressable
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            NativeAlarm.stopSoundPreview();
+            navigation.goBack();
+          }}
           hitSlop={10}
           className="p-1"
         >
@@ -137,7 +177,11 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-28 pt-3"
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: 110 + bottomInset,
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -159,7 +203,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           {countdownText}
         </Text>
 
-        {/* Custom Wheel / Drum Time Picker (NO system dialog!) */}
+        {/* Custom Wheel / Drum Time Picker */}
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm items-center">
           <WheelTimePicker
             hour={draft.hour}
@@ -229,112 +273,46 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          {/* Slots */}
+          {/* 5 Slots */}
           <View className="flex-row justify-between">
-            {/* Slot 1: Math */}
-            <Pressable
-              onPress={() => toggleMission('math')}
-              className={`h-14 w-14 items-center justify-center rounded-2xl border ${
-                draft.missions.includes('math')
-                  ? 'bg-amber-50 border-amber-300'
-                  : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {draft.missions.includes('math') ? (
-                <View className="items-center">
-                  <Text className="text-lg">🧠</Text>
-                  <Text className="text-[10px] font-bold text-amber-800">
-                    Math
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-lg text-slate-400">+</Text>
-              )}
-            </Pressable>
+            {Array.from({ length: 5 }).map((_, slotIndex) => {
+              const missionKey = draft.missions[slotIndex];
+              const details = missionKey ? MISSION_DETAILS[missionKey] : null;
 
-            {/* Slot 2: Shake */}
-            <Pressable
-              onPress={() => toggleMission('shake')}
-              className={`h-14 w-14 items-center justify-center rounded-2xl border ${
-                draft.missions.includes('shake')
-                  ? 'bg-sky-50 border-sky-300'
-                  : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {draft.missions.includes('shake') ? (
-                <View className="items-center">
-                  <Text className="text-lg">📱</Text>
-                  <Text className="text-[10px] font-bold text-sky-800">
-                    Shake
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-lg text-slate-400">+</Text>
-              )}
-            </Pressable>
+              if (details) {
+                return (
+                  <Pressable
+                    key={slotIndex}
+                    onPress={() => removeMission(slotIndex)}
+                    className="h-14 w-14 items-center justify-center rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] relative shadow-sm"
+                  >
+                    <Text className="text-xl">{details.icon}</Text>
+                    <Text
+                      className="text-[9px] font-bold text-[#0284C7] mt-0.5"
+                      numberOfLines={1}
+                    >
+                      {details.title.split(' ')[0]}
+                    </Text>
+                    {/* Small remove badge */}
+                    <View className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 items-center justify-center">
+                      <Text className="text-white text-[9px] font-black leading-none">
+                        ✕
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              }
 
-            {/* Slot 3: QR */}
-            <Pressable
-              onPress={() => toggleMission('qr')}
-              className={`h-14 w-14 items-center justify-center rounded-2xl border ${
-                draft.missions.includes('qr')
-                  ? 'bg-purple-50 border-purple-300'
-                  : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {draft.missions.includes('qr') ? (
-                <View className="items-center">
-                  <Text className="text-lg">📷</Text>
-                  <Text className="text-[10px] font-bold text-purple-800">
-                    QR
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-lg text-slate-400">+</Text>
-              )}
-            </Pressable>
-
-            {/* Slot 4: Memory */}
-            <Pressable
-              onPress={() => toggleMission('memory')}
-              className={`h-14 w-14 items-center justify-center rounded-2xl border ${
-                draft.missions.includes('memory')
-                  ? 'bg-emerald-50 border-emerald-300'
-                  : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {draft.missions.includes('memory') ? (
-                <View className="items-center">
-                  <Text className="text-lg">🧩</Text>
-                  <Text className="text-[10px] font-bold text-emerald-800">
-                    Memory
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-lg text-slate-400">+</Text>
-              )}
-            </Pressable>
-
-            {/* Slot 5: Typing */}
-            <Pressable
-              onPress={() => toggleMission('typing')}
-              className={`h-14 w-14 items-center justify-center rounded-2xl border ${
-                draft.missions.includes('typing')
-                  ? 'bg-rose-50 border-rose-300'
-                  : 'bg-slate-50 border-slate-200'
-              }`}
-            >
-              {draft.missions.includes('typing') ? (
-                <View className="items-center">
-                  <Text className="text-lg">⌨️</Text>
-                  <Text className="text-[10px] font-bold text-rose-800">
-                    Typing
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-lg text-slate-400">+</Text>
-              )}
-            </Pressable>
+              return (
+                <Pressable
+                  key={slotIndex}
+                  onPress={() => setShowMissionModal(true)}
+                  className="h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-dashed border-slate-300 active:bg-slate-100"
+                >
+                  <Text className="text-xl font-light text-slate-400">+</Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -371,22 +349,37 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             Alarm sound
           </Text>
 
-          {/* Sound selection row */}
-          <Pressable
-            onPress={() => setShowSoundPicker(prev => !prev)}
-            className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-3 mb-3 border border-slate-100"
-          >
-            <View className="flex-row items-center">
-              <View className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-3">
-                <Text className="text-xs">▶</Text>
-              </View>
-              <Text className="text-sm font-bold text-slate-800">
-                {SOUND_OPTIONS.find(s => s.id === draft.soundId)?.label ||
-                  'Default Alarm'}
+          {/* Sound selection row with Audio Preview */}
+          <View className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-3 mb-3 border border-slate-100">
+            <Pressable
+              onPress={() => toggleSoundPreview()}
+              className={`h-9 w-9 rounded-full items-center justify-center mr-3 active:scale-95 ${
+                isPlayingSound ? 'bg-[#FF385C]' : 'bg-[#38BDF8]'
+              }`}
+            >
+              <Text className="text-white text-xs font-black">
+                {isPlayingSound ? '■' : '▶'}
               </Text>
-            </View>
-            <Text className="text-xs font-bold text-slate-400">›</Text>
-          </Pressable>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setShowSoundPicker(prev => !prev)}
+              className="flex-1 flex-row items-center justify-between"
+            >
+              <View>
+                <Text className="text-sm font-bold text-slate-800">
+                  {SOUND_OPTIONS.find(s => s.id === draft.soundId)?.label ||
+                    'Default Alarm'}
+                </Text>
+                <Text className="text-[11px] text-slate-400 font-medium">
+                  {isPlayingSound ? 'Playing audio preview...' : 'Tap ▶ to test sound'}
+                </Text>
+              </View>
+              <Text className="text-xs font-bold text-slate-400">
+                {showSoundPicker ? '▲' : '▼'}
+              </Text>
+            </Pressable>
+          </View>
 
           {/* Sound options expansion */}
           {showSoundPicker && (
@@ -397,20 +390,24 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   onPress={() => {
                     patch({ soundId: opt.id });
                     setShowSoundPicker(false);
+                    toggleSoundPreview(opt.id);
                   }}
                   className={`flex-row items-center justify-between py-2.5 px-3 rounded-xl mb-1 ${
-                    draft.soundId === opt.id ? 'bg-[#E0F2FE]' : ''
+                    draft.soundId === opt.id ? 'bg-[#E0F2FE]' : 'active:bg-slate-50'
                   }`}
                 >
-                  <Text
-                    className={`text-sm ${
-                      draft.soundId === opt.id
-                        ? 'font-bold text-[#0284C7]'
-                        : 'font-medium text-slate-700'
-                    }`}
-                  >
-                    {opt.label}
-                  </Text>
+                  <View className="flex-row items-center">
+                    <Text className="text-lg mr-2.5">{opt.icon}</Text>
+                    <Text
+                      className={`text-sm ${
+                        draft.soundId === opt.id
+                          ? 'font-bold text-[#0284C7]'
+                          : 'font-medium text-slate-700'
+                      }`}
+                    >
+                      {opt.label}
+                    </Text>
+                  </View>
                   {draft.soundId === opt.id && (
                     <Text className="text-[#0284C7] font-bold text-xs">✓</Text>
                   )}
@@ -568,8 +565,19 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Save Button */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white/95 px-5 py-4 border-t border-slate-100">
+      {/* Fixed Bottom Save Button with Safe Area Inset */}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingBottom: bottomInset,
+          paddingHorizontal: 20,
+          paddingTop: 12,
+        }}
+        className="bg-white/95 border-t border-slate-100 shadow-lg"
+      >
         <Pressable
           onPress={save}
           className="w-full bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-sm"
@@ -579,6 +587,100 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           </Text>
         </Pressable>
       </View>
+
+      {/* Wake-up Mission Selection Modal */}
+      <Modal
+        visible={showMissionModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMissionModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowMissionModal(false)}>
+          <View className="flex-1 bg-black/40 justify-end">
+            <TouchableWithoutFeedback>
+              <View
+                style={{
+                  maxHeight: '80%',
+                  paddingBottom: Math.max(insets.bottom, 24),
+                }}
+                className="bg-white rounded-t-3xl p-5 shadow-2xl"
+              >
+                {/* Header */}
+                <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
+                  <View>
+                    <Text className="text-lg font-extrabold text-slate-900">
+                      Choose Wake-up Mission
+                    </Text>
+                    <Text className="text-xs text-slate-400 mt-0.5">
+                      Select a task you must complete to turn off the alarm
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => setShowMissionModal(false)}
+                    className="p-1"
+                  >
+                    <Text className="text-base font-bold text-slate-400">✕</Text>
+                  </Pressable>
+                </View>
+
+                {/* Mission List */}
+                <ScrollView className="mt-3" showsVerticalScrollIndicator={false}>
+                  {(Object.keys(MISSION_DETAILS) as MissionType[]).map(
+                    missionKey => {
+                      const item = MISSION_DETAILS[missionKey];
+                      const isAdded = draft.missions.includes(missionKey);
+
+                      return (
+                        <Pressable
+                          key={missionKey}
+                          onPress={() => addMission(missionKey)}
+                          className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
+                            isAdded
+                              ? 'bg-slate-50 border-slate-200'
+                              : 'bg-white border-slate-100 shadow-sm active:bg-[#E0F2FE]'
+                          }`}
+                        >
+                          <View className="flex-row items-center flex-1 pr-3">
+                            <Text className="text-3xl mr-3">{item.icon}</Text>
+                            <View className="flex-1">
+                              <View className="flex-row items-center mb-0.5">
+                                <Text className="text-base font-bold text-slate-900 mr-2">
+                                  {item.title}
+                                </Text>
+                                <View className="rounded bg-rose-50 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-black text-rose-500">
+                                    {item.badge}
+                                  </Text>
+                                </View>
+                              </View>
+                              <Text className="text-xs text-slate-500 font-medium leading-tight">
+                                {item.desc}
+                              </Text>
+                            </View>
+                          </View>
+                          <View
+                            className={`px-3 py-1.5 rounded-full ${
+                              isAdded ? 'bg-slate-200' : 'bg-[#FF385C]'
+                            }`}
+                          >
+                            <Text
+                              className={`text-xs font-bold ${
+                                isAdded ? 'text-slate-500' : 'text-white'
+                              }`}
+                            >
+                              {isAdded ? 'Added' : 'Select'}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    },
+                  )}
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }

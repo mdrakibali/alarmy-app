@@ -7,7 +7,10 @@ import {
   StatusBar,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
 import {
   DefaultTheme,
   NavigationContainer,
@@ -70,7 +73,7 @@ function App() {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <StatusBar barStyle="dark-content" />
         <NavigationContainer
           ref={navigationRef}

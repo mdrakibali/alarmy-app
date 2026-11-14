@@ -13,11 +13,73 @@ export const MISSION_LABEL: Record<MissionType, string> = {
   step: 'Steps',
 };
 
+export const MISSION_DETAILS: Record<
+  MissionType,
+  { title: string; desc: string; icon: string; badge: string }
+> = {
+  math: {
+    title: 'Math Mission',
+    desc: 'Solve simple to complex math problems to wake your brain up',
+    icon: '🧠',
+    badge: 'POPULAR',
+  },
+  shake: {
+    title: 'Shake Mission',
+    desc: 'Shake your phone up to 50 times to get your blood flowing',
+    icon: '📱',
+    badge: 'ACTIVE',
+  },
+  qr: {
+    title: 'QR / Barcode',
+    desc: 'Leave bed and scan a barcode (e.g. toothpaste in bathroom)',
+    icon: '📷',
+    badge: 'UNBEATABLE',
+  },
+  memory: {
+    title: 'Memory Game',
+    desc: 'Flip and match card pairs to build morning focus',
+    icon: '🧩',
+    badge: 'BRAIN',
+  },
+  typing: {
+    title: 'Typing Mission',
+    desc: 'Type motivational affirmations accurately',
+    icon: '⌨️',
+    badge: 'EASY',
+  },
+  photo: {
+    title: 'Photo Mission',
+    desc: 'Take a photo of a registered place or object in your room',
+    icon: '📸',
+    badge: 'HARD',
+  },
+  squat: {
+    title: 'Squat Mission',
+    desc: 'Perform 10 morning squats to wake up your body',
+    icon: '🏋️',
+    badge: 'FITNESS',
+  },
+  step: {
+    title: 'Step Mission',
+    desc: 'Walk 30 steps away from bed',
+    icon: '🚶',
+    badge: 'ACTIVE',
+  },
+};
+
 export const SOUND_OPTIONS = [
-  { id: 'default', label: 'Default' },
-  { id: 'rooster', label: 'Rooster' },
-  { id: 'beep', label: 'Beep' },
-  { id: 'gentle', label: 'Gentle' },
+  { id: 'alarm_classic', label: 'Classic Alarm', icon: '⏰' },
+  { id: 'alarm_digital', label: 'Digital Watch', icon: '⌚' },
+  { id: 'alarm_siren', label: 'Loud Siren', icon: '🚨' },
+  { id: 'alarm_emergency', label: 'Emergency Warning', icon: '⚡' },
+  { id: 'alarm_bell', label: 'Brass Bell', icon: '🔔' },
+  { id: 'alarm_rooster', label: 'Rooster Crow', icon: '🐓' },
+  { id: 'alarm_birds', label: 'Forest Birds', icon: '🐦' },
+  { id: 'alarm_gentle', label: 'Gentle Morning', icon: '🍃' },
+  { id: 'alarm_piano', label: 'Warm Piano', icon: '🎹' },
+  { id: 'alarm_electronic', label: 'Electronic Beat', icon: '🎵' },
+  { id: 'cats', label: 'Dancing Cat (Video Sound)', icon: '🐱' },
+  { id: 'illit', label: "[ILLIT] You're Under Arrest", icon: '✨' },
 ] as const;
 
 export const SNOOZE_INTERVALS = [3, 5, 10, 15, 30];
@@ -57,13 +119,13 @@ export function blankAlarm(): Omit<Alarm, 'id'> {
   return {
     hour: 7,
     minute: 0,
-    label: 'Alarm',
+    label: 'Wake up early',
     repeatDays: [1, 2, 3, 4, 5],
     enabled: true,
-    soundId: 'default',
+    soundId: 'alarm_rooster',
     volume: 1,
     vibrate: true,
     snooze: { enabled: true, intervalMin: 5, maxCount: 3 },
-    missions: [],
+    missions: ['shake'],
   };
 }

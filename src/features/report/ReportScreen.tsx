@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/Screen';
+import { useAppInsets } from '@/utils/safeArea';
 
 const DAYS = [
   { day: 'Mon', onTime: true, height: '80%' },
@@ -13,11 +14,17 @@ const DAYS = [
 ];
 
 export function ReportScreen() {
+  const insets = useAppInsets();
+
   return (
     <Screen padded={false}>
       <ScrollView
         className="flex-1 bg-[#F5F6F8]"
-        contentContainerClassName="px-5 pb-12 pt-3"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: insets.top + 10,
+          paddingBottom: 120 + insets.bottom,
+        }}
       >
         <Text className="text-3xl font-extrabold text-slate-900">Report</Text>
         <Text className="text-sm text-slate-500 mt-1">

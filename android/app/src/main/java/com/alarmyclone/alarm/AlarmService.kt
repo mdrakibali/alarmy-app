@@ -135,6 +135,9 @@ class AlarmService : Service() {
         val notification = notificationBuilder.build()
         startForeground(NOTIFICATION_ID, notification)
 
+        // Stop any background sleep music immediately so alarm has exclusive audio
+        SleepMusicManager.stop()
+
         // Play sound and vibration
         startAlarmAudio(alarm)
         if (alarm?.vibrate != false) {
@@ -152,7 +155,22 @@ class AlarmService : Service() {
             mediaPlayer?.release()
             mediaPlayer = null
 
-            var soundUri: Uri? = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            var soundUri: Uri? = null
+
+            // 1. Check if alarm.soundId maps to bundled raw sound resource
+            val soundId = alarm?.soundId
+            if (!soundId.isNullOrEmpty()) {
+                val cleanId = soundId.lowercase().replace("-", "_")
+                val resId = resources.getIdentifier(cleanId, "raw", packageName)
+                if (resId != 0) {
+                    soundUri = Uri.parse("android.resource://$packageName/$resId")
+                }
+            }
+
+            // 2. Fallback to system ringtone manager if not found
+            if (soundUri == null) {
+                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            }
             if (soundUri == null) {
                 soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             }
@@ -174,7 +192,7 @@ class AlarmService : Service() {
                 prepare()
                 start()
             }
-            Log.d(TAG, "Audio started playing successfully")
+            Log.d(TAG, "Audio started playing successfully with URI: $soundUri")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to play alarm audio", e)
         }

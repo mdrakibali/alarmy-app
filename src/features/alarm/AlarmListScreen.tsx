@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAppInsets } from '@/utils/safeArea';
 import { Screen } from '@/components/ui/Screen';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAlarmStore } from './alarmStore';
@@ -20,6 +21,7 @@ import type { Alarm } from './types';
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export function AlarmListScreen() {
+  const insets = useAppInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const alarms = useAlarmStore(s => s.alarms);
@@ -115,7 +117,11 @@ export function AlarmListScreen() {
         <FlatList
           data={sorted}
           keyExtractor={item => item.id}
-          contentContainerClassName="px-4 pb-24 pt-1"
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 4,
+            paddingBottom: 160 + insets.bottom,
+          }}
           ListEmptyComponent={
             <EmptyState onAdd={() => navigation.navigate('AlarmEdit')} />
           }
@@ -129,7 +135,13 @@ export function AlarmListScreen() {
         />
 
         {/* Floating Action Button (FAB) */}
-        <View className="absolute bottom-6 right-6">
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 76 + insets.bottom,
+            right: 20,
+          }}
+        >
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
@@ -159,7 +171,13 @@ export function AlarmListScreen() {
           <TouchableWithoutFeedback onPress={() => setFabMenuOpen(false)}>
             <View className="flex-1 bg-black/25 justify-end">
               <TouchableWithoutFeedback>
-                <View className="mb-24 mr-6 self-end items-end">
+                <View
+                  style={{
+                    marginBottom: 76 + insets.bottom,
+                    marginRight: 20,
+                  }}
+                  className="self-end items-end"
+                >
                   {/* Habit Alarm */}
                   <Pressable
                     onPress={() => {

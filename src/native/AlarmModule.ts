@@ -16,6 +16,15 @@ export interface RingingAlarmInfo {
   missions: string[];
 }
 
+export interface SleepMusicStatus {
+  isPlaying: boolean;
+  currentSoundId: string | null;
+  volume: number;
+  remainingSeconds: number;
+  durationMs: number;
+  positionMs: number;
+}
+
 class AlarmModuleBridge {
   private emitter: NativeEventEmitter | null = null;
 
@@ -98,6 +107,118 @@ class AlarmModuleBridge {
   openExactAlarmSettings(): void {
     if (Platform.OS === 'android' && AlarmModule) {
       AlarmModule.openExactAlarmSettings();
+    }
+  }
+
+  async previewSound(soundId: string = 'default'): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.previewSound(soundId);
+    } catch {
+      return false;
+    }
+  }
+
+  async stopSoundPreview(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.stopSoundPreview();
+    } catch {
+      return false;
+    }
+  }
+
+  // ==================== SLEEP MUSIC METHODS ====================
+
+  async playSleepMusic(
+    soundId: string,
+    volume: number = 0.8,
+    loop: boolean = true,
+    timerMinutes: number = 0,
+  ): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.playSleepMusic(
+        soundId,
+        volume,
+        loop,
+        timerMinutes,
+      );
+    } catch (e) {
+      console.warn('NativeAlarm playSleepMusic failed:', e);
+      return false;
+    }
+  }
+
+  async pauseSleepMusic(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.pauseSleepMusic();
+    } catch {
+      return false;
+    }
+  }
+
+  async resumeSleepMusic(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.resumeSleepMusic();
+    } catch {
+      return false;
+    }
+  }
+
+  async stopSleepMusic(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.stopSleepMusic();
+    } catch {
+      return false;
+    }
+  }
+
+  async setSleepMusicVolume(volume: number): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.setSleepMusicVolume(volume);
+    } catch {
+      return false;
+    }
+  }
+
+  async seekSleepMusic(positionMs: number): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.seekSleepMusic(positionMs);
+    } catch {
+      return false;
+    }
+  }
+
+  async getSleepMusicStatus(): Promise<SleepMusicStatus | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return null;
+    }
+    try {
+      return await AlarmModule.getSleepMusicStatus();
+    } catch {
+      return null;
     }
   }
 

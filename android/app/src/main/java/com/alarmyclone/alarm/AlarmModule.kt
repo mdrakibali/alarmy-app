@@ -2,6 +2,9 @@ package com.alarmyclone.alarm
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -16,6 +19,8 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class AlarmModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
+
+    private var previewPlayer: MediaPlayer? = null
 
     companion object {
         const val NAME = "AlarmModule"
@@ -207,6 +212,158 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 }
                 reactContext.startActivity(fallbackIntent)
             }
+        }
+    }
+
+    @ReactMethod
+    fun previewSound(soundId: String, promise: Promise) {
+        try {
+            stopSoundPreviewInternal()
+            var soundUri: Uri? = null
+
+            // 1. Try bundled raw sound resource
+            if (soundId.isNotEmpty()) {
+                val cleanId = soundId.lowercase().replace("-", "_")
+                val resId = reactContext.resources.getIdentifier(cleanId, "raw", reactContext.packageName)
+                if (resId != 0) {
+                    soundUri = Uri.parse("android.resource://${reactContext.packageName}/$resId")
+                }
+            }
+
+            // 2. Fallback to system ringtones
+            if (soundUri == null) {
+                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            }
+            if (soundUri == null) {
+                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            }
+            if (soundUri == null) {
+                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            }
+
+            previewPlayer = MediaPlayer().apply {
+                setDataSource(reactContext, soundUri!!)
+                val audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+                setAudioAttributes(audioAttributes)
+                isLooping = false
+                prepare()
+                start()
+                setOnCompletionListener {
+                    try {
+                        it.release()
+                    } catch (e: Exception) {}
+                    previewPlayer = null
+                }
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("PREVIEW_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun stopSoundPreview(promise: Promise) {
+        try {
+            stopSoundPreviewInternal()
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("STOP_PREVIEW_ERROR", e.message, e)
+        }
+    }
+
+    private fun stopSoundPreviewInternal() {
+        try {
+            previewPlayer?.stop()
+            previewPlayer?.release()
+        } catch (e: Exception) {}
+        previewPlayer = null
+    }
+
+    // ==================== SLEEP MUSIC METHODS ====================
+
+    @ReactMethod
+    fun playSleepMusic(soundId: String, volume: Double, loop: Boolean, timerMinutes: Int, promise: Promise) {
+        try {
+            val success = SleepMusicManager.play(
+                context = reactContext,
+                soundId = soundId,
+                volume = volume.toFloat(),
+                loop = loop,
+                timerMinutes = timerMinutes
+            )
+            promise.resolve(success)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_PLAY_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun pauseSleepMusic(promise: Promise) {
+        try {
+            SleepMusicManager.pause()
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_PAUSE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun resumeSleepMusic(promise: Promise) {
+        try {
+            val res = SleepMusicManager.resume()
+            promise.resolve(res)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_RESUME_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun stopSleepMusic(promise: Promise) {
+        try {
+            SleepMusicManager.stop()
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_STOP_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun setSleepMusicVolume(volume: Double, promise: Promise) {
+        try {
+            SleepMusicManager.setVolume(volume.toFloat())
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_VOL_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun seekSleepMusic(positionMs: Int, promise: Promise) {
+        try {
+            SleepMusicManager.seekTo(positionMs)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_SEEK_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun getSleepMusicStatus(promise: Promise) {
+        try {
+            val map = Arguments.createMap().apply {
+                putBoolean("isPlaying", SleepMusicManager.isPlaying)
+                putString("currentSoundId", SleepMusicManager.currentSoundId)
+                putDouble("volume", SleepMusicManager.currentVolume.toDouble())
+                putInt("remainingSeconds", SleepMusicManager.timerRemainingSeconds)
+                putInt("durationMs", SleepMusicManager.getDuration())
+                putInt("positionMs", SleepMusicManager.getCurrentPosition())
+            }
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("SLEEP_STATUS_ERROR", e.message, e)
         }
     }
 
