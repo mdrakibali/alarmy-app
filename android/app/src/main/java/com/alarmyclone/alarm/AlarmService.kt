@@ -247,7 +247,9 @@ class AlarmService : Service() {
 
             // 1. Check if alarm.soundId maps to bundled raw sound resource
             val soundId = alarm?.soundId
-            if (!soundId.isNullOrEmpty()) {
+            if (!soundId.isNullOrEmpty() && (soundId.startsWith("file://") || soundId.startsWith("content://"))) {
+                soundUri = Uri.parse(soundId)
+            } else if (!soundId.isNullOrEmpty()) {
                 val cleanId = soundId.lowercase().replace("-", "_")
                 val resId = resources.getIdentifier(cleanId, "raw", packageName)
                 if (resId != 0) {

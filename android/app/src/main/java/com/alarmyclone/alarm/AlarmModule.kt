@@ -27,11 +27,15 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     private var stepCounter: StepCounter? = null
     private var cameraPromise: Promise? = null
     private var pickPromise: Promise? = null
+    private var audioPromise: Promise? = null
+    private var videoPromise: Promise? = null
 
     companion object {
         const val NAME = "AlarmModule"
         private const val CAMERA_REQUEST = 4401
         private const val PICK_REQUEST = 4402
+        private const val AUDIO_REQUEST = 4403
+        private const val VIDEO_REQUEST = 4404
         private var instance: AlarmModule? = null
 
         fun emitAlarmRinging(alarmId: String?) {
@@ -598,6 +602,45 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun pickLocalAudio(promise: Promise) {
+        openDocument(promise, "audio/*", AUDIO_REQUEST) { audioPromise = it }
+    }
+
+    @ReactMethod
+    fun pickLocalVideo(promise: Promise) {
+        openDocument(promise, "video/*", VIDEO_REQUEST) { videoPromise = it }
+    }
+
+    @ReactMethod
+    fun previewVideo(uri: String) {
+        val activity = reactContext.currentActivity ?: return
+        val intent = Intent(activity, VideoPreviewActivity::class.java).apply {
+            putExtra(VideoPreviewActivity.EXTRA_URI, uri)
+        }
+        activity.startActivity(intent)
+    }
+
+    private fun openDocument(promise: Promise, mime: String, request: Int, hold: (Promise?) -> Unit) {
+        val activity = reactContext.currentActivity
+        if (activity == null) {
+            promise.reject("NO_ACTIVITY", "Open the app before choosing a file")
+            return
+        }
+        hold(promise)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mime
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        try {
+            activity.startActivityForResult(intent, request)
+        } catch (e: Exception) {
+            hold(null)
+            promise.reject("PICK_FILE", e.message, e)
+        }
+    }
+
+    @ReactMethod
     fun exportAlarmBackup(json: String, promise: Promise) {
         try {
             val file = java.io.File(reactContext.filesDir, "alba-backup.json")
@@ -609,6 +652,22 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     }
 
     override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == AUDIO_REQUEST || requestCode == VIDEO_REQUEST) {
+            val promise = if (requestCode == AUDIO_REQUEST) audioPromise else videoPromise
+            if (requestCode == AUDIO_REQUEST) audioPromise = null else videoPromise = null
+            val uri = data?.data
+            if (promise == null) return
+            if (resultCode != Activity.RESULT_OK || uri == null) {
+                promise.reject("PICK_CANCELLED", "cancelled")
+                return
+            }
+            try {
+                reactContext.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {
+            }
+            promise.resolve(uri.toString())
+            return
+        }
         if (requestCode == PICK_REQUEST) {
             val promise = pickPromise ?: return
             pickPromise = null

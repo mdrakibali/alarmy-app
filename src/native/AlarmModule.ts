@@ -347,6 +347,30 @@ class AlarmModuleBridge {
     };
   }
 
+  async pickLocalAudio(): Promise<string | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) return null;
+    try {
+      return await AlarmModule.pickLocalAudio();
+    } catch {
+      return null;
+    }
+  }
+
+  async pickLocalVideo(): Promise<string | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) return null;
+    try {
+      return await AlarmModule.pickLocalVideo();
+    } catch {
+      return null;
+    }
+  }
+
+  previewVideo(uri: string): void {
+    if (Platform.OS === 'android' && AlarmModule?.previewVideo) {
+      AlarmModule.previewVideo(uri);
+    }
+  }
+
   async pickLocalImage(): Promise<string | null> {
     if (Platform.OS !== 'android' || !AlarmModule) return null;
     try {

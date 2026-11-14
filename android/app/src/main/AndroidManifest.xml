@@ -80,6 +80,12 @@
         android:foregroundServiceType="mediaPlayback" />
 
       <activity
+        android:name=".alarm.VideoPreviewActivity"
+        android:exported="false"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true" />
+
+      <activity
         android:name=".alarm.CameraMissionActivity"
         android:exported="false"
         android:showWhenLocked="true"

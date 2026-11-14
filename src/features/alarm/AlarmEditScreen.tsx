@@ -403,10 +403,21 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               className="py-1 px-3 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30"
             >
               <Text className="text-xs font-bold text-[#4E7D5B]">
-                Browse All (31+) ›
+                Browse All
               </Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            onPress={async () => {
+              const uri = await NativeAlarm.pickLocalVideo();
+              if (!uri) return;
+              patch({ wallpaper: uri });
+              NativeAlarm.previewVideo(uri);
+            }}
+            className="mb-2"
+          >
+            <Text className="text-xs font-bold text-[#5E7166]">Import an MP4 wallpaper</Text>
+          </TouchableOpacity>
 
           {/* Quick Horizontal Carousel of Wallpapers with Live Selection */}
           <ScrollView
@@ -466,6 +477,19 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           <Text className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">
             Alarm sound
           </Text>
+          <TouchableOpacity
+            onPress={async () => {
+              const uri = await NativeAlarm.pickLocalAudio();
+              if (uri) patch({ soundId: uri });
+            }}
+            className="mb-3"
+          >
+            <Text className="text-sm font-bold text-[#6B8F71]">
+              {draft.soundId.startsWith('content://') || draft.soundId.startsWith('file://')
+                ? 'Custom sound selected'
+                : 'Import a custom sound'}
+            </Text>
+          </TouchableOpacity>
 
           {/* Sound selection row with Audio Preview */}
           <View className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-3 mb-3 border border-slate-100">
