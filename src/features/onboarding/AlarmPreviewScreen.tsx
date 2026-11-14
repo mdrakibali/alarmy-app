@@ -6,7 +6,6 @@ import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { formatTime } from '@/features/alarm/format';
-import type { MissionType } from '@/features/alarm/types';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { storage } from '@/storage/mmkv';
@@ -20,7 +19,6 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   const { hour, minute, wallpaper, soundId, mission } = route.params;
 
   const addAlarm = useAlarmStore(s => s.addAlarm);
-  const [isPlaying, setIsPlaying] = useState(true);
   const [mathSolved, setMathSolved] = useState(false);
   const [shakeCount, setShakeCount] = useState(10); // mini preview count
   const [showActivatedModal, setShowActivatedModal] = useState(false);

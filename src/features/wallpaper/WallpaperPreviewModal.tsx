@@ -28,6 +28,7 @@ export function WallpaperPreviewModal({
   onApplyForAlarm,
 }: Props) {
   const insets = useAppInsets();
+  const toast = useToast();
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [showApplySheet, setShowApplySheet] = useState(false);
 
@@ -63,8 +64,6 @@ export function WallpaperPreviewModal({
       setTimeout(() => setIsPlayingAudio(false), 4500);
     }
   };
-
-  const toast = useToast();
 
   const handleApplyTo = (target: 'all' | 'alarm' | 'ringing') => {
     const targetLabel =

@@ -11,7 +11,6 @@ import { Screen } from '@/components/ui/Screen';
 import {
   SLEEP_MUSIC_ITEMS,
   SleepMusicCategory,
-  SleepMusicItem,
 } from '@/data/sleepMusic';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { useAppInsets } from '@/utils/safeArea';

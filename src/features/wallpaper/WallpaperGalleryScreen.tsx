@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -8,11 +7,10 @@ import {
   View,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   WALLPAPERS,
   WALLPAPER_CATEGORIES,
-  WallpaperCategory,
   WallpaperItem,
 } from '@/data/wallpapers';
 import type { RootStackParamList } from '@/navigation/types';
@@ -30,7 +28,6 @@ export function WallpaperGalleryScreen() {
   const currentHomeBg = useThemeStore(s => s.homeBackground);
   const favorites = useThemeStore(s => s.favorites);
   const recentlyViewed = useThemeStore(s => s.recentlyViewed);
-  const setBackground = useThemeStore(s => s.setBackground);
 
   const [activePreview, setActivePreview] = useState<WallpaperItem | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('All');

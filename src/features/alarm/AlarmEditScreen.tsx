@@ -83,7 +83,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     if (hours === 0 && minutes === 0) return 'Ring in less than a minute';
     if (hours === 0) return `Ring in ${minutes} minutes`;
     return `Ring in ${hours} hr. ${minutes} min`;
-  }, [draft.hour, draft.minute, draft.repeatDays]);
+  }, [draft]);
 
   const isDaily = draft.repeatDays.length === 7;
 

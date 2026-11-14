@@ -77,7 +77,7 @@ const saveState = (state: Partial<ThemeState>) => {
   }
 };
 
-export const useThemeStore = create<ThemeState>((set, get) => {
+export const useThemeStore = create<ThemeState>(set => {
   const initial = loadState();
 
   return {

@@ -1,5 +1,4 @@
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
-import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { SLEEP_MUSIC_ITEMS } from '@/data/sleepMusic';
 import { WALLPAPERS, WALLPAPER_CATEGORIES } from '@/data/wallpapers';
 import { useThemeStore } from '@/storage/themeStore';
