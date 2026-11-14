@@ -383,13 +383,14 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               return (
                 <Pressable
                   key={w.id}
+                  hitSlop={8}
                   onPress={() => {
                     patch({ wallpaper: w.id });
                     useThemeStore.getState().setBackground('alarm', w.id);
                   }}
                   className={`mr-3 h-36 w-24 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
-                      ? 'border-[#FF385C] scale-102 shadow-md'
+                      ? 'border-[#FF385C] scale-105 shadow-md'
                       : 'border-transparent bg-slate-100 active:scale-98'
                   }`}
                 >
@@ -397,9 +398,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     source={w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
+                    pointerEvents="none"
                   />
                   {/* Selected Badge */}
-                  <View className="w-full flex-row justify-end p-1.5 z-10">
+                  <View
+                    className="w-full flex-row justify-end p-1.5 z-10"
+                    pointerEvents="none"
+                  >
                     {isSelected && (
                       <View className="h-5 w-5 rounded-full bg-[#FF385C] items-center justify-center shadow-sm">
                         <Text className="text-white text-[9px] font-black">✓</Text>
@@ -407,7 +412,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     )}
                   </View>
                   {/* Title Bar */}
-                  <View className="w-full py-1.5 px-1 bg-black/60 backdrop-blur-sm z-10">
+                  <View
+                    className="w-full py-1.5 px-1 bg-black/60 backdrop-blur-sm z-10"
+                    pointerEvents="none"
+                  >
                     <Text
                       className={`text-[10px] font-bold text-center ${
                         isSelected ? 'text-[#FF385C]' : 'text-white'

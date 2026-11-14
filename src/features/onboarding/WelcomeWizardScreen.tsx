@@ -15,6 +15,7 @@ import type { MissionType } from '../alarm/types';
 
 import { WALLPAPERS } from '@/data/wallpapers';
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
+import { useThemeStore } from '@/storage/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WelcomeWizard'>;
 
@@ -63,7 +64,11 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   };
 
   const handleNext = () => {
-    NativeAlarm.stopSoundPreview();
+    try {
+      NativeAlarm.stopSoundPreview();
+    } catch {
+      // ignore preview errors
+    }
     if (step === 1) {
       setStep(2);
     } else if (step === 2) {
@@ -81,8 +86,6 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       });
     }
   };
-
-  const bottomInset = insets.bottom + 8;
 
   return (
     <View className="flex-1 bg-[#F5F6F8]">
@@ -152,16 +155,24 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   {category === 'Trending' && '💖 Trending'}
                   {category === 'Daily Motivation' && '🔥 Daily Motivation'}
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  nestedScrollEnabled={true}
+                >
                   {WALLPAPERS.filter(w => w.category === category).map(w => {
                     const isSelected = selectedWallpaper === w.id;
                     return (
                       <Pressable
                         key={w.id}
-                        onPress={() => setSelectedWallpaper(w.id)}
+                        hitSlop={8}
+                        onPress={() => {
+                          setSelectedWallpaper(w.id);
+                          useThemeStore.getState().setBackground('alarm', w.id);
+                        }}
                         className={`mr-3 h-48 w-32 rounded-3xl overflow-hidden justify-between items-center border-2 relative bg-slate-50 ${
                           isSelected
-                            ? 'border-[#FF385C] scale-102 shadow-md'
+                            ? 'border-[#FF385C] shadow-lg'
                             : 'border-slate-200'
                         }`}
                       >
@@ -169,9 +180,38 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                           source={w.source}
                           className="absolute inset-0 w-full h-full"
                           resizeMode="cover"
+                          pointerEvents="none"
                         />
-                        <View className="items-center justify-center flex-1" />
-                        <View className="w-full items-center py-2 px-1 bg-black/60 backdrop-blur-sm">
+
+                        {/* Top Selected Badge */}
+                        <View
+                          className="w-full flex-row justify-end p-2.5 z-20"
+                          pointerEvents="none"
+                        >
+                          {isSelected ? (
+                            <View className="h-7 w-7 rounded-full bg-[#FF385C] border-2 border-white items-center justify-center shadow-md">
+                              <Text className="text-white text-xs font-black">✓</Text>
+                            </View>
+                          ) : (
+                            <View className="h-6 w-6 rounded-full bg-black/40 border border-white/60 items-center justify-center">
+                              <Text className="text-white/60 text-[10px]">○</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Selected Red Glow Overlay */}
+                        {isSelected && (
+                          <View
+                            className="absolute inset-0 border-4 border-[#FF385C] rounded-3xl bg-[#FF385C]/10"
+                            pointerEvents="none"
+                          />
+                        )}
+
+                        {/* Bottom Title Bar */}
+                        <View
+                          className="w-full items-center py-2 px-1.5 bg-black/70 backdrop-blur-sm z-20 border-t border-white/10"
+                          pointerEvents="none"
+                        >
                           <Text
                             className={`text-xs font-black ${
                               isSelected ? 'text-[#FF385C]' : 'text-white'
@@ -293,11 +333,12 @@ export function WelcomeWizardScreen({ navigation }: Props) {
 
       {/* Bottom Button with Safe Area */}
       <View
-        style={{ paddingBottom: Math.max(bottomInset, 52) }}
+        style={{ paddingBottom: Math.max(insets.bottom, 24) }}
         className="bg-white border-t border-slate-100 shadow-sm px-5 pt-3 z-50"
       >
         <Pressable
           onPress={handleNext}
+          hitSlop={12}
           className="w-full bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-md"
         >
           <Text className="text-white text-base font-black tracking-wide">

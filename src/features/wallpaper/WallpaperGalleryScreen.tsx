@@ -262,6 +262,7 @@ function WallpaperCard({
 }) {
   return (
     <Pressable
+      hitSlop={8}
       onPress={onPress}
       className={`mr-3 h-52 w-36 rounded-3xl overflow-hidden justify-between items-center relative border-2 bg-slate-50 ${
         isSelected
@@ -274,10 +275,14 @@ function WallpaperCard({
         source={wallpaper.source}
         className="absolute inset-0 w-full h-full"
         resizeMode="cover"
+        pointerEvents="none"
       />
 
       {/* Top Favorite indicator badge */}
-      <View className="w-full flex-row justify-end p-2 z-10">
+      <View
+        className="w-full flex-row justify-end p-2 z-10"
+        pointerEvents="none"
+      >
         {isSelected && (
           <View className="h-6 w-6 rounded-full bg-[#FF385C] items-center justify-center shadow-md">
             <Text className="text-white text-[10px] font-black">✓</Text>
@@ -286,7 +291,10 @@ function WallpaperCard({
       </View>
 
       {/* Bottom Title Bar with Music Note Icon (Matching Alarmy Reference) */}
-      <View className="w-full py-2.5 px-2 bg-black/60 backdrop-blur-md z-10 border-t border-white/10">
+      <View
+        className="w-full py-2.5 px-2 bg-black/60 backdrop-blur-md z-10 border-t border-white/10"
+        pointerEvents="none"
+      >
         <Text
           className={`text-xs font-black ${
             isSelected ? 'text-[#FF385C]' : 'text-white'
