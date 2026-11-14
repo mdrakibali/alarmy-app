@@ -41,6 +41,7 @@ export type RootStackParamList = {
   SquatMission: { alarmId?: string; missionIndex?: number; missions?: string[]; squatTarget?: number } | undefined;
   WallpaperGallery: { pickForAlarm?: boolean } | undefined;
   WallpaperPreview: { wallpaperId: string; pickForAlarm?: boolean };
+  OfflineLibrary: undefined;
   Report: undefined;
   BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[]; registeredCode?: string } | undefined;
   TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;

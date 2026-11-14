@@ -18,6 +18,9 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.bridge.ActivityEventListener
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 class AlarmModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext), ActivityEventListener {
@@ -29,6 +32,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     private var pickPromise: Promise? = null
     private var audioPromise: Promise? = null
     private var videoPromise: Promise? = null
+    private val activeDownloads = mutableSetOf<String>()
 
     companion object {
         const val NAME = "AlarmModule"
@@ -335,8 +339,9 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 stopSoundPreviewInternal()
                 var soundUri: Uri? = null
 
-                // 1. Try bundled raw sound resource
-                if (soundId.isNotEmpty()) {
+                if (soundId.startsWith("file://") || soundId.startsWith("content://")) {
+                    soundUri = Uri.parse(soundId)
+                } else if (soundId.isNotEmpty()) {
                     val cleanId = soundId.lowercase().replace("-", "_")
                     val resId = reactContext.resources.getIdentifier(cleanId, "raw", reactContext.packageName)
                     if (resId != 0) {
@@ -630,6 +635,162 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             putExtra(VideoPreviewActivity.EXTRA_URI, uri)
         }
         activity.startActivity(intent)
+    }
+
+    @ReactMethod
+    fun materializeBundledMedia(assetPath: String, promise: Promise) {
+        if (!assetPath.startsWith("alba/") || assetPath.contains("..")) {
+            promise.reject("BAD_PATH", "Unknown bundled media")
+            return
+        }
+        try {
+            val out = File(reactContext.cacheDir, "alba_" + assetPath.replace('/', '_'))
+            if (!out.exists() || out.length() == 0L) {
+                reactContext.assets.open(assetPath).use { input ->
+                    out.outputStream().use { output -> input.copyTo(output) }
+                }
+            }
+            if (out.length() < 32L) {
+                out.delete()
+                promise.reject("EMPTY", "Bundled file was empty")
+                return
+            }
+            promise.resolve(Uri.fromFile(out).toString())
+        } catch (e: Exception) {
+            promise.reject("MEDIA", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun listOfflineMedia(promise: Promise) {
+        val array = Arguments.createArray()
+        mediaDir().listFiles()?.sortedBy { it.name }?.forEach { file ->
+            if (!file.isFile || file.name.endsWith(".part")) return@forEach
+            val map = Arguments.createMap()
+            map.putString("id", file.name)
+            map.putString("path", Uri.fromFile(file).toString())
+            map.putDouble("bytes", file.length().toDouble())
+            array.pushMap(map)
+        }
+        promise.resolve(array)
+    }
+
+    @ReactMethod
+    fun deleteOfflineMedia(fileName: String, promise: Promise) {
+        if (!safeDownloadName(fileName)) {
+            promise.reject("BAD_NAME", "Refusing to delete that name")
+            return
+        }
+        File(mediaDir(), fileName).delete()
+        File(mediaDir(), "$fileName.part").delete()
+        promise.resolve(true)
+    }
+
+    @ReactMethod
+    fun downloadOfflineMedia(id: String, url: String, fileName: String, promise: Promise) {
+        if (!safeDownloadName(fileName) || !safeDownloadName(id)) {
+            promise.reject("BAD_NAME", "Refusing that download name")
+            return
+        }
+        val parsed = Uri.parse(url)
+        if (parsed.scheme != "https" || parsed.host != "assets.mixkit.co") {
+            promise.reject("HOST", "Only Mixkit downloads are allowed")
+            return
+        }
+        val dest = File(mediaDir(), fileName)
+        if (dest.exists() && dest.length() > 1024L) {
+            emitDownload(id, "done", dest.length(), dest.length(), null)
+            promise.resolve(Uri.fromFile(dest).toString())
+            return
+        }
+        synchronized(activeDownloads) {
+            if (!activeDownloads.add(id)) {
+                promise.reject("IN_PROGRESS", "That file is already downloading")
+                return
+            }
+        }
+        Thread {
+            val part = File(mediaDir(), "$fileName.part")
+            try {
+                val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
+                    connectTimeout = 20000
+                    readTimeout = 30000
+                    setRequestProperty("User-Agent", "Alba")
+                }
+                val code = connection.responseCode
+                val type = connection.contentType ?: ""
+                if (code != HttpURLConnection.HTTP_OK || type.startsWith("text/")) {
+                    connection.disconnect()
+                    part.delete()
+                    failDownload(id, promise, "Download was rejected ($code)")
+                    return@Thread
+                }
+                val total = connection.contentLengthLong
+                connection.inputStream.use { input ->
+                    part.outputStream().use { output ->
+                        val buffer = ByteArray(8192)
+                        var received = 0L
+                        var sinceEmit = 0L
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            output.write(buffer, 0, count)
+                            received += count
+                            sinceEmit += count
+                            if (sinceEmit >= 65536L) {
+                                emitDownload(id, "progress", received, total, null)
+                                sinceEmit = 0L
+                            }
+                        }
+                    }
+                }
+                connection.disconnect()
+                if (part.length() < 1024L || (total > 0L && part.length() != total)) {
+                    part.delete()
+                    failDownload(id, promise, "The file was incomplete and was deleted")
+                    return@Thread
+                }
+                if (dest.exists()) dest.delete()
+                if (!part.renameTo(dest)) {
+                    part.delete()
+                    failDownload(id, promise, "Could not save the download")
+                    return@Thread
+                }
+                emitDownload(id, "done", dest.length(), dest.length(), null)
+                promise.resolve(Uri.fromFile(dest).toString())
+            } catch (e: Exception) {
+                part.delete()
+                failDownload(id, promise, e.message ?: "Download failed")
+            } finally {
+                synchronized(activeDownloads) { activeDownloads.remove(id) }
+            }
+        }.start()
+    }
+
+    private fun failDownload(id: String, promise: Promise, message: String) {
+        emitDownload(id, "error", 0L, 0L, message)
+        promise.reject("DOWNLOAD", message)
+    }
+
+    private fun emitDownload(id: String, state: String, received: Long, total: Long, message: String?) {
+        val map = Arguments.createMap()
+        map.putString("id", id)
+        map.putString("state", state)
+        map.putDouble("received", received.toDouble())
+        map.putDouble("total", total.toDouble())
+        if (message != null) map.putString("message", message)
+        sendEvent("onOfflineDownload", map)
+    }
+
+    private fun mediaDir(): File {
+        val dir = File(reactContext.getExternalFilesDir(null), "downloads")
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
+    private fun safeDownloadName(name: String): Boolean {
+        return name.matches(Regex("^[a-z0-9][a-z0-9._-]{0,80}$"))
     }
 
     private fun openDocument(promise: Promise, mime: String, request: Int, hold: (Promise?) -> Unit) {

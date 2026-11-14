@@ -4,12 +4,14 @@ import {
   Image,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ALBA_BACKGROUNDS, AlbaGroup, findAlbaBackground } from '@/data/albaBackgrounds';
+import { ALBA_BACKGROUNDS, AlbaGroup } from '@/data/albaBackgrounds';
+import { MOTION_MEDIA } from '@/data/motionMedia';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -17,7 +19,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
 
-type GroupId = AlbaGroup | 'Custom' | 'Favorites';
+type GroupId = AlbaGroup | 'Motion' | 'Video' | 'Custom' | 'Favorites';
 
 const GROUPS: GroupId[] = [
   'Nature',
@@ -27,6 +29,8 @@ const GROUPS: GroupId[] = [
   'Abstract',
   'Motivational',
   'Night',
+  'Motion',
+  'Video',
   'Custom',
   'Favorites',
 ];
@@ -36,12 +40,14 @@ const Card = React.memo(function WallpaperCard({
   name,
   selected,
   source,
+  badge,
   onPress,
 }: {
   id: string;
   name: string;
   selected: boolean;
   source: number | { uri: string };
+  badge?: string;
   onPress: (id: string) => void;
 }) {
   return (
@@ -54,6 +60,11 @@ const Card = React.memo(function WallpaperCard({
       }`}
     >
       <Image source={source} className="absolute inset-0 w-full h-full" resizeMode="cover" />
+      {badge ? (
+        <View className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70">
+          <Text className="text-[10px] font-black text-white">{badge}</Text>
+        </View>
+      ) : null}
       <View className="flex-1 justify-end">
         <View className="w-full py-2 px-2 bg-black/70">
           <Text className="text-xs font-black text-white text-center" numberOfLines={1}>
@@ -75,20 +86,36 @@ export function WallpaperGalleryScreen() {
   const favorites = useThemeStore(s => s.favorites);
   const customImages = useThemeStore(s => s.customImages);
   const [selectedGroup, setSelectedGroup] = React.useState<GroupId>('Nature');
+  const [query, setQuery] = React.useState('');
 
   const items = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const matches = (name: string) => !q || name.toLowerCase().includes(q);
+    const motionOf = (kind: 'gif' | 'video') =>
+      MOTION_MEDIA.filter(item => item.kind === kind && matches(item.name)).map(item => ({
+        id: item.id,
+        name: item.name,
+        source: item.poster,
+        badge: kind === 'gif' ? 'GIF' : 'MP4',
+      }));
     if (selectedGroup === 'Favorites') {
-      const stills = ALBA_BACKGROUNDS.filter(item => favorites.includes(item.id)).map(item => ({
+      const stills = ALBA_BACKGROUNDS.filter(item => favorites.includes(item.id) && matches(item.name)).map(item => ({
         id: item.id,
         name: item.name,
         source: item.source as number,
       }));
-      const legacy = WALLPAPERS.filter(w => favorites.includes(w.id)).map(w => ({
+      const motion = MOTION_MEDIA.filter(item => favorites.includes(item.id) && matches(item.name)).map(item => ({
+        id: item.id,
+        name: item.name,
+        source: item.poster,
+        badge: item.kind === 'gif' ? 'GIF' : 'MP4',
+      }));
+      const legacy = WALLPAPERS.filter(w => favorites.includes(w.id) && matches(w.name)).map(w => ({
         id: w.id,
         name: w.name,
         source: wallpaperThumb(w.id) ?? w.source,
       }));
-      return [...stills, ...legacy];
+      return [...stills, ...motion, ...legacy];
     }
     if (selectedGroup === 'Custom') {
       return customImages.map(uri => ({
@@ -98,12 +125,14 @@ export function WallpaperGalleryScreen() {
         custom: true as const,
       }));
     }
-    return ALBA_BACKGROUNDS.filter(item => item.group === selectedGroup).map(item => ({
+    if (selectedGroup === 'Motion') return motionOf('gif');
+    if (selectedGroup === 'Video') return motionOf('video');
+    return ALBA_BACKGROUNDS.filter(item => item.group === selectedGroup && matches(item.name)).map(item => ({
       id: item.id,
       name: item.name,
       source: item.source,
     }));
-  }, [selectedGroup, favorites, customImages]);
+  }, [selectedGroup, favorites, customImages, query]);
 
   const onPress = useCallback(
     (id: string) => {
@@ -113,13 +142,14 @@ export function WallpaperGalleryScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: { id: string; name: string; source: number | { uri: string }; custom?: boolean } }) => {
+    ({ item }: { item: { id: string; name: string; source: number | { uri: string }; badge?: string; custom?: boolean } }) => {
       return (
         <Card
           id={item.id}
           name={item.name}
           selected={currentAlarmBg === item.id}
           source={item.source}
+          badge={item.badge}
           onPress={onPress}
         />
       );
@@ -146,8 +176,15 @@ export function WallpaperGalleryScreen() {
         </View>
         <Text className="text-2xl font-black text-[#1A2E22]">Choose alarm wallpaper</Text>
         <Text className="text-xs text-[#5E7166] mt-0.5">
-          Posters stay still. Animation plays only in preview.
+          The grid stays still. A GIF plays on the alarm. A video plays muted in preview.
         </Text>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search wallpapers"
+          placeholderTextColor="#5E7166"
+          className="mt-3 bg-[#FBFBF9] border border-slate-200 rounded-xl px-3 py-2 text-sm text-[#1A2E22]"
+        />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
           {GROUPS.map(tab => (
             <TouchableOpacity

@@ -14,6 +14,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { ALBA_BACKGROUNDS, findAlbaBackground } from '@/data/albaBackgrounds';
+import { findMotionMedia, MOTION_MEDIA } from '@/data/motionMedia';
+import { OFFLINE_PACK } from '@/data/offlinePack';
 import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { useCameraPermission } from 'react-native-vision-camera';
@@ -60,14 +62,16 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isPlayingSound, setIsPlayingSound] = useState(false);
   const [soundQuery, setSoundQuery] = useState('');
+  const [downloadedSounds, setDownloadedSounds] = useState<{ id: string; path: string; title: string }[]>([]);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const selectedVisualId = draft.wallpaper || alarmBackground;
   const albaVisual = findAlbaBackground(selectedVisualId);
+  const motionVisual = findMotionMedia(selectedVisualId);
   const legacyVisual = WALLPAPERS.find(w => w.id === selectedVisualId);
   const currentWallpaper = {
-    name: albaVisual?.name ?? legacyVisual?.name ?? 'Wallpaper',
-    category: albaVisual?.group ?? legacyVisual?.category ?? 'Nature',
+    name: motionVisual?.name ?? albaVisual?.name ?? legacyVisual?.name ?? 'Wallpaper',
+    category: motionVisual ? (motionVisual.kind === 'gif' ? 'Motion' : 'Video') : albaVisual?.group ?? legacyVisual?.category ?? 'Nature',
   };
 
   // Stop preview on unmount
@@ -76,6 +80,21 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       NativeAlarm.stopSoundPreview();
     };
   }, []);
+
+  useEffect(() => {
+    if (!showSoundPicker) return;
+    NativeAlarm.listOfflineMedia().then(rows => {
+      setDownloadedSounds(
+        rows
+          .filter(file => /\.(wav|mp3|m4a)$/i.test(file.id))
+          .map(file => ({
+            id: file.id,
+            path: file.path,
+            title: OFFLINE_PACK.find(item => item.fileName === file.id)?.title ?? 'Downloaded sound',
+          })),
+      );
+    });
+  }, [showSoundPicker]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -427,7 +446,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             keyboardShouldPersistTaps="handled"
             className="-mx-4 px-4 py-1"
           >
-            {ALBA_BACKGROUNDS.slice(0, 6).map(w => {
+            {[
+              ...ALBA_BACKGROUNDS.slice(0, 4).map(w => ({ id: w.id, name: w.name, source: w.source as number })),
+              ...MOTION_MEDIA.slice(0, 8).map(w => ({ id: w.id, name: w.name, source: w.poster })),
+            ].map(w => {
               const isSelected = (draft.wallpaper || alarmBackground) === w.id;
               return (
                 <TouchableOpacity
@@ -514,7 +536,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               <View>
                 <Text className="text-sm font-bold text-slate-800">
                   {SOUND_OPTIONS.find(s => s.id === draft.soundId)?.label ||
-                    'Default Alarm'}
+                    downloadedSounds.find(s => s.path === draft.soundId)?.title ||
+                    (draft.soundId.startsWith('file://') ? 'Downloaded sound' : 'Default Alarm')}
                 </Text>
                 <Text className="text-[11px] text-slate-400 font-medium">
                   {isPlayingSound ? 'Playing audio preview...' : 'Tap ▶ to test sound'}
@@ -568,6 +591,25 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   )}
                 </TouchableOpacity>
               ))}
+              {downloadedSounds
+                .filter(opt => opt.title.toLowerCase().includes(soundQuery.trim().toLowerCase()))
+                .map(opt => (
+                  <TouchableOpacity
+                    key={opt.path}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      patch({ soundId: opt.path });
+                      setShowSoundPicker(false);
+                      toggleSoundPreview(opt.path, true);
+                    }}
+                    className={`flex-row items-center justify-between py-2.5 px-3 rounded-xl mb-1 ${
+                      draft.soundId === opt.path ? 'bg-[#E0F2FE]' : ''
+                    }`}
+                  >
+                    <Text className="text-sm font-medium text-slate-700">{opt.title}</Text>
+                    {draft.soundId === opt.path ? <Text className="text-[#0284C7] font-bold text-xs">✓</Text> : null}
+                  </TouchableOpacity>
+                ))}
             </View>
           )}
 

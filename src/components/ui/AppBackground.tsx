@@ -9,6 +9,8 @@ import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { findAlbaBackground } from '@/data/albaBackgrounds';
+import { findMotionMedia } from '@/data/motionMedia';
+import { NativeAlarm } from '@/native/AlarmModule';
 import { BackgroundTarget, useThemeStore } from '@/storage/themeStore';
 
 interface Props {
@@ -50,11 +52,30 @@ export function AppBackground({
     activeId?.startsWith('http');
 
   const alba = findAlbaBackground(activeId);
-  const animated = target === 'ringing' && !alba;
+  const motion = findMotionMedia(activeId);
+  const [gifUri, setGifUri] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (target !== 'ringing' || motion?.kind !== 'gif') {
+      setGifUri(null);
+      return;
+    }
+    let live = true;
+    NativeAlarm.materializeBundledMedia(motion.asset).then(uri => {
+      if (live) setGifUri(uri);
+    });
+    return () => {
+      live = false;
+    };
+  }, [target, motion?.asset, motion?.kind]);
+  const animated = target === 'ringing' && !alba && !motion;
   const still = wallpaperThumb(activeId);
   const imageSource = isCustomUri
     ? { uri: activeId }
-    : alba
+    : motion
+      ? gifUri
+        ? { uri: gifUri }
+        : motion.poster
+      : alba
       ? alba.source
       : animated
       ? wallpaperItem?.source || bgItem?.source || still || WALLPAPERS[0].source

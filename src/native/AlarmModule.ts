@@ -24,6 +24,20 @@ export interface RingingAlarmInfo {
   missions: string[];
 }
 
+export interface OfflineFile {
+  id: string;
+  path: string;
+  bytes: number;
+}
+
+export interface OfflineDownloadEvent {
+  id: string;
+  state: 'progress' | 'done' | 'error' | string;
+  received: number;
+  total: number;
+  message?: string;
+}
+
 export interface SleepMusicStatus {
   isPlaying: boolean;
   currentSoundId: string | null;
@@ -369,6 +383,52 @@ class AlarmModuleBridge {
     if (Platform.OS === 'android' && AlarmModule?.previewVideo) {
       AlarmModule.previewVideo(uri);
     }
+  }
+
+  async materializeBundledMedia(assetPath: string): Promise<string | null> {
+    if (Platform.OS !== 'android' || !AlarmModule?.materializeBundledMedia) return null;
+    try {
+      return await AlarmModule.materializeBundledMedia(assetPath);
+    } catch {
+      return null;
+    }
+  }
+
+  async listOfflineMedia(): Promise<OfflineFile[]> {
+    if (Platform.OS !== 'android' || !AlarmModule?.listOfflineMedia) return [];
+    try {
+      const rows = await AlarmModule.listOfflineMedia();
+      return Array.isArray(rows) ? rows : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async deleteOfflineMedia(fileName: string): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule?.deleteOfflineMedia) return false;
+    try {
+      return await AlarmModule.deleteOfflineMedia(fileName);
+    } catch {
+      return false;
+    }
+  }
+
+  async downloadOfflineMedia(id: string, url: string, fileName: string): Promise<string | null> {
+    if (Platform.OS !== 'android' || !AlarmModule?.downloadOfflineMedia) return null;
+    try {
+      return await AlarmModule.downloadOfflineMedia(id, url, fileName);
+    } catch {
+      return null;
+    }
+  }
+
+  onOfflineDownload(listener: (event: OfflineDownloadEvent) => void): () => void {
+    if (!this.emitter) return () => {};
+    const sub = this.emitter.addListener('onOfflineDownload', (...args: readonly unknown[]) => {
+      const event = args[0] as OfflineDownloadEvent;
+      if (event) listener(event);
+    });
+    return () => sub.remove();
   }
 
   async pickLocalImage(): Promise<string | null> {

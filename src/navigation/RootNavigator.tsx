@@ -27,6 +27,7 @@ import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { SleepScreen } from '@/features/sleep/SleepScreen';
 import { WallpaperGalleryScreen } from '@/features/wallpaper/WallpaperGalleryScreen';
 import { WallpaperPreviewScreen } from '@/features/wallpaper/WallpaperPreviewScreen';
+import { OfflineLibraryScreen } from '@/features/wallpaper/OfflineLibraryScreen';
 import { ReportScreen } from '@/features/report/ReportScreen';
 import type { RootStackParamList, TabParamList } from './types';
 
@@ -252,6 +253,11 @@ export function RootNavigator() {
           headerShown: false,
           animation: 'fade',
         }}
+      />
+      <Stack.Screen
+        name="OfflineLibrary"
+        component={OfflineLibraryScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Report"

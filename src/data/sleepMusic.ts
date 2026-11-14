@@ -189,4 +189,8 @@ export const SLEEP_MUSIC_ITEMS: SleepMusicItem[] = [
     description: 'Clear fresh water babbling gently over smooth pebbles',
     loopable: true,
   },
+  { id: 'sleep_mix_light_rain_loop', title: 'Light Rain', category: 'Nature', durationSec: 15, icon: '🌧️', description: 'Mixkit License light rain loop', loopable: true },
+  { id: 'sleep_mix_rain_and_thunder_storm', title: 'Rain and Thunder', category: 'Nature', durationSec: 29, icon: '⛈️', description: 'Mixkit License rain and thunder', loopable: true },
+  { id: 'sleep_mix_sea_waves_with_birds_loop', title: 'Sea Waves and Birds', category: 'Nature', durationSec: 38, icon: '🌊', description: 'Mixkit License sea waves with birds', loopable: true },
+  { id: 'sleep_mix_forest_birds', title: 'Birds in the Trees', category: 'Nature', durationSec: 8, icon: '🐦', description: 'Mixkit License forest birds', loopable: true },
 ];

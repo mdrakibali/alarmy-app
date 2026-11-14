@@ -85,6 +85,9 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    androidResources {
+        noCompress 'mp4', 'gif'
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')

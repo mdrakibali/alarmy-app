@@ -143,6 +143,12 @@ export function SettingsScreen() {
               label="Browse Animated Wallpaper Gallery 🎨"
               onPress={() => navigation.navigate('WallpaperGallery')}
             />
+            <View className="mt-3">
+              <Button
+                label="Offline downloads"
+                onPress={() => navigation.navigate('OfflineLibrary')}
+              />
+            </View>
           </View>
 
           <Text className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">
