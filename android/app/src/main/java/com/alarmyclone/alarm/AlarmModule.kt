@@ -26,10 +26,12 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     private var shakeDetector: ShakeDetector? = null
     private var stepCounter: StepCounter? = null
     private var cameraPromise: Promise? = null
+    private var pickPromise: Promise? = null
 
     companion object {
         const val NAME = "AlarmModule"
         private const val CAMERA_REQUEST = 4401
+        private const val PICK_REQUEST = 4402
         private var instance: AlarmModule? = null
 
         fun emitAlarmRinging(alarmId: String?) {
@@ -574,7 +576,57 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
         promise.resolve(true)
     }
 
+    @ReactMethod
+    fun pickLocalImage(promise: Promise) {
+        val activity = reactContext.currentActivity
+        if (activity == null) {
+            promise.reject("NO_ACTIVITY", "Open the app before choosing a photo")
+            return
+        }
+        pickPromise = promise
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        try {
+            activity.startActivityForResult(intent, PICK_REQUEST)
+        } catch (e: Exception) {
+            pickPromise = null
+            promise.reject("PICK_IMAGE", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun exportAlarmBackup(json: String, promise: Promise) {
+        try {
+            val file = java.io.File(reactContext.filesDir, "alba-backup.json")
+            file.writeText(json)
+            promise.resolve(file.absolutePath)
+        } catch (e: Exception) {
+            promise.reject("BACKUP", e.message, e)
+        }
+    }
+
     override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == PICK_REQUEST) {
+            val promise = pickPromise ?: return
+            pickPromise = null
+            val uri = data?.data
+            if (resultCode != Activity.RESULT_OK || uri == null) {
+                promise.reject("PICK_CANCELLED", "cancelled")
+                return
+            }
+            try {
+                reactContext.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            } catch (_: Exception) {
+            }
+            promise.resolve(uri.toString())
+            return
+        }
         if (requestCode != CAMERA_REQUEST) return
         val promise = cameraPromise ?: return
         cameraPromise = null

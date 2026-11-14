@@ -347,6 +347,24 @@ class AlarmModuleBridge {
     };
   }
 
+  async pickLocalImage(): Promise<string | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) return null;
+    try {
+      return await AlarmModule.pickLocalImage();
+    } catch {
+      return null;
+    }
+  }
+
+  async exportAlarmBackup(json: string): Promise<string | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) return null;
+    try {
+      return await AlarmModule.exportAlarmBackup(json);
+    } catch {
+      return null;
+    }
+  }
+
   async openCameraMission(options: {
     mode: 'photo' | 'barcode' | 'squat';
     target?: number;
@@ -395,8 +413,8 @@ class AlarmModuleBridge {
 
   onStepCount(listener: (steps: number) => void): () => void {
     if (!this.emitter) return () => {};
-    const sub = this.emitter.addListener('onStepCount', (value: number) => {
-      listener(Number(value));
+    const sub = this.emitter.addListener('onStepCount', (...args: readonly unknown[]) => {
+      listener(Number(args[0]));
     });
     return () => sub.remove();
   }

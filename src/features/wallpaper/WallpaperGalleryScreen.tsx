@@ -11,6 +11,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { WALLPAPERS, WallpaperItem } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
+import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
@@ -172,11 +173,23 @@ export function WallpaperGalleryScreen() {
         ListEmptyComponent={
           <View className="items-center py-20 px-6">
             <Text className="text-sm font-bold text-[#1A2E22]">Nothing in this category yet</Text>
-            <Text className="text-xs text-[#5E7166] mt-1 text-center">
-              {selectedGroup === 'Custom'
-                ? 'Import a photo from the alarm editor.'
-                : 'Mark wallpapers from the preview screen.'}
-            </Text>
+            {selectedGroup === 'Custom' ? (
+              <TouchableOpacity
+                onPress={async () => {
+                  const uri = await NativeAlarm.pickLocalImage();
+                  if (uri) {
+                    useThemeStore.getState().addCustomImage(uri);
+                  }
+                }}
+                className="mt-4 bg-[#6B8F71] px-4 py-3 rounded-2xl"
+              >
+                <Text className="text-white font-bold">Import a photo</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text className="text-xs text-[#5E7166] mt-1 text-center">
+                Mark wallpapers from the preview screen.
+              </Text>
+            )}
           </View>
         }
       />

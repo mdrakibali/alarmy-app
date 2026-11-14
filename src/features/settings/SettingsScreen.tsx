@@ -19,6 +19,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { suggestChronotypeHour, buildBackupPayload } from '@/features/v2/localIntelligence';
 import { useToast } from '@/components/ui/AppToast';
 
 export function SettingsScreen() {
@@ -28,6 +29,9 @@ export function SettingsScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [exactAlarmAllowed, setExactAlarmAllowed] = useState(true);
   const [batteryIgnored, setBatteryIgnored] = useState(true);
+  const [eveningType, setEveningType] = useState(false);
+  const [lateSleep, setLateSleep] = useState(false);
+  const suggestedHour = suggestChronotypeHour({ evening: eveningType, lateSleep });
   const addAlarm = useAlarmStore(s => s.addAlarm);
 
   const homeBg = useThemeStore(s => s.homeBackground);
@@ -91,6 +95,45 @@ export function SettingsScreen() {
       <Text className="text-3xl font-black text-slate-900 mb-6 tracking-tight">
         Settings
       </Text>
+
+      <Section title="Guest">
+        <View className="p-4">
+          <Text className="text-sm text-[#1A2E22] font-bold">Using Alba as a guest</Text>
+          <Text className="text-xs text-[#5E7166] mt-1">
+            No account is required. Alarms stay on this phone.
+          </Text>
+          <Text className="text-xs text-[#5E7166] mt-3">
+            Chronotype suggestion: {suggestedHour}:00. This does not change an alarm until you edit it.
+          </Text>
+          <View className="flex-row mt-3">
+            <Pressable onPress={() => setEveningType(v => !v)} className="mr-2 px-3 py-2 rounded-full bg-white border border-[#6B8F71]">
+              <Text className="text-xs font-bold text-[#1A2E22]">{eveningType ? 'Evening type on' : 'Evening type'}</Text>
+            </Pressable>
+            <Pressable onPress={() => setLateSleep(v => !v)} className="px-3 py-2 rounded-full bg-white border border-[#6B8F71]">
+              <Text className="text-xs font-bold text-[#1A2E22]">{lateSleep ? 'Late sleep on' : 'Late sleep'}</Text>
+            </Pressable>
+          </View>
+          <Pressable
+            onPress={async () => {
+              const alarms = useAlarmStore.getState().alarms.map(alarm => ({
+                id: alarm.id,
+                hour: alarm.hour,
+                minute: alarm.minute,
+                enabled: alarm.enabled,
+              }));
+              const path = await NativeAlarm.exportAlarmBackup(JSON.stringify(buildBackupPayload(alarms)));
+              toast.showToast({
+                title: path ? 'Backup saved' : 'Backup failed',
+                message: path ?? 'Could not write the backup file.',
+                type: path ? 'success' : 'error',
+              });
+            }}
+            className="mt-4"
+          >
+            <Text className="text-sm font-bold text-[#6B8F71]">Save alarm backup on this phone</Text>
+          </Pressable>
+        </View>
+      </Section>
 
       {/* Background & Theme Customization */}
       <Section title="Theme & Wallpaper">
