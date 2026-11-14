@@ -9,13 +9,13 @@ import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
 import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
 import { MorningScreen } from '@/features/morning/MorningScreen';
 import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
+import { SplashScreen } from '@/features/onboarding/SplashScreen';
 import { WelcomeWizardScreen } from '@/features/onboarding/WelcomeWizardScreen';
 import { ReportScreen } from '@/features/report/ReportScreen';
 import { TabVectorIcon } from '@/components/ui/TabVectorIcon';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { SleepScreen } from '@/features/sleep/SleepScreen';
 import { WallpaperGalleryScreen } from '@/features/wallpaper/WallpaperGalleryScreen';
-import { storage } from '@/storage/mmkv';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -106,10 +106,13 @@ function Tabs() {
 }
 
 export function RootNavigator() {
-  const hasCompleted = storage.getBoolean('hasCompletedWelcome');
-
   return (
-    <Stack.Navigator initialRouteName={hasCompleted ? 'Tabs' : 'WelcomeWizard'}>
+    <Stack.Navigator initialRouteName="Splash">
+      <Stack.Screen
+        name="Splash"
+        component={SplashScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="WelcomeWizard"
         component={WelcomeWizardScreen}

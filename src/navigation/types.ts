@@ -9,6 +9,7 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+  Splash: undefined;
   Tabs: undefined;
   WelcomeWizard: undefined;
   AlarmPreview: {

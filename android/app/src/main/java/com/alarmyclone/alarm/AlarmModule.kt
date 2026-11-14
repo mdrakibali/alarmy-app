@@ -127,17 +127,9 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun snoozeAlarm(alarmId: String, intervalMin: Int, promise: Promise) {
         try {
-            val alarm = AlarmStorage.getAlarm(reactContext, alarmId)
-            val delayMs = intervalMin * 60 * 1000L
-            val snoozeTriggerTime = System.currentTimeMillis() + delayMs
-
-            alarm?.let {
-                val snoozed = it.copy(triggerTimeMs = snoozeTriggerTime)
-                AlarmScheduler.schedule(reactContext, snoozed)
-            }
-
+            val success = AlarmScheduler.scheduleSnooze(reactContext, alarmId, intervalMin)
             AlarmService.stop(reactContext)
-            promise.resolve(true)
+            promise.resolve(success)
         } catch (e: Exception) {
             promise.reject("SNOOZE_ERROR", e.message, e)
         }

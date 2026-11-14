@@ -5,6 +5,7 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAppInsets } from '@/utils/safeArea';
+import { useToast } from '@/components/ui/AppToast';
 import { useAlarmStore } from './alarmStore';
 import { formatTime } from './format';
 
@@ -12,6 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AlarmRinging'>;
 
 export function AlarmRingingScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const toast = useToast();
   const alarmId = route.params?.id;
   const alarmFromStore = useAlarmStore(s =>
     alarmId ? s.alarms.find(a => a.id === alarmId) : undefined,
@@ -56,6 +58,12 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     const id = alarmId || activeInfo?.id;
     if (id) {
       await NativeAlarm.snoozeAlarm(id, snoozeInterval);
+      toast.showToast({
+        title: 'Alarm Snoozed! ⏰',
+        message: `Extended by ${snoozeInterval} minutes.`,
+        type: 'info',
+        icon: '💤',
+      });
     } else {
       await NativeAlarm.stopAlarm();
     }

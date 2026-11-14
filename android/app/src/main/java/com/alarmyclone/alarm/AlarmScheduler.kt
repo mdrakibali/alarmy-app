@@ -22,11 +22,18 @@ object AlarmScheduler {
         }
     }
 
-    fun schedule(context: Context, alarm: AlarmModel) {
+    fun schedule(context: Context, alarm: AlarmModel, explicitTriggerTimeMs: Long? = null) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 
-        // Compute next occurrence
-        val triggerTimeMs = calculateNextOccurrence(alarm)
+        // Compute trigger time: if explicitTriggerTimeMs (such as snooze) is provided, use it!
+        // Otherwise calculate next regular daily/weekly occurrence.
+        val triggerTimeMs = if (explicitTriggerTimeMs != null && explicitTriggerTimeMs > System.currentTimeMillis()) {
+            explicitTriggerTimeMs
+        } else if (alarm.triggerTimeMs > System.currentTimeMillis()) {
+            alarm.triggerTimeMs
+        } else {
+            calculateNextOccurrence(alarm)
+        }
         alarm.triggerTimeMs = triggerTimeMs
         AlarmStorage.saveAlarm(context, alarm)
 
@@ -80,6 +87,24 @@ object AlarmScheduler {
         alarmManager.cancel(pendingIntent)
         AlarmStorage.removeAlarm(context, alarmId)
         Log.d(TAG, "Cancelled alarm $alarmId")
+    }
+
+    fun scheduleSnooze(context: Context, alarmId: String, intervalMin: Int): Boolean {
+        val existing = AlarmStorage.getAlarm(context, alarmId)
+        val nowCal = Calendar.getInstance()
+        val alarm = existing ?: AlarmModel(
+            id = alarmId,
+            hour = nowCal.get(Calendar.HOUR_OF_DAY),
+            minute = nowCal.get(Calendar.MINUTE),
+            label = "Alarm",
+            snoozeIntervalMin = intervalMin
+        )
+        val delayMs = intervalMin * 60 * 1000L
+        val snoozeTriggerTime = System.currentTimeMillis() + delayMs
+        val snoozed = alarm.copy(triggerTimeMs = snoozeTriggerTime)
+        schedule(context, snoozed, explicitTriggerTimeMs = snoozeTriggerTime)
+        Log.d(TAG, "Snoozed alarm $alarmId for $intervalMin min (at $snoozeTriggerTime)")
+        return true
     }
 
     fun rescheduleAll(context: Context) {

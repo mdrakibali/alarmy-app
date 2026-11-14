@@ -71,41 +71,41 @@ export function WallpaperGalleryScreen() {
   };
 
   return (
-    <View className="flex-1 bg-black">
+    <View className="flex-1 bg-[#F5F6F8]">
       {/* Top Header */}
       <View
         style={{ paddingTop: Math.max(insets.top, 14) }}
-        className="px-5 pb-3 border-b border-neutral-900 bg-black/95 z-10"
+        className="px-5 pb-3 border-b border-slate-100 bg-white/95 z-10"
       >
         <View className="flex-row items-center justify-between mb-2">
           <Pressable
             onPress={() => navigation.goBack()}
-            className="h-10 w-10 rounded-full bg-neutral-900 items-center justify-center active:bg-neutral-800"
+            className="h-10 w-10 rounded-full bg-slate-100 items-center justify-center active:bg-slate-200"
           >
-            <Text className="text-white text-lg font-bold">←</Text>
+            <Text className="text-slate-800 text-lg font-bold">←</Text>
           </Pressable>
 
           <View className="flex-row items-center">
             <Pressable
               onPress={handleCustomImport}
-              className="px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 flex-row items-center active:bg-neutral-800 mr-2"
+              className="px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 flex-row items-center active:bg-slate-200 mr-2"
             >
               <Text className="text-xs mr-1">➕</Text>
-              <Text className="text-xs font-bold text-neutral-300">Import</Text>
+              <Text className="text-xs font-bold text-slate-700">Import</Text>
             </Pressable>
 
-            <View className="px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40">
-              <Text className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
+            <View className="px-3 py-1 rounded-full bg-rose-50 border border-rose-200">
+              <Text className="text-[10px] font-black text-[#FF385C] uppercase tracking-widest">
                 LIVE GIFS
               </Text>
             </View>
           </View>
         </View>
 
-        <Text className="text-2xl font-black text-white tracking-tight">
+        <Text className="text-2xl font-black text-slate-900 tracking-tight">
           Choose your alarm wallpaper
         </Text>
-        <Text className="text-xs text-neutral-400 mt-0.5">
+        <Text className="text-xs text-slate-500 mt-0.5">
           Animated looping backgrounds to start your morning
         </Text>
 
@@ -122,13 +122,13 @@ export function WallpaperGalleryScreen() {
               onPress={() => setSelectedFilter(tab)}
               className={`mr-2 px-3.5 py-1.5 rounded-xl border ${
                 selectedFilter === tab
-                  ? 'bg-white border-white'
-                  : 'bg-neutral-900 border-neutral-800 active:bg-neutral-800'
+                  ? 'bg-[#0F172A] border-[#0F172A]'
+                  : 'bg-white border-slate-200 active:bg-slate-50'
               }`}
             >
               <Text
                 className={`text-xs font-bold ${
-                  selectedFilter === tab ? 'text-black' : 'text-neutral-400'
+                  selectedFilter === tab ? 'text-white' : 'text-slate-600'
                 }`}
               >
                 {tab}
@@ -152,10 +152,10 @@ export function WallpaperGalleryScreen() {
           favoriteItems.length > 0 && (
             <View className="mb-7 px-5">
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-base font-black text-white flex-row items-center">
+                <Text className="text-base font-black text-slate-900 flex-row items-center">
                   ❤️ Favorites
                 </Text>
-                <Text className="text-xs text-neutral-500 font-bold">
+                <Text className="text-xs text-slate-400 font-bold">
                   {favoriteItems.length} wallpapers
                 </Text>
               </View>
@@ -177,7 +177,7 @@ export function WallpaperGalleryScreen() {
           recentItems.length > 0 && (
             <View className="mb-7 px-5">
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-base font-black text-white">
+                <Text className="text-base font-black text-slate-900">
                   🕒 Recently Viewed
                 </Text>
               </View>
@@ -207,10 +207,10 @@ export function WallpaperGalleryScreen() {
             <View key={cat.id} className="mb-7 px-5">
               {/* Category Header */}
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-base font-black text-white">
+                <Text className="text-base font-black text-slate-900">
                   {cat.icon} {cat.name}
                 </Text>
-                <Text className="text-xs text-neutral-500 font-bold">
+                <Text className="text-xs text-slate-400 font-bold">
                   {items.length} items
                 </Text>
               </View>
@@ -266,9 +266,9 @@ function WallpaperCard({
       className={`mr-3 h-52 w-36 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
         isSelected
           ? 'border-[#FF385C] scale-102 shadow-lg'
-          : 'border-transparent bg-neutral-900 active:scale-98'
+          : 'border-slate-200 bg-white shadow-xs active:scale-98'
       }`}
-      style={{ backgroundColor: isSelected ? '#1E1E1E' : '#141414' }}
+      style={{ backgroundColor: '#F8FAFC' }}
     >
       {/* Animated Looping GIF Image */}
       <Image
