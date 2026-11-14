@@ -24,3 +24,4 @@ export function useAppInsets() {
     rawBottom: insets.bottom,
   };
 }
+

@@ -91,8 +91,15 @@ export function SettingsScreen() {
       {/* Background & Theme Customization */}
       <Section title="Theme & Wallpaper">
         <View className="p-4">
+          <View className="mb-4">
+            <Button
+              label="Browse Animated Wallpaper Gallery 🎨"
+              onPress={() => navigation.navigate('WallpaperGallery')}
+            />
+          </View>
+
           <Text className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">
-            Choose App Background
+            Quick Choose App Background
           </Text>
 
           {/* Wallpaper Preview Grid */}

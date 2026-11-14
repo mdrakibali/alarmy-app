@@ -18,25 +18,31 @@ interface ThemeState {
   brightness: number;
   overlayOpacity: number;
   customImages: string[];
+  favorites: string[];
+  recentlyViewed: string[];
 
   setBackground: (target: BackgroundTarget, backgroundId: string) => void;
   setBrightness: (brightness: number) => void;
   setOverlayOpacity: (opacity: number) => void;
   addCustomImage: (uri: string) => void;
+  toggleFavorite: (wallpaperId: string) => void;
+  addRecentlyViewed: (wallpaperId: string) => void;
   resetTheme: () => void;
 }
 
 const STORAGE_KEY = 'alarmy_theme_settings';
 
 const defaultState = {
-  homeBackground: 'gradient',
-  alarmBackground: 'minimal',
-  ringingBackground: 'sunrise',
-  sleepBackground: 'night_sky',
-  missionBackground: 'minimal',
+  homeBackground: 'trending_dancing_cat',
+  alarmBackground: 'trending_dancing_cat',
+  ringingBackground: 'trending_dancing_cat',
+  sleepBackground: 'galaxy_nebula_swirl',
+  missionBackground: 'trending_dancing_cat',
   brightness: 1.0,
-  overlayOpacity: 0.1,
+  overlayOpacity: 0.15,
   customImages: [],
+  favorites: ['trending_dancing_cat', 'kpop_stage', 'motivation_sunrise'],
+  recentlyViewed: ['trending_dancing_cat', 'kpop_stage'],
 };
 
 const loadState = () => {
@@ -62,6 +68,8 @@ const saveState = (state: Partial<ThemeState>) => {
       brightness: state.brightness,
       overlayOpacity: state.overlayOpacity,
       customImages: state.customImages,
+      favorites: state.favorites,
+      recentlyViewed: state.recentlyViewed,
     };
     storage.set(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
@@ -126,6 +134,28 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       set(state => {
         const customImages = [uri, ...state.customImages.filter(u => u !== uri)];
         const updated = { customImages };
+        saveState({ ...state, ...updated });
+        return updated;
+      });
+    },
+
+    toggleFavorite: wallpaperId => {
+      set(state => {
+        const has = state.favorites.includes(wallpaperId);
+        const favorites = has
+          ? state.favorites.filter(id => id !== wallpaperId)
+          : [wallpaperId, ...state.favorites];
+        const updated = { favorites };
+        saveState({ ...state, ...updated });
+        return updated;
+      });
+    },
+
+    addRecentlyViewed: wallpaperId => {
+      set(state => {
+        const filtered = state.recentlyViewed.filter(id => id !== wallpaperId);
+        const recentlyViewed = [wallpaperId, ...filtered].slice(0, 10);
+        const updated = { recentlyViewed };
         saveState({ ...state, ...updated });
         return updated;
       });

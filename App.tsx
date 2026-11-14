@@ -72,7 +72,7 @@ function App() {
   }, [rescheduleAll]);
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <StatusBar barStyle="dark-content" />
         <NavigationContainer

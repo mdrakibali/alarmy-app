@@ -20,68 +20,69 @@ interface WallpaperItem {
   title: string;
   category: 'KPOP Trending' | 'Trending' | 'Daily Motivation';
   icon: string;
+  source: any;
   bgGradient: string[];
 }
 
 const WALLPAPERS: WallpaperItem[] = [
+  // Trending
+  {
+    id: 'cats',
+    title: 'Dancing Cat',
+    category: 'Trending',
+    icon: '🐱',
+    source: require('../../assets/images/backgrounds/bg_cats.gif'),
+    bgGradient: ['#FEF3C7', '#FDE68A'],
+  },
+  {
+    id: 'ocean',
+    title: 'Ocean Waves',
+    category: 'Trending',
+    icon: '🌊',
+    source: require('../../assets/images/backgrounds/bg_ocean.gif'),
+    bgGradient: ['#E0F2FE', '#BAE6FD'],
+  },
+  {
+    id: 'galaxy',
+    title: 'Cosmic Galaxy',
+    category: 'Trending',
+    icon: '✨',
+    source: require('../../assets/images/backgrounds/bg_galaxy.gif'),
+    bgGradient: ['#F3E8FF', '#E9D5FF'],
+  },
   // KPOP Trending
   {
-    id: 'illit',
-    title: 'ILLIT',
+    id: 'kpop',
+    title: 'ILLIT Stage',
     category: 'KPOP Trending',
-    icon: '✨',
-    bgGradient: ['#E0F2FE', '#BAE6FD'],
+    icon: '🎀',
+    source: require('../../assets/images/backgrounds/bg_kpop.gif'),
+    bgGradient: ['#FCE7F3', '#FBCFE8'],
   },
   {
     id: 'wonhee',
     title: 'WONHEE',
     category: 'KPOP Trending',
     icon: '🌸',
+    source: require('../../assets/images/backgrounds/bg_kpop.gif'),
     bgGradient: ['#FCE7F3', '#FBCFE8'],
   },
-  {
-    id: 'iroha',
-    title: 'IROHA',
-    category: 'KPOP Trending',
-    icon: '🎀',
-    bgGradient: ['#F3E8FF', '#E9D5FF'],
-  },
-  // Trending
-  {
-    id: 'dancing_cat',
-    title: 'Dancing Cat',
-    category: 'Trending',
-    icon: '🐱',
-    bgGradient: ['#FEF3C7', '#FDE68A'],
-  },
-  {
-    id: 'screaming_cat',
-    title: 'Screaming Cat',
-    category: 'Trending',
-    icon: '🙀',
-    bgGradient: ['#FEE2E2', '#FECACA'],
-  },
-  {
-    id: 'alarm_nightmare',
-    title: 'Alarm Nightmare',
-    category: 'Trending',
-    icon: '⏰',
-    bgGradient: ['#E2E8F0', '#CBD5E1'],
-  },
-  // Motivation
+  // Daily Motivation
   {
     id: 'sunrise',
-    title: 'Mountain Sunrise',
+    title: 'Golden Sunrise',
     category: 'Daily Motivation',
     icon: '🌄',
+    source: require('../../assets/images/backgrounds/bg_sunrise.gif'),
     bgGradient: ['#FFEDD5', '#FED7AA'],
   },
   {
-    id: 'focus',
-    title: 'Pure Focus',
+    id: 'night_sky',
+    title: 'Starry Night',
     category: 'Daily Motivation',
-    icon: '🎯',
-    bgGradient: ['#CCFBF1', '#99F6E4'],
+    icon: '🌌',
+    source: require('../../assets/images/backgrounds/bg_night_sky.gif'),
+    bgGradient: ['#1E1B4B', '#312E81'],
   },
 ];
 
@@ -236,24 +237,35 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       <Pressable
                         key={w.id}
                         onPress={() => setSelectedWallpaper(w.id)}
-                        className={`mr-3 h-48 w-32 rounded-3xl p-3 justify-between items-center border-2 ${
+                        className={`mr-3 h-48 w-32 rounded-3xl overflow-hidden justify-between items-center border-2 relative ${
                           isSelected
                             ? 'border-[#FF385C] scale-105'
                             : 'border-transparent bg-neutral-900'
                         }`}
                         style={{ backgroundColor: isSelected ? '#1E1E1E' : '#141414' }}
                       >
-                        <View className="items-center justify-center flex-1">
-                          <Text className="text-4xl">{w.icon}</Text>
-                        </View>
-                        <View className="w-full items-center py-1.5 rounded-xl bg-black/40">
+                        <Image
+                          source={w.source}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: '100%',
+                            height: '100%',
+                          }}
+                          resizeMode="cover"
+                        />
+                        <View className="items-center justify-center flex-1" />
+                        <View className="w-full items-center py-2 px-1 bg-black/60 backdrop-blur-sm">
                           <Text
-                            className={`text-xs font-bold ${
-                              isSelected ? 'text-[#FF385C]' : 'text-neutral-300'
+                            className={`text-xs font-black ${
+                              isSelected ? 'text-[#FF385C]' : 'text-white'
                             }`}
                             numberOfLines={1}
                           >
-                            {w.title}
+                            ♪ {w.title}
                           </Text>
                         </View>
                       </Pressable>

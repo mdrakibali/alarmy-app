@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { formatTime } from '@/features/alarm/format';
 import type { MissionType } from '@/features/alarm/types';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { storage } from '@/storage/mmkv';
+import { useThemeStore } from '@/storage/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AlarmPreview'>;
 
@@ -47,6 +49,9 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       missions: [mission],
     });
 
+    // Apply chosen animated wallpaper to app theme
+    useThemeStore.getState().setBackground('all', wallpaper);
+
     // Mark welcome as completed
     storage.set('hasCompletedWelcome', true);
 
@@ -63,25 +68,29 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     );
   };
 
-  const wallpaperGradient: Record<string, string> = {
-    illit: '#0284C7',
-    wonhee: '#DB2777',
-    iroha: '#9333EA',
-    dancing_cat: '#D97706',
-    screaming_cat: '#DC2626',
-    alarm_nightmare: '#475569',
-    sunrise: '#EA580C',
-    focus: '#0D9488',
-  };
-
-  const bgTone = wallpaperGradient[wallpaper] || '#1E293B';
+  const activeBg =
+    BACKGROUND_ITEMS.find(b => b.id === wallpaper) || BACKGROUND_ITEMS[0];
   const bottomInset = insets.bottom + 8;
 
   return (
-    <View
-      style={{ backgroundColor: bgTone }}
-      className="flex-1 justify-between px-6 py-12"
-    >
+    <View className="flex-1 justify-between px-6 py-12 relative bg-slate-900">
+      {/* Animated GIF Background */}
+      <Image
+        source={activeBg.source}
+        style={[
+          StyleSheet.absoluteFill,
+          { width: '100%', height: '100%', opacity: 0.85 },
+        ]}
+        resizeMode="cover"
+      />
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: '#000000', opacity: 0.35 },
+        ]}
+        pointerEvents="none"
+      />
+
       {/* Top Banner */}
       <View
         style={{ paddingTop: Math.max(insets.top, 12) }}

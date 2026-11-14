@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -13,8 +14,10 @@ import {
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
+import { WALLPAPERS } from '@/data/wallpapers';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useThemeStore } from '@/storage/themeStore';
 import { useAlarmStore } from './alarmStore';
 import {
   MISSION_DETAILS,
@@ -48,6 +51,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [showSoundPicker, setShowSoundPicker] = useState(false);
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
+
+  const alarmBackground = useThemeStore(s => s.alarmBackground);
+  const currentWallpaper =
+    WALLPAPERS.find(w => w.id === alarmBackground) || WALLPAPERS[0];
 
   // Stop preview on unmount
   useEffect(() => {
@@ -341,6 +348,61 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </View>
             <Text className="text-xs font-semibold text-slate-400">Off ›</Text>
           </View>
+        </View>
+
+        {/* Alarm Wallpaper Card (Animated GIF) */}
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm">
+          <View className="flex-row items-center justify-between mb-2 px-1">
+            <Text className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Alarm Wallpaper (GIF)
+            </Text>
+            <Pressable
+              onPress={() =>
+                navigation.navigate('WallpaperGallery', {
+                  onSelect: (id: string) => {
+                    useThemeStore.getState().setBackground('alarm', id);
+                  },
+                })
+              }
+            >
+              <Text className="text-xs font-bold text-[#FF385C]">
+                Change Wallpaper ›
+              </Text>
+            </Pressable>
+          </View>
+
+          <Pressable
+            onPress={() =>
+              navigation.navigate('WallpaperGallery', {
+                onSelect: (id: string) => {
+                  useThemeStore.getState().setBackground('alarm', id);
+                },
+              })
+            }
+            className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-2.5 border border-slate-100"
+          >
+            <View className="flex-row items-center flex-1 mr-3">
+              <View className="h-14 w-11 rounded-xl overflow-hidden mr-3 bg-slate-200">
+                <Image
+                  source={currentWallpaper.source}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              </View>
+              <View className="flex-1">
+                <Text
+                  className="text-sm font-bold text-slate-800"
+                  numberOfLines={1}
+                >
+                  {currentWallpaper.name}
+                </Text>
+                <Text className="text-[11px] text-slate-400 font-medium mt-0.5">
+                  Looping Animated GIF • {currentWallpaper.category}
+                </Text>
+              </View>
+            </View>
+            <Text className="text-xs font-bold text-slate-400 mr-1">›</Text>
+          </Pressable>
         </View>
 
         {/* Alarm Sound Card */}

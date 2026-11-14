@@ -12,9 +12,11 @@ export function Screen({
   return (
     <SafeAreaView
       edges={['top']}
-      className={`flex-1 bg-[#F5F6F8] ${padded ? 'px-4' : ''}`}
+      style={{ flex: 1, backgroundColor: '#F5F6F8' }}
     >
-      {children}
+      <View style={{ flex: 1, paddingHorizontal: padded ? 16 : 0 }}>
+        {children}
+      </View>
     </SafeAreaView>
   );
 }

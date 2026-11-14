@@ -1,12 +1,12 @@
 import React from 'react';
 import {
   Image,
-  ImageBackground,
   StyleSheet,
   View,
   ViewStyle,
 } from 'react-native';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
+import { WALLPAPERS } from '@/data/wallpapers';
 import { BackgroundTarget, useThemeStore } from '@/storage/themeStore';
 
 interface Props {
@@ -39,7 +39,9 @@ export function AppBackground({
     else if (target === 'mission') activeId = missionBackground;
   }
 
+  const wallpaperItem = WALLPAPERS.find(w => w.id === activeId);
   const bgItem = BACKGROUND_ITEMS.find(b => b.id === activeId);
+
   const isCustomUri =
     activeId?.startsWith('file://') ||
     activeId?.startsWith('content://') ||
@@ -47,7 +49,7 @@ export function AppBackground({
 
   const imageSource = isCustomUri
     ? { uri: activeId }
-    : bgItem?.source || BACKGROUND_ITEMS[0].source;
+    : wallpaperItem?.source || bgItem?.source || WALLPAPERS[0].source;
 
   return (
     <View style={[styles.container, style]}>

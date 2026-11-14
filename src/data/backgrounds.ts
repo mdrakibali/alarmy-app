@@ -12,18 +12,60 @@ export interface BackgroundItem {
   name: string;
   category: BackgroundCategory;
   source: any;
-  overlayOpacity?: number; // suggested default
+  isAnimated?: boolean;
+  overlayOpacity?: number;
   brightness?: number;
   previewColor: string;
 }
 
 export const BACKGROUND_ITEMS: BackgroundItem[] = [
   {
-    id: 'sunrise',
-    name: 'Golden Sunrise',
+    id: 'cats',
+    name: 'Dancing Cat (Animated GIF)',
+    category: 'Trending',
+    source: require('../assets/images/backgrounds/bg_cats.gif'),
+    isAnimated: true,
+    previewColor: '#F59E0B',
+  },
+  {
+    id: 'galaxy',
+    name: 'Cosmic Galaxy (Animated GIF)',
     category: 'Sky',
-    source: require('../assets/images/backgrounds/bg_sunrise.png'),
+    source: require('../assets/images/backgrounds/bg_galaxy.gif'),
+    isAnimated: true,
+    previewColor: '#6B2D9E',
+  },
+  {
+    id: 'ocean',
+    name: 'Ocean Waves (Animated GIF)',
+    category: 'Nature',
+    source: require('../assets/images/backgrounds/bg_ocean.gif'),
+    isAnimated: true,
+    previewColor: '#00A8B5',
+  },
+  {
+    id: 'sunrise',
+    name: 'Golden Sunrise (Animated GIF)',
+    category: 'Sky',
+    source: require('../assets/images/backgrounds/bg_sunrise.gif'),
+    isAnimated: true,
     previewColor: '#FF9944',
+  },
+  {
+    id: 'night_sky',
+    name: 'Starry Night (Animated GIF)',
+    category: 'Sky',
+    source: require('../assets/images/backgrounds/bg_night_sky.gif'),
+    isAnimated: true,
+    previewColor: '#191E50',
+  },
+  {
+    id: 'kpop',
+    name: 'K-Pop Stage (Animated GIF)',
+    category: 'KPOP',
+    source: require('../assets/images/backgrounds/bg_kpop.gif'),
+    isAnimated: true,
+    previewColor: '#D2BEF5',
   },
   {
     id: 'sunset',
@@ -31,27 +73,6 @@ export const BACKGROUND_ITEMS: BackgroundItem[] = [
     category: 'Sky',
     source: require('../assets/images/backgrounds/bg_sunset.png'),
     previewColor: '#8E2D6E',
-  },
-  {
-    id: 'night_sky',
-    name: 'Starry Night',
-    category: 'Sky',
-    source: require('../assets/images/backgrounds/bg_night_sky.png'),
-    previewColor: '#191E50',
-  },
-  {
-    id: 'galaxy',
-    name: 'Cosmic Galaxy',
-    category: 'Sky',
-    source: require('../assets/images/backgrounds/bg_galaxy.png'),
-    previewColor: '#6B2D9E',
-  },
-  {
-    id: 'ocean',
-    name: 'Tropical Ocean',
-    category: 'Nature',
-    source: require('../assets/images/backgrounds/bg_ocean.png'),
-    previewColor: '#00A8B5',
   },
   {
     id: 'mountains',
@@ -87,19 +108,5 @@ export const BACKGROUND_ITEMS: BackgroundItem[] = [
     category: 'Aesthetic',
     source: require('../assets/images/backgrounds/bg_gradient.png'),
     previewColor: '#FF385C',
-  },
-  {
-    id: 'kpop',
-    name: 'K-Pop Pastel',
-    category: 'KPOP',
-    source: require('../assets/images/backgrounds/bg_kpop.png'),
-    previewColor: '#D2BEF5',
-  },
-  {
-    id: 'cats',
-    name: 'Dancing Cat',
-    category: 'Trending',
-    source: require('../assets/images/backgrounds/bg_cats.png'),
-    previewColor: '#F59E0B',
   },
 ];

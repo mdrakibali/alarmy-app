@@ -14,6 +14,7 @@ import { WelcomeWizardScreen } from '@/features/onboarding/WelcomeWizardScreen';
 import { ReportScreen } from '@/features/report/ReportScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { SleepScreen } from '@/features/sleep/SleepScreen';
+import { WallpaperGalleryScreen } from '@/features/wallpaper/WallpaperGalleryScreen';
 import { storage } from '@/storage/mmkv';
 import type { RootStackParamList, TabParamList } from './types';
 
@@ -173,6 +174,13 @@ export function RootNavigator() {
         options={{
           headerShown: false,
           gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="WallpaperGallery"
+        component={WallpaperGalleryScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
