@@ -1,11 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import {
   FlatList,
-  Modal,
   Pressable,
   Switch,
   Text,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -29,7 +27,6 @@ export function AlarmListScreen() {
   const sorted = sortAlarms(alarms);
 
   const [showPromo, setShowPromo] = useState(true);
-  const [fabMenuOpen, setFabMenuOpen] = useState(false);
 
   // Compute countdown to earliest upcoming enabled alarm
   const nextAlarmCountdown = useMemo(() => {
@@ -145,7 +142,7 @@ export function AlarmListScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
-            onPress={() => setFabMenuOpen(prev => !prev)}
+            onPress={() => navigation.navigate('AlarmEdit')}
             className="h-16 w-16 items-center justify-center rounded-full bg-[#FF385C] shadow-lg active:scale-95"
             style={{
               elevation: 8,
@@ -156,84 +153,10 @@ export function AlarmListScreen() {
             }}
           >
             <Text className="text-3xl font-light text-white leading-none">
-              {fabMenuOpen ? '✕' : '+'}
+              +
             </Text>
           </Pressable>
         </View>
-
-        {/* FAB Popup Menu */}
-        <Modal
-          visible={fabMenuOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setFabMenuOpen(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setFabMenuOpen(false)}>
-            <View className="flex-1 bg-black/25 justify-end">
-              <TouchableWithoutFeedback>
-                <View
-                  style={{
-                    marginBottom: 76 + insets.bottom,
-                    marginRight: 20,
-                  }}
-                  className="self-end items-end"
-                >
-                  {/* Habit Alarm */}
-                  <Pressable
-                    onPress={() => {
-                      setFabMenuOpen(false);
-                      navigation.navigate('AlarmEdit');
-                    }}
-                    className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-3 shadow-md border border-slate-100"
-                  >
-                    <Text className="text-xl mr-3">📅</Text>
-                    <Text className="text-base font-bold text-slate-800">
-                      Habit alarm
-                    </Text>
-                  </Pressable>
-
-                  {/* Quick Alarm */}
-                  <Pressable
-                    onPress={() => {
-                      setFabMenuOpen(false);
-                      navigation.navigate('AlarmEdit');
-                    }}
-                    className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-3 shadow-md border border-slate-100"
-                  >
-                    <Text className="text-xl mr-3">⚡</Text>
-                    <Text className="text-base font-bold text-slate-800">
-                      Quick alarm
-                    </Text>
-                  </Pressable>
-
-                  {/* Standard Alarm */}
-                  <Pressable
-                    onPress={() => {
-                      setFabMenuOpen(false);
-                      navigation.navigate('AlarmEdit');
-                    }}
-                    className="mb-4 flex-row items-center rounded-2xl bg-white px-5 py-3 shadow-md border border-slate-100"
-                  >
-                    <Text className="text-xl mr-3">⏰</Text>
-                    <Text className="text-base font-bold text-slate-800">
-                      Alarm
-                    </Text>
-                  </Pressable>
-
-                  {/* Close Red Button */}
-                  <Pressable
-                    onPress={() => setFabMenuOpen(false)}
-                    className="h-16 w-16 items-center justify-center rounded-full bg-[#FF385C] shadow-lg active:scale-95"
-                  >
-                    <Text className="text-2xl font-bold text-white leading-none">
-                      ✕
-                    </Text>
-                  </Pressable>
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
       </View>
     </Screen>
   );

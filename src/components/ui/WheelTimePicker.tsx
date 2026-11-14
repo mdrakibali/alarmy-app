@@ -21,27 +21,34 @@ interface WheelTimePickerProps {
   hour: number; // 0-23
   minute: number; // 0-59
   onChange: (hour: number, minute: number) => void;
+  onInteractionChange?: (isInteracting: boolean) => void;
 }
 
 export function WheelTimePicker({
   hour,
   minute,
   onChange,
+  onInteractionChange,
 }: WheelTimePickerProps) {
   const hour12 = hour % 12 === 0 ? 12 : hour % 12;
   const isPM = hour >= 12;
 
-  const hourScrollRef = useRef<ScrollView>(null);
-  const minScrollRef = useRef<ScrollView>(null);
-  const periodScrollRef = useRef<ScrollView>(null);
+  const hourScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+  const minScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+  const periodScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
 
-  // Sync scroll position whenever hour or minute changes
+  const isInteracting = useRef(false);
+  const isMounted = useRef(false);
+
+  // Sync scroll position whenever hour or minute changes (only when user is not actively interacting)
   useEffect(() => {
+    if (isInteracting.current) return;
+
     const hourIdx = HOURS_12.indexOf(hour12);
     if (hourIdx !== -1) {
       hourScrollRef.current?.scrollTo({
         y: hourIdx * ITEM_HEIGHT,
-        animated: true,
+        animated: isMounted.current,
       });
     }
 
@@ -49,15 +56,17 @@ export function WheelTimePicker({
     if (minIdx !== -1) {
       minScrollRef.current?.scrollTo({
         y: minIdx * ITEM_HEIGHT,
-        animated: true,
+        animated: isMounted.current,
       });
     }
 
     const periodIdx = isPM ? 1 : 0;
     periodScrollRef.current?.scrollTo({
       y: periodIdx * ITEM_HEIGHT,
-      animated: true,
+      animated: isMounted.current,
     });
+
+    isMounted.current = true;
   }, [hour12, minute, isPM]);
 
   const handleHourScrollEnd = (
@@ -68,6 +77,10 @@ export function WheelTimePicker({
       0,
       Math.min(HOURS_12.length - 1, Math.round(y / ITEM_HEIGHT)),
     );
+    hourScrollRef.current?.scrollTo({
+      y: index * ITEM_HEIGHT,
+      animated: true,
+    });
     const selectedH12 = HOURS_12[index];
     const new24h = isPM
       ? selectedH12 === 12
@@ -77,6 +90,10 @@ export function WheelTimePicker({
       ? 0
       : selectedH12;
     onChange(new24h, minute);
+    setTimeout(() => {
+      isInteracting.current = false;
+      onInteractionChange?.(false);
+    }, 120);
   };
 
   const handleMinScrollEnd = (
@@ -87,8 +104,16 @@ export function WheelTimePicker({
       0,
       Math.min(MINUTES.length - 1, Math.round(y / ITEM_HEIGHT)),
     );
+    minScrollRef.current?.scrollTo({
+      y: index * ITEM_HEIGHT,
+      animated: true,
+    });
     const selectedMin = MINUTES[index];
     onChange(hour, selectedMin);
+    setTimeout(() => {
+      isInteracting.current = false;
+      onInteractionChange?.(false);
+    }, 120);
   };
 
   const handlePeriodScrollEnd = (
@@ -99,6 +124,10 @@ export function WheelTimePicker({
       0,
       Math.min(PERIODS.length - 1, Math.round(y / ITEM_HEIGHT)),
     );
+    periodScrollRef.current?.scrollTo({
+      y: index * ITEM_HEIGHT,
+      animated: true,
+    });
     const targetPM = index === 1;
     if (targetPM !== isPM) {
       const new24h = targetPM
@@ -110,6 +139,10 @@ export function WheelTimePicker({
         : hour12;
       onChange(new24h, minute);
     }
+    setTimeout(() => {
+      isInteracting.current = false;
+      onInteractionChange?.(false);
+    }, 120);
   };
 
   const selectHour = (h: number) => {
@@ -213,7 +246,13 @@ export function WheelTimePicker({
             nestedScrollEnabled={true}
             showsVerticalScrollIndicator={false}
             snapToInterval={ITEM_HEIGHT}
+            snapToAlignment="center"
             decelerationRate="fast"
+            onScrollBeginDrag={() => {
+              isInteracting.current = true;
+              onInteractionChange?.(true);
+            }}
+            onScrollEndDrag={handleHourScrollEnd}
             onMomentumScrollEnd={handleHourScrollEnd}
             contentContainerStyle={{
               paddingTop: ITEM_HEIGHT,
@@ -260,7 +299,13 @@ export function WheelTimePicker({
             nestedScrollEnabled={true}
             showsVerticalScrollIndicator={false}
             snapToInterval={ITEM_HEIGHT}
+            snapToAlignment="center"
             decelerationRate="fast"
+            onScrollBeginDrag={() => {
+              isInteracting.current = true;
+              onInteractionChange?.(true);
+            }}
+            onScrollEndDrag={handleMinScrollEnd}
             onMomentumScrollEnd={handleMinScrollEnd}
             contentContainerStyle={{
               paddingTop: ITEM_HEIGHT,
@@ -299,7 +344,13 @@ export function WheelTimePicker({
             nestedScrollEnabled={true}
             showsVerticalScrollIndicator={false}
             snapToInterval={ITEM_HEIGHT}
+            snapToAlignment="center"
             decelerationRate="fast"
+            onScrollBeginDrag={() => {
+              isInteracting.current = true;
+              onInteractionChange?.(true);
+            }}
+            onScrollEndDrag={handlePeriodScrollEnd}
             onMomentumScrollEnd={handlePeriodScrollEnd}
             contentContainerStyle={{
               paddingTop: ITEM_HEIGHT,

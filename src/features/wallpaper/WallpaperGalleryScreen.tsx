@@ -18,10 +18,12 @@ import {
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { useToast } from '@/components/ui/AppToast';
 import { WallpaperPreviewModal } from './WallpaperPreviewModal';
 
 export function WallpaperGalleryScreen() {
   const insets = useAppInsets();
+  const toast = useToast();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<any>();
 
@@ -36,6 +38,21 @@ export function WallpaperGalleryScreen() {
   // Callback if opened from AlarmEdit to pick wallpaper specifically
   const onSelectForAlarm = route.params?.onSelect;
 
+  const handleCardPress = (w: WallpaperItem) => {
+    if (onSelectForAlarm) {
+      onSelectForAlarm(w.id);
+      toast.showToast({
+        title: 'Wallpaper Selected! ✨',
+        message: `"${w.name}" selected for your alarm.`,
+        icon: '🖼️',
+        type: 'success',
+      });
+      navigation.goBack();
+    } else {
+      setActivePreview(w);
+    }
+  };
+
   const favoriteItems = useMemo(() => {
     return WALLPAPERS.filter(w => favorites.includes(w.id));
   }, [favorites]);
@@ -47,30 +64,13 @@ export function WallpaperGalleryScreen() {
   }, [recentlyViewed]);
 
   const handleCustomImport = () => {
-    Alert.prompt
-      ? Alert.prompt(
-          'Import Custom GIF',
-          'Enter direct HTTP(S) URL or local file path to animated GIF:',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Add',
-              onPress: (url?: string) => {
-                if (url && (url.endsWith('.gif') || url.startsWith('http'))) {
-                  useThemeStore.getState().addCustomImage(url);
-                  useThemeStore.getState().setBackground('all', url);
-                  Alert.alert('Imported!', 'Custom GIF set as wallpaper.');
-                } else {
-                  Alert.alert('Invalid URL', 'Please enter a valid GIF file URL.');
-                }
-              },
-            },
-          ],
-        )
-      : Alert.alert(
-          'Custom GIF Import',
-          'Place your custom GIF in src/assets/wallpapers/ or configure custom URL in settings.',
-        );
+    toast.showToast({
+      title: 'Import Custom GIF 🖼️',
+      message:
+        'Place your custom GIF in src/assets/wallpapers/ or configure URL in settings.',
+      icon: '💡',
+      type: 'info',
+    });
   };
 
   return (
@@ -168,7 +168,7 @@ export function WallpaperGalleryScreen() {
                     key={`fav-${w.id}`}
                     wallpaper={w}
                     isSelected={currentHomeBg === w.id}
-                    onPress={() => setActivePreview(w)}
+                    onPress={() => handleCardPress(w)}
                   />
                 ))}
               </ScrollView>
@@ -190,7 +190,7 @@ export function WallpaperGalleryScreen() {
                     key={`rec-${w.id}`}
                     wallpaper={w}
                     isSelected={currentHomeBg === w.id}
-                    onPress={() => setActivePreview(w)}
+                    onPress={() => handleCardPress(w)}
                   />
                 ))}
               </ScrollView>
@@ -229,7 +229,7 @@ export function WallpaperGalleryScreen() {
                     key={w.id}
                     wallpaper={w}
                     isSelected={currentHomeBg === w.id}
-                    onPress={() => setActivePreview(w)}
+                    onPress={() => handleCardPress(w)}
                   />
                 ))}
               </ScrollView>

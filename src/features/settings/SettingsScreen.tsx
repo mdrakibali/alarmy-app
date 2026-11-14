@@ -23,6 +23,7 @@ import { useToast } from '@/components/ui/AppToast';
 
 export function SettingsScreen() {
   const insets = useAppInsets();
+  const toast = useToast();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [exactAlarmAllowed, setExactAlarmAllowed] = useState(true);
@@ -68,11 +69,13 @@ export function SettingsScreen() {
       missions: ['math'],
     });
 
-    Alert.alert(
-      'Test Alarm Scheduled! ⏳',
-      'An alarm has been set for 10-30 seconds from now with a Math Mission. Lock your phone or close the app to test background wakeup!',
-      [{ text: 'Got it!' }],
-    );
+    toast.showToast({
+      title: 'Test Alarm Scheduled! ⏳',
+      message:
+        'Set for ~10 seconds from now with Math Mission. Lock phone to test!',
+      icon: '🔔',
+      type: 'success',
+    });
   };
 
   return (

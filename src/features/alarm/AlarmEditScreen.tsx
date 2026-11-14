@@ -54,6 +54,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
+  const [isTimePickerActive, setIsTimePickerActive] = useState(false);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const currentWallpaper =
@@ -203,6 +204,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
       <ScrollView
         className="flex-1"
+        scrollEnabled={!isTimePickerActive}
         nestedScrollEnabled={true}
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -231,11 +233,17 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </Text>
 
         {/* Custom Wheel / Drum Time Picker */}
-        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm items-center">
+        <View
+          onTouchStart={() => setIsTimePickerActive(true)}
+          onTouchEnd={() => setIsTimePickerActive(false)}
+          onTouchCancel={() => setIsTimePickerActive(false)}
+          className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm items-center"
+        >
           <WheelTimePicker
             hour={draft.hour}
             minute={draft.minute}
             onChange={(h, m) => patch({ hour: h, minute: m })}
+            onInteractionChange={setIsTimePickerActive}
           />
         </View>
 

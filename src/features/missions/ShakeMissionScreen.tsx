@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, BackHandler, Pressable, Text, View } from 'react-native';
+import { BackHandler, Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
+import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAppInsets } from '@/utils/safeArea';
@@ -12,6 +13,7 @@ export function ShakeMissionScreen({ navigation }: Props) {
   const insets = useAppInsets();
   const REQUIRED_SHAKES = 30;
   const [shakesLeft, setShakesLeft] = useState(REQUIRED_SHAKES);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     // Disable back button during mission
@@ -32,13 +34,7 @@ export function ShakeMissionScreen({ navigation }: Props) {
 
   const completeMission = async () => {
     await NativeAlarm.stopAlarm();
-    Alert.alert('Awake and Energized! ⚡', 'Shake mission completed successfully.', [
-      {
-        text: 'Awesome!',
-        onPress: () =>
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] }),
-      },
-    ]);
+    setShowSuccessModal(true);
   };
 
   const progress = ((REQUIRED_SHAKES - shakesLeft) / REQUIRED_SHAKES) * 100;
@@ -109,6 +105,24 @@ export function ShakeMissionScreen({ navigation }: Props) {
           </Pressable>
         </View>
       </View>
+
+      {/* Completion Modal */}
+      <CustomConfirmModal
+        visible={showSuccessModal}
+        title="Awake and Energized! ⚡"
+        message="Shake mission completed! You shook your phone 30 times. Sleep inertia defeated!"
+        icon="📱"
+        confirmText="Start My Day"
+        cancelText=""
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        }}
+        onCancel={() => {
+          setShowSuccessModal(false);
+          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        }}
+      />
     </AppBackground>
   );
 }

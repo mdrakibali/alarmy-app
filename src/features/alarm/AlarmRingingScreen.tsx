@@ -85,7 +85,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     : 'Complete Mission to Dismiss 🎯';
 
   return (
-    <AppBackground target="ringing">
+    <AppBackground target="ringing" backgroundId={alarmFromStore?.wallpaper}>
       <View
         style={{
           paddingTop: insets.top + 16,
