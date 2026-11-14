@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   Pressable,
@@ -8,6 +8,9 @@ import {
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useCameraPermission } from 'react-native-vision-camera';
+import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
+import { TextRecognitionCamera } from 'vision-camera-ocr-plugin';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -34,7 +37,9 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
   const [manualInput, setManualInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [isScanning, setIsScanning] = useState(false);
+  const [lens, setLens] = useState<'barcode' | 'text' | null>(null);
+  const accepted = useRef(false);
+  const { hasPermission, requestPermission } = useCameraPermission();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
@@ -132,20 +137,29 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   };
 
-  const handleSimulateScan = async () => {
-    setIsScanning(true);
-    setErrorMsg('');
-    const result = await NativeAlarm.openCameraMission({ mode: 'barcode' });
-    setIsScanning(false);
-    if (!result?.value) {
-      setErrorMsg('Scan cancelled. The mission stays open.');
-      return;
-    }
-    if (result.value.trim() === selectedTarget.code) {
+  const acceptValue = (value: string) => {
+    if (accepted.current) return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (trimmed === selectedTarget.code || trimmed.includes(selectedTarget.code)) {
+      accepted.current = true;
+      setLens(null);
       completeMission();
       return;
     }
     setErrorMsg('That code does not match the registered barcode.');
+  };
+
+  const openLens = async (next: 'barcode' | 'text') => {
+    setErrorMsg('');
+    if (!hasPermission) {
+      const granted = await requestPermission();
+      if (!granted) {
+        setErrorMsg('Camera permission is required to scan.');
+        return;
+      }
+    }
+    setLens(next);
   };
 
   const handleVerifyManualCode = () => {
@@ -197,53 +211,36 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
         </View>
 
         {/* Camera Viewfinder Simulation */}
-        <View className="w-full aspect-[4/3] bg-slate-900 rounded-3xl overflow-hidden relative border-2 border-slate-700 shadow-2xl items-center justify-center my-3">
-          {/* Viewfinder Target Reticle */}
-          <View className="w-56 h-36 border-2 border-dashed border-emerald-400/80 rounded-2xl items-center justify-center relative bg-black/40">
-            {/* Horizontal Scanning Laser line */}
-            <View className="w-full h-0.5 bg-emerald-400 shadow-lg shadow-emerald-400" />
-
-            {/* Barcode Graphic Inside Reticle */}
-            <View className="flex-row items-center justify-center space-x-1 mt-4 opacity-75">
-              <View className="w-1.5 h-12 bg-white" />
-              <View className="w-0.5 h-12 bg-white" />
-              <View className="w-2 h-12 bg-white" />
-              <View className="w-1 h-12 bg-white" />
-              <View className="w-3 h-12 bg-white" />
-              <View className="w-0.5 h-12 bg-white" />
-              <View className="w-2 h-12 bg-white" />
-              <View className="w-1.5 h-12 bg-white" />
+        <View className="w-full aspect-[4/3] bg-slate-900 rounded-3xl overflow-hidden relative border-2 border-slate-700 my-3">
+          {lens === 'barcode' && hasPermission ? (
+            <CodeScanner
+              style={{ width: '100%', height: '100%' }}
+              isActive
+              barcodeFormats={['qr-code', 'ean-13', 'ean-8', 'code-128', 'upc-a', 'upc-e']}
+              onBarcodeScanned={codes => {
+                const value = codes.find(code => code.rawValue)?.rawValue;
+                if (value) acceptValue(value);
+              }}
+              onError={() => setErrorMsg('Barcode scanner could not read the camera.')}
+            />
+          ) : null}
+          {lens === 'text' && hasPermission ? (
+            <TextRecognitionCamera
+              style={{ width: '100%', height: '100%' }}
+              isActive
+              onTextRecognized={result => {
+                if (result.text) acceptValue(result.text);
+              }}
+              onError={() => setErrorMsg('Text recognition could not read the camera.')}
+            />
+          ) : null}
+          {lens == null ? (
+            <View className="flex-1 items-center justify-center px-6">
+              <Text className="text-white text-center text-sm font-semibold">
+                The camera stays off until you start a scan.
+              </Text>
             </View>
-            <Text className="text-emerald-300 font-mono text-[10px] mt-1 font-bold">
-              ||| {selectedTarget.code} |||
-            </Text>
-          </View>
-
-          {/* Flashlight toggle */}
-          <Pressable
-            onPress={() => setFlashlight(prev => !prev)}
-            className={`absolute top-4 right-4 px-3 py-1.5 rounded-full flex-row items-center border ${
-              flashlight
-                ? 'bg-amber-400 border-amber-300'
-                : 'bg-black/50 border-white/20'
-            }`}
-          >
-            <Text className="text-xs mr-1">🔦</Text>
-            <Text
-              className={`text-[11px] font-bold ${
-                flashlight ? 'text-slate-900' : 'text-white'
-              }`}
-            >
-              {flashlight ? 'Flash ON' : 'Flash'}
-            </Text>
-          </Pressable>
-
-          {/* Status text */}
-          <View className="absolute bottom-3 bg-black/60 px-4 py-1 rounded-full">
-            <Text className="text-white text-xs font-semibold">
-              {isScanning ? '🔍 Verifying barcode...' : 'Align barcode inside frame'}
-            </Text>
-          </View>
+          ) : null}
         </View>
 
         {/* Manual Barcode input dropdown */}
@@ -282,12 +279,19 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
         {/* Action Controls */}
         <View className="w-full items-center">
           <Pressable
-            onPress={handleSimulateScan}
-            disabled={isScanning}
-            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-md mb-2"
+            onPress={() => openLens('barcode')}
+            className="w-full bg-[#6B8F71] py-4 rounded-2xl items-center mb-2"
           >
-            <Text className="text-white font-extrabold text-base tracking-wide">
-              {isScanning ? 'Scanning Barcode...' : 'Scan Target Barcode 📷'}
+            <Text className="text-white font-extrabold text-base">
+              {lens === 'barcode' ? 'Scanning barcode' : 'Scan QR or barcode'}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => openLens('text')}
+            className="w-full bg-[#1A2E22] py-3 rounded-2xl items-center mb-2"
+          >
+            <Text className="text-white font-bold text-sm">
+              {lens === 'text' ? 'Reading printed text' : 'Read printed text (OCR)'}
             </Text>
           </Pressable>
 
