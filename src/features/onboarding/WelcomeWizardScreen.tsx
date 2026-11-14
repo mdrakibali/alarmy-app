@@ -13,6 +13,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import type { MissionType } from '../alarm/types';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
 import { useThemeStore } from '@/storage/themeStore';
 
@@ -268,7 +269,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   key={w.id}
                   id={w.id}
                   name={w.name}
-                  source={w.source}
+                  source={wallpaperThumb(w.id) ?? w.source}
                   isSelected={selectedWallpaper === w.id}
                   onSelect={handleWallpaperSelect}
                 />

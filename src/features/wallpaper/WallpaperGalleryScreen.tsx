@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
+  FlatList,
   Image,
   ScrollView,
   Text,
@@ -8,216 +9,176 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import {
-  WALLPAPERS,
-  WallpaperItem,
-} from '@/data/wallpapers';
+import { WALLPAPERS, WallpaperItem } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
-import { useToast } from '@/components/ui/AppToast';
-import { WallpaperPreviewModal } from './WallpaperPreviewModal';
+
+type GroupId =
+  | 'Nature'
+  | 'Minimal'
+  | 'Animated'
+  | 'Motivational'
+  | 'Custom'
+  | 'Favorites';
+
+const GROUPS: { id: GroupId; categories: string[] }[] = [
+  { id: 'Nature', categories: ['Nature', 'Galaxy'] },
+  { id: 'Minimal', categories: ['Minimal Animation', 'Aesthetic'] },
+  { id: 'Animated', categories: ['Trending', 'KPOP Trending', 'Anime', 'Cute Animals', 'Funny Memes', 'Gaming', 'Love & Romance'] },
+  { id: 'Motivational', categories: ['Daily Motivation'] },
+  { id: 'Custom', categories: [] },
+  { id: 'Favorites', categories: [] },
+];
+
+const Card = React.memo(function WallpaperCard({
+  id,
+  name,
+  selected,
+  source,
+  onPress,
+}: {
+  id: string;
+  name: string;
+  selected: boolean;
+  source: number | { uri: string };
+  onPress: (id: string) => void;
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={() => onPress(id)}
+      style={{ width: '48%', height: 224, marginBottom: 16 }}
+      className={`rounded-3xl overflow-hidden border-2 ${
+        selected ? 'border-[#6B8F71]' : 'border-slate-200'
+      }`}
+    >
+      <Image source={source} className="absolute inset-0 w-full h-full" resizeMode="cover" />
+      <View className="flex-1 justify-end">
+        <View className="w-full py-2 px-2 bg-black/70">
+          <Text className="text-xs font-black text-white text-center" numberOfLines={1}>
+            {name}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 export function WallpaperGalleryScreen() {
   const insets = useAppInsets();
-  const toast = useToast();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<any>();
+  const pickForAlarm = Boolean(route.params?.pickForAlarm);
 
   const currentAlarmBg = useThemeStore(s => s.alarmBackground);
   const favorites = useThemeStore(s => s.favorites);
-  const recentlyViewed = useThemeStore(s => s.recentlyViewed);
+  const customImages = useThemeStore(s => s.customImages);
+  const [selectedGroup, setSelectedGroup] = React.useState<GroupId>('Nature');
 
-  const [activePreview, setActivePreview] = useState<WallpaperItem | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Trending');
-
-  // Callback if opened from AlarmEdit to pick wallpaper specifically
-  const onSelectForAlarm = route.params?.onSelect;
-
-  const handleCardPress = (w: WallpaperItem) => {
-    if (onSelectForAlarm) {
-      onSelectForAlarm(w.id);
-      toast.showToast({
-        title: 'Wallpaper Selected! ✨',
-        message: `"${w.name}" selected for your alarm.`,
-        icon: '🖼️',
-        type: 'success',
-      });
-      navigation.goBack();
-    } else {
-      setActivePreview(w);
-    }
-  };
-
-  // Only render the active category's items (6-8 items max) to prevent memory exhaustion on Android
-  const displayedItems = useMemo(() => {
-    if (selectedCategory === 'Favorites') {
+  const items = useMemo(() => {
+    if (selectedGroup === 'Favorites') {
       return WALLPAPERS.filter(w => favorites.includes(w.id));
     }
-    if (selectedCategory === 'Recent') {
-      return recentlyViewed
-        .map(id => WALLPAPERS.find(w => w.id === id))
-        .filter((w): w is WallpaperItem => Boolean(w));
+    if (selectedGroup === 'Custom') {
+      return customImages.map(uri => ({
+        id: uri,
+        name: 'Custom photo',
+        custom: true as const,
+      }));
     }
-    if (selectedCategory === 'All') {
-      return WALLPAPERS.slice(0, 10);
-    }
-    return WALLPAPERS.filter(w => w.category === selectedCategory);
-  }, [selectedCategory, favorites, recentlyViewed]);
+    const group = GROUPS.find(g => g.id === selectedGroup);
+    return WALLPAPERS.filter(w => group?.categories.includes(w.category));
+  }, [selectedGroup, favorites, customImages]);
 
-  const categoryTabs = [
-    'Trending',
-    'KPOP Trending',
-    'Anime',
-    'Cute Animals',
-    'Daily Motivation',
-    'Aesthetic',
-    'Galaxy',
-    'Gaming',
-    'Favorites',
-    'All',
-  ];
+  const onPress = useCallback(
+    (id: string) => {
+      navigation.navigate('WallpaperPreview', { wallpaperId: id, pickForAlarm });
+    },
+    [navigation, pickForAlarm],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: WallpaperItem | { id: string; name: string; custom: true } }) => {
+      const custom = 'custom' in item && item.custom;
+      const thumb = custom ? { uri: item.id } : wallpaperThumb(item.id);
+      if (!thumb) {
+        return null;
+      }
+      return (
+        <Card
+          id={item.id}
+          name={item.name}
+          selected={currentAlarmBg === item.id}
+          source={thumb}
+          onPress={onPress}
+        />
+      );
+    },
+    [currentAlarmBg, onPress],
+  );
 
   return (
-    <View className="flex-1 bg-[#F5F6F8]">
-      {/* Top Header */}
+    <View className="flex-1 bg-[#FBFBF9]">
       <View
         style={{ paddingTop: Math.max(insets.top, 14) }}
-        className="px-5 pb-3 border-b border-slate-100 bg-white z-10 shadow-xs"
+        className="px-5 pb-3 border-b border-slate-100 bg-white"
       >
         <View className="flex-row items-center justify-between mb-2">
           <TouchableOpacity
-            activeOpacity={0.7}
             onPress={() => navigation.goBack()}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             className="h-10 w-10 rounded-full bg-slate-100 items-center justify-center"
           >
             <Text className="text-slate-800 text-lg font-bold">←</Text>
           </TouchableOpacity>
-
-          <View className="px-3 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30">
-            <Text className="text-[10px] font-black text-[#4E7D5B] uppercase tracking-widest">
-              LIVE WALLPAPERS
-            </Text>
-          </View>
+          <Text className="text-[10px] font-black text-[#6B8F71] uppercase tracking-widest">
+            Wallpapers
+          </Text>
         </View>
-
-        <Text className="text-2xl font-black text-slate-900 tracking-tight">
-          Choose alarm wallpaper
+        <Text className="text-2xl font-black text-[#1A2E22]">Choose alarm wallpaper</Text>
+        <Text className="text-xs text-[#5E7166] mt-0.5">
+          Posters stay still. Animation plays only in preview.
         </Text>
-        <Text className="text-xs text-slate-500 mt-0.5">
-          Select an animated background for your morning wake-up
-        </Text>
-
-        {/* Category Horizontal Filter Bar */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mt-3 -mx-1"
-          contentContainerStyle={{ paddingHorizontal: 2 }}
-        >
-          {categoryTabs.map(tab => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
+          {GROUPS.map(tab => (
             <TouchableOpacity
-              key={tab}
-              activeOpacity={0.8}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              onPress={() => setSelectedCategory(tab)}
+              key={tab.id}
+              onPress={() => setSelectedGroup(tab.id)}
               className={`mr-2 px-3.5 py-1.5 rounded-xl border ${
-                selectedCategory === tab
-                  ? 'bg-[#0F172A] border-[#0F172A]'
-                  : 'bg-white border-slate-200'
+                selectedGroup === tab.id ? 'bg-[#1A2E22] border-[#1A2E22]' : 'bg-white border-slate-200'
               }`}
             >
-              <Text
-                className={`text-xs font-bold ${
-                  selectedCategory === tab ? 'text-white' : 'text-slate-600'
-                }`}
-              >
-                {tab}
+              <Text className={`text-xs font-bold ${selectedGroup === tab.id ? 'text-white' : 'text-[#5E7166]'}`}>
+                {tab.id}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
-      {/* 2-Column Responsive Grid (Only active category items mounted = 60fps) */}
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: insets.bottom + 32,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {displayedItems.length === 0 ? (
-          <View className="items-center justify-center py-20">
-            <Text className="text-3xl mb-2">🖼️</Text>
-            <Text className="text-sm font-bold text-slate-700">
-              No wallpapers found in this category
+      <FlatList
+        data={items}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+        numColumns={2}
+        windowSize={5}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        removeClippedSubviews
+        {...(items.length > 0
+          ? { columnWrapperStyle: { justifyContent: 'space-between' as const, paddingHorizontal: 16 } }
+          : {})}
+        ListEmptyComponent={
+          <View className="items-center py-20 px-6">
+            <Text className="text-sm font-bold text-[#1A2E22]">Nothing in this category yet</Text>
+            <Text className="text-xs text-[#5E7166] mt-1 text-center">
+              {selectedGroup === 'Custom'
+                ? 'Import a photo from the alarm editor.'
+                : 'Mark wallpapers from the preview screen.'}
             </Text>
           </View>
-        ) : (
-          <View className="flex-row flex-wrap justify-between">
-            {displayedItems.map(w => {
-              const isSelected = currentAlarmBg === w.id;
-              return (
-                <TouchableOpacity
-                  key={w.id}
-                  activeOpacity={0.85}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  onPress={() => handleCardPress(w)}
-                  className={`w-[48%] h-56 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
-                    isSelected
-                      ? 'border-[#4E7D5B] shadow-md bg-[#EBF3ED]/40'
-                      : 'border-slate-200 bg-white shadow-xs'
-                  }`}
-                >
-                  {/* Animated Looping GIF Image */}
-                  <Image
-                    source={w.source}
-                    className="absolute inset-0 w-full h-full"
-                    resizeMode="cover"
-                  />
-
-                  {/* Top Favorite / Selected indicator badge */}
-                  <View className="w-full flex-row justify-end p-2.5 z-10">
-                    {isSelected && (
-                      <View className="h-6 w-6 rounded-full bg-[#4E7D5B] border border-white items-center justify-center shadow-md">
-                        <Text className="text-white text-[10px] font-black">✓</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Bottom Title Bar */}
-                  <View className="w-full py-2 px-2 bg-black/70 z-10 border-t border-white/10">
-                    <Text
-                      className={`text-xs font-black text-center ${
-                        isSelected ? 'text-[#E2A938]' : 'text-white'
-                      }`}
-                      numberOfLines={1}
-                    >
-                      ♪ {w.name}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Full-Screen Preview Modal */}
-      <WallpaperPreviewModal
-        visible={Boolean(activePreview)}
-        wallpaper={activePreview}
-        onClose={() => setActivePreview(null)}
-        onApplyForAlarm={wallpaperId => {
-          if (onSelectForAlarm) {
-            onSelectForAlarm(wallpaperId);
-            navigation.goBack();
-          }
-        }}
+        }
       />
     </View>
   );

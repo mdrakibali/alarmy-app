@@ -99,20 +99,38 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed]);
 
-  const handleCapture = () => {
+  const [captureError, setCaptureError] = useState('');
+
+  const handleCapture = async () => {
     if (isCapturing) return;
     setIsCapturing(true);
-    try {
-      Vibration.vibrate(60);
-    } catch {}
-
-    setTimeout(() => {
-      setMatchPercentage(96);
-      setTimeout(() => {
-        setIsCapturing(false);
-        completeMission();
-      }, 700);
-    }, 1200);
+    setCaptureError('');
+    const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
+    if (!shot?.path) {
+      setIsCapturing(false);
+      setCaptureError('Camera closed. The mission is still open.');
+      return;
+    }
+    const reference = route.params?.referencePath;
+    if (!reference) {
+      setIsCapturing(false);
+      setCaptureError('Register a reference photo while editing the alarm. This capture was not accepted.');
+      return;
+    }
+    const compared = await NativeAlarm.comparePhotos(
+      reference,
+      shot.path,
+      route.params?.matchThreshold ?? 72,
+    );
+    if (!compared?.pass) {
+      setMatchPercentage(compared?.score ?? 0);
+      setIsCapturing(false);
+      setCaptureError(`Match ${compared?.score ?? 0}%. Try the same place again.`);
+      return;
+    }
+    setMatchPercentage(compared.score);
+    setIsCapturing(false);
+    completeMission();
   };
 
   return (
@@ -178,11 +196,13 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
             </Text>
 
             {matchPercentage !== null && (
-              <View className="absolute inset-0 bg-black/70 rounded-2xl items-center justify-center">
+              <View className="mt-3 items-center">
                 <Text className="text-white text-3xl font-black">{matchPercentage}%</Text>
-                <Text className="text-emerald-400 font-bold text-xs mt-1">Target Matched! ✓</Text>
               </View>
             )}
+            {captureError ? (
+              <Text className="text-white text-center text-sm mt-3 px-4">{captureError}</Text>
+            ) : null}
           </View>
 
           {/* Flashlight toggle */}

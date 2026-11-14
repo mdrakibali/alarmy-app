@@ -22,97 +22,118 @@ object AlarmScheduler {
         }
     }
 
-    fun schedule(context: Context, alarm: AlarmModel, explicitTriggerTimeMs: Long? = null) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-
-        // Compute trigger time: if explicitTriggerTimeMs (such as snooze) is provided, use it!
-        // Otherwise calculate next regular daily/weekly occurrence.
-        val triggerTimeMs = if (explicitTriggerTimeMs != null && explicitTriggerTimeMs > System.currentTimeMillis()) {
-            explicitTriggerTimeMs
-        } else if (alarm.triggerTimeMs > System.currentTimeMillis()) {
-            alarm.triggerTimeMs
-        } else {
-            calculateNextOccurrence(alarm)
+    fun schedule(
+        context: Context,
+        alarm: AlarmModel,
+        explicitTriggerTimeMs: Long? = null,
+        recalculateWallClock: Boolean = false,
+    ): Boolean {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return false
+        if (!canScheduleExactAlarms(context)) {
+            Log.e(TAG, "Exact alarm permission missing for ${alarm.id}")
+            val stored = AlarmStorage.saveAlarm(context, alarm.copy(enabled = false))
+            cancelPending(context, alarm.id, stored.requestCode)
+            return false
         }
-        alarm.triggerTimeMs = triggerTimeMs
-        AlarmStorage.saveAlarm(context, alarm)
+
+        val now = System.currentTimeMillis()
+        val keepSnoozeInstant = alarm.snoozeUsed > 0 && alarm.triggerTimeMs > now && !recalculateWallClock
+        val triggerTimeMs = when {
+            explicitTriggerTimeMs != null && explicitTriggerTimeMs > now -> explicitTriggerTimeMs
+            keepSnoozeInstant -> alarm.triggerTimeMs
+            else -> calculateNextOccurrence(alarm)
+        }
+        val prepared = alarm.copy(
+            triggerTimeMs = triggerTimeMs,
+            snoozeUsed = if (explicitTriggerTimeMs != null) alarm.snoozeUsed else 0,
+        )
+        val stored = AlarmStorage.saveAlarm(context, prepared)
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = AlarmReceiver.ACTION_ALARM_TRIGGER
-            putExtra(EXTRA_ALARM_ID, alarm.id)
+            putExtra(EXTRA_ALARM_ID, stored.id)
         }
-
-        val requestCode = alarm.id.hashCode()
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, flags)
+        val pendingIntent = PendingIntent.getBroadcast(context, stored.requestCode, intent, flags)
+        cancelLegacyHashPending(context, stored.id)
 
-        // PendingIntent to launch app when clicking alarm info
         val showIntent = Intent(context, MainActivity::class.java).apply {
             setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         val showPendingIntent = PendingIntent.getActivity(
             context,
-            requestCode,
+            stored.requestCode,
             showIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val alarmClockInfo = AlarmManager.AlarmClockInfo(triggerTimeMs, showPendingIntent)
-                alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
-                Log.d(TAG, "Scheduled alarm clock for ${alarm.id} at $triggerTimeMs")
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMs, pendingIntent)
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTimeMs, pendingIntent)
-            }
+        return try {
+            val alarmClockInfo = AlarmManager.AlarmClockInfo(triggerTimeMs, showPendingIntent)
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+            Log.d(TAG, "Scheduled alarm clock for ${stored.id} code=${stored.requestCode} at $triggerTimeMs")
+            true
         } catch (e: SecurityException) {
-            Log.e(TAG, "Exact alarm permission denied when scheduling ${alarm.id}", e)
+            Log.e(TAG, "Exact alarm permission denied when scheduling ${stored.id}", e)
+            AlarmStorage.saveAlarm(context, stored.copy(enabled = false))
+            false
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to schedule alarm ${alarm.id}", e)
+            Log.e(TAG, "Failed to schedule alarm ${stored.id}", e)
+            AlarmStorage.saveAlarm(context, stored.copy(enabled = false))
+            false
         }
     }
 
     fun cancel(context: Context, alarmId: String) {
+        val existing = AlarmStorage.getAlarm(context, alarmId)
+        cancelPending(context, alarmId, existing?.requestCode ?: 0)
+        AlarmStorage.removeAlarm(context, alarmId)
+        Log.d(TAG, "Cancelled alarm $alarmId")
+    }
+
+    private fun cancelPending(context: Context, alarmId: String, requestCode: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = AlarmReceiver.ACTION_ALARM_TRIGGER
             putExtra(EXTRA_ALARM_ID, alarmId)
         }
-        val requestCode = alarmId.hashCode()
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, flags)
+        if (requestCode != 0) {
+            alarmManager.cancel(PendingIntent.getBroadcast(context, requestCode, intent, flags))
+        }
+        cancelLegacyHashPending(context, alarmId)
+    }
 
-        alarmManager.cancel(pendingIntent)
-        AlarmStorage.removeAlarm(context, alarmId)
-        Log.d(TAG, "Cancelled alarm $alarmId")
+    private fun cancelLegacyHashPending(context: Context, alarmId: String) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = AlarmReceiver.ACTION_ALARM_TRIGGER
+            putExtra(EXTRA_ALARM_ID, alarmId)
+        }
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        alarmManager.cancel(PendingIntent.getBroadcast(context, alarmId.hashCode(), intent, flags))
     }
 
     fun scheduleSnooze(context: Context, alarmId: String, intervalMin: Int): Boolean {
-        val existing = AlarmStorage.getAlarm(context, alarmId)
-        val nowCal = Calendar.getInstance()
-        val alarm = existing ?: AlarmModel(
-            id = alarmId,
-            hour = nowCal.get(Calendar.HOUR_OF_DAY),
-            minute = nowCal.get(Calendar.MINUTE),
-            label = "Alarm",
-            snoozeIntervalMin = intervalMin
-        )
-        val delayMs = intervalMin * 60 * 1000L
+        val alarm = AlarmStorage.getAlarm(context, alarmId) ?: return false
+        if (!alarm.snoozeEnabled) return false
+        if (alarm.snoozeUsed >= alarm.snoozeMaxCount) {
+            Log.d(TAG, "Snooze cap reached for $alarmId (${alarm.snoozeUsed}/${alarm.snoozeMaxCount})")
+            return false
+        }
+        val delayMs = intervalMin.coerceAtLeast(1) * 60 * 1000L
         val snoozeTriggerTime = System.currentTimeMillis() + delayMs
-        val snoozed = alarm.copy(triggerTimeMs = snoozeTriggerTime)
-        schedule(context, snoozed, explicitTriggerTimeMs = snoozeTriggerTime)
-        Log.d(TAG, "Snoozed alarm $alarmId for $intervalMin min (at $snoozeTriggerTime)")
-        return true
+        val snoozed = alarm.copy(snoozeUsed = alarm.snoozeUsed + 1, triggerTimeMs = snoozeTriggerTime)
+        val ok = schedule(context, snoozed, explicitTriggerTimeMs = snoozeTriggerTime)
+        Log.d(TAG, "Snooze $alarmId result=$ok used=${snoozed.snoozeUsed}")
+        return ok
     }
 
-    fun rescheduleAll(context: Context) {
+    fun rescheduleAll(context: Context, recalculateWallClock: Boolean = false) {
         val alarms = AlarmStorage.getAllAlarms(context)
-        Log.d(TAG, "Rescheduling ${alarms.size} alarms")
+        Log.d(TAG, "Rescheduling ${alarms.size} alarms recalculate=$recalculateWallClock")
         for (alarm in alarms) {
             if (alarm.enabled) {
-                schedule(context, alarm)
+                schedule(context, alarm, recalculateWallClock = recalculateWallClock)
             }
         }
     }

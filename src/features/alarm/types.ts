@@ -26,4 +26,14 @@ export interface Alarm {
   wallpaper?: string;
   snoozedUntil?: number;
   gentleWakeup?: boolean;
+  photoReferencePath?: string;
+  photoMatchThreshold?: number;
+  barcodeValue?: string;
+  stepTarget?: number;
+  squatTarget?: number;
+  shakeTarget?: number;
+  backupSoundId?: string;
+  wakeUpCheckMin?: number;
+  timePressure?: boolean;
+  labelReminder?: boolean;
 }

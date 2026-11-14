@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '@/components/ui/Button';
 import { Row, Section } from '@/components/ui/Section';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
@@ -122,7 +123,7 @@ export function SettingsScreen() {
                   }`}
                 >
                   <Image
-                    source={bg.source}
+                    source={wallpaperThumb(bg.id) ?? bg.source}
                     className="w-[70px] h-[110px]"
                     resizeMode="cover"
                   />

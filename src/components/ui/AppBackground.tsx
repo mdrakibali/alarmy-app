@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { BackgroundTarget, useThemeStore } from '@/storage/themeStore';
 
 interface Props {
@@ -47,9 +48,13 @@ export function AppBackground({
     activeId?.startsWith('content://') ||
     activeId?.startsWith('http');
 
+  const animated = target === 'ringing';
+  const still = wallpaperThumb(activeId);
   const imageSource = isCustomUri
     ? { uri: activeId }
-    : wallpaperItem?.source || bgItem?.source || WALLPAPERS[0].source;
+    : animated
+      ? wallpaperItem?.source || bgItem?.source || still || WALLPAPERS[0].source
+      : still || wallpaperItem?.source || bgItem?.source || WALLPAPERS[0].source;
 
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
 

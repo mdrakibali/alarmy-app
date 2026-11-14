@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { storage } from './mmkv';
+import { useMorningStore } from './morningStore';
 
 export interface AlarmLogEntry {
   id: string;
@@ -101,7 +102,7 @@ const loadLogs = (): AlarmLogEntry[] => {
   } catch (e) {
     console.warn('Failed to load report logs:', e);
   }
-  return generateDefaultLogs();
+  return [];
 };
 
 const saveLogs = (logs: AlarmLogEntry[]) => {
@@ -127,6 +128,7 @@ export const useReportStore = create<ReportState>((set, get) => {
         };
         const nextLogs = [...state.logs, newEntry];
         saveLogs(nextLogs);
+        useMorningStore.getState().markAlarmDismissed();
         return { logs: nextLogs };
       });
     },

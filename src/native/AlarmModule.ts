@@ -8,6 +8,14 @@ import type { Alarm } from '@/features/alarm/types';
 
 const { AlarmModule } = NativeModules;
 
+export interface NativeAlarmRecord {
+  id: string;
+  enabled: boolean;
+  snoozeUsed: number;
+  snoozeMaxCount: number;
+  triggerTimeMs: number;
+}
+
 export interface RingingAlarmInfo {
   id: string;
   label: string;
@@ -108,6 +116,35 @@ class AlarmModuleBridge {
       return await AlarmModule.getCurrentlyRingingAlarm();
     } catch {
       return null;
+    }
+  }
+
+  async listAlarms(): Promise<NativeAlarmRecord[]> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return [];
+    }
+    try {
+      const rows = await AlarmModule.listAlarms();
+      return Array.isArray(rows) ? rows : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async canUseFullScreenIntent(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule?.canUseFullScreenIntent) {
+      return true;
+    }
+    try {
+      return await AlarmModule.canUseFullScreenIntent();
+    } catch {
+      return true;
+    }
+  }
+
+  openFullScreenIntentSettings(): void {
+    if (Platform.OS === 'android' && AlarmModule?.openFullScreenIntentSettings) {
+      AlarmModule.openFullScreenIntentSettings();
     }
   }
 
@@ -308,6 +345,66 @@ class AlarmModuleBridge {
       } catch {}
       this.stopShakeDetection();
     };
+  }
+
+  async openCameraMission(options: {
+    mode: 'photo' | 'barcode' | 'squat';
+    target?: number;
+  }): Promise<{ path?: string; value?: string; count?: number; completed?: boolean } | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return null;
+    }
+    try {
+      return await AlarmModule.openCameraMission(options);
+    } catch (e) {
+      console.warn('openCameraMission', e);
+      return null;
+    }
+  }
+
+  async comparePhotos(
+    referencePath: string,
+    capturedPath: string,
+    threshold: number,
+  ): Promise<{ score: number; pass: boolean } | null> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return null;
+    }
+    try {
+      return await AlarmModule.comparePhotos(referencePath, capturedPath, threshold);
+    } catch {
+      return null;
+    }
+  }
+
+  async startStepCounter(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) return false;
+    try {
+      return await AlarmModule.startStepCounter();
+    } catch {
+      return false;
+    }
+  }
+
+  async stopStepCounter(): Promise<void> {
+    if (Platform.OS !== 'android' || !AlarmModule) return;
+    try {
+      await AlarmModule.stopStepCounter();
+    } catch {}
+  }
+
+  onStepCount(listener: (steps: number) => void): () => void {
+    if (!this.emitter) return () => {};
+    const sub = this.emitter.addListener('onStepCount', (value: number) => {
+      listener(Number(value));
+    });
+    return () => sub.remove();
+  }
+
+  onStepUnavailable(listener: () => void): () => void {
+    if (!this.emitter) return () => {};
+    const sub = this.emitter.addListener('onStepUnavailable', () => listener());
+    return () => sub.remove();
   }
 
   onAlarmRinging(listener: (alarmId: string | null) => void): EmitterSubscription | null {

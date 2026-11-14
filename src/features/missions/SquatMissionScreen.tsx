@@ -91,27 +91,17 @@ export function SquatMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed]);
 
-  const addSquat = useCallback(() => {
-    try {
-      Vibration.vibrate(80);
-    } catch {}
+  const [poseBlocked, setPoseBlocked] = useState(false);
 
-    setSquatsDone(prev => {
-      const next = prev + 1;
-      if (next >= TARGET_SQUATS) {
-        completeMission();
-      }
-      return next;
-    });
+  const startPose = useCallback(async () => {
+    const result = await NativeAlarm.openCameraMission({ mode: 'squat', target: TARGET_SQUATS });
+    if (result?.completed) {
+      setSquatsDone(result.count ?? TARGET_SQUATS);
+      completeMission();
+      return;
+    }
+    setPoseBlocked(true);
   }, [completeMission]);
-
-  // Motion sensor detector for squats
-  useEffect(() => {
-    const unsub = NativeAlarm.onShake(() => {
-      addSquat();
-    });
-    return () => unsub();
-  }, [addSquat]);
 
   const progressPct = Math.min(100, Math.round((squatsDone / TARGET_SQUATS) * 100));
 
@@ -165,15 +155,17 @@ export function SquatMissionScreen({ navigation, route }: Props) {
           </View>
 
           <Pressable
-            onPress={addSquat}
-            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:bg-[#3D6347] mb-3"
+            onPress={startPose}
+            className="w-full bg-[#6B8F71] py-4 rounded-2xl items-center shadow-md mb-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
-              Perform Squat (or Tap) 🏋️
+              Open camera and count squats
             </Text>
           </Pressable>
           <Text className="text-xs font-bold text-[#5E7166] text-center">
-            Sensor automatically detects your squat motion
+            {poseBlocked
+              ? 'Pose detection did not finish. Shaking the phone does not count.'
+              : 'A rep counts only after a full down and up detected by the camera.'}
           </Text>
         </View>
       </View>

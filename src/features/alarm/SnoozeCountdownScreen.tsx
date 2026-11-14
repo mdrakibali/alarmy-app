@@ -9,6 +9,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
@@ -81,7 +82,7 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
     <View className="flex-1 relative bg-slate-900">
       {/* Edge-to-Edge Animated Wallpaper */}
       <Image
-        source={activeBg.source}
+        source={wallpaperThumb(activeWallpaperId) ?? activeBg.source}
         className="absolute inset-0 w-full h-full opacity-80"
         resizeMode="cover"
       />

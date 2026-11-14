@@ -132,28 +132,24 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   };
 
-  const handleSimulateScan = () => {
+  const handleSimulateScan = async () => {
     setIsScanning(true);
     setErrorMsg('');
-    setTimeout(() => {
-      setIsScanning(false);
+    const result = await NativeAlarm.openCameraMission({ mode: 'barcode' });
+    setIsScanning(false);
+    if (!result?.value) {
+      setErrorMsg('Scan cancelled. The mission stays open.');
+      return;
+    }
+    if (result.value.trim() === selectedTarget.code) {
       completeMission();
-    }, 1200);
+      return;
+    }
+    setErrorMsg('That code does not match the registered barcode.');
   };
 
   const handleVerifyManualCode = () => {
-    if (!manualInput.trim()) {
-      setErrorMsg('Please enter a barcode number');
-      return;
-    }
-    if (
-      manualInput.trim() === selectedTarget.code ||
-      manualInput.trim().length >= 4
-    ) {
-      completeMission();
-    } else {
-      setErrorMsg(`Code doesn't match "${selectedTarget.label}" barcode!`);
-    }
+    setErrorMsg('Type the code with the camera scanner. Typed text cannot dismiss the alarm.');
   };
 
   return (

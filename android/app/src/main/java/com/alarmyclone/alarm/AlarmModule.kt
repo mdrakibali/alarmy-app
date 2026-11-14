@@ -1,5 +1,6 @@
 package com.alarmyclone.alarm
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
@@ -16,15 +17,19 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.facebook.react.bridge.ActivityEventListener
 
 class AlarmModule(private val reactContext: ReactApplicationContext) :
-    ReactContextBaseJavaModule(reactContext) {
+    ReactContextBaseJavaModule(reactContext), ActivityEventListener {
 
     private var previewPlayer: MediaPlayer? = null
     private var shakeDetector: ShakeDetector? = null
+    private var stepCounter: StepCounter? = null
+    private var cameraPromise: Promise? = null
 
     companion object {
         const val NAME = "AlarmModule"
+        private const val CAMERA_REQUEST = 4401
         private var instance: AlarmModule? = null
 
         fun emitAlarmRinging(alarmId: String?) {
@@ -34,6 +39,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     init {
         instance = this
+        reactContext.addActivityEventListener(this)
     }
 
     override fun getName(): String = NAME
@@ -104,13 +110,13 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 gentleWakeup = gentleWakeup
             )
 
-            if (enabled) {
+            val scheduled = if (enabled) {
                 AlarmScheduler.schedule(reactContext, model)
             } else {
                 AlarmScheduler.cancel(reactContext, id)
+                true
             }
-
-            promise.resolve(true)
+            promise.resolve(scheduled)
         } catch (e: Exception) {
             promise.reject("SCHEDULE_ERROR", e.message, e)
         }
@@ -194,6 +200,46 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun canScheduleExactAlarms(promise: Promise) {
         promise.resolve(AlarmScheduler.canScheduleExactAlarms(reactContext))
+    }
+
+    @ReactMethod
+    fun canUseFullScreenIntent(promise: Promise) {
+        if (Build.VERSION.SDK_INT >= 34) {
+            val manager = reactContext.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            promise.resolve(manager.canUseFullScreenIntent())
+        } else {
+            promise.resolve(true)
+        }
+    }
+
+    @ReactMethod
+    fun openFullScreenIntentSettings() {
+        if (Build.VERSION.SDK_INT >= 34) {
+            val intent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                data = Uri.parse("package:${reactContext.packageName}")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+        }
+    }
+
+    @ReactMethod
+    fun listAlarms(promise: Promise) {
+        try {
+            val arr = Arguments.createArray()
+            AlarmStorage.getAllAlarms(reactContext).forEach { alarm ->
+                val map = Arguments.createMap()
+                map.putString("id", alarm.id)
+                map.putBoolean("enabled", alarm.enabled)
+                map.putInt("snoozeUsed", alarm.snoozeUsed)
+                map.putInt("snoozeMaxCount", alarm.snoozeMaxCount)
+                map.putDouble("triggerTimeMs", alarm.triggerTimeMs.toDouble())
+                arr.pushMap(map)
+            }
+            promise.resolve(arr)
+        } catch (e: Exception) {
+            promise.reject("LIST_ALARMS", e.message, e)
+        }
     }
 
     @ReactMethod
@@ -465,6 +511,86 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             promise.reject("SHAKE_STOP_ERROR", e.message, e)
         }
     }
+
+    @ReactMethod
+    fun openCameraMission(options: ReadableMap, promise: Promise) {
+        val activity = reactContext.currentActivity
+        if (activity == null) {
+            promise.reject("NO_ACTIVITY", "Open the app before using the camera")
+            return
+        }
+        if (cameraPromise != null) {
+            promise.reject("CAMERA_BUSY", "Camera is already open")
+            return
+        }
+        cameraPromise = promise
+        val intent = Intent(activity, CameraMissionActivity::class.java).apply {
+            putExtra(CameraMissionActivity.EXTRA_MODE, options.getString("mode") ?: CameraMissionActivity.MODE_PHOTO)
+            if (options.hasKey("target")) {
+                putExtra(CameraMissionActivity.EXTRA_TARGET, options.getInt("target"))
+            }
+        }
+        try {
+            activity.startActivityForResult(intent, CAMERA_REQUEST)
+        } catch (e: Exception) {
+            cameraPromise = null
+            promise.reject("CAMERA_START", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun comparePhotos(referencePath: String, capturedPath: String, threshold: Int, promise: Promise) {
+        try {
+            val score = PhotoMatcher.similarityPercent(referencePath, capturedPath)
+            val map = Arguments.createMap()
+            map.putInt("score", score)
+            map.putBoolean("pass", score >= threshold.coerceIn(1, 99))
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("COMPARE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun startStepCounter(promise: Promise) {
+        try {
+            stepCounter?.stop()
+            val counter = StepCounter(
+                reactContext,
+                onSteps = { sendEvent("onStepCount", it) },
+                onUnavailable = { sendEvent("onStepUnavailable", true) },
+            )
+            stepCounter = counter
+            promise.resolve(counter.start())
+        } catch (e: Exception) {
+            promise.reject("STEP_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun stopStepCounter(promise: Promise) {
+        stepCounter?.stop()
+        stepCounter = null
+        promise.resolve(true)
+    }
+
+    override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode != CAMERA_REQUEST) return
+        val promise = cameraPromise ?: return
+        cameraPromise = null
+        if (resultCode != Activity.RESULT_OK || data == null) {
+            promise.reject("CAMERA_CANCELLED", data?.getStringExtra(CameraMissionActivity.EXTRA_REASON) ?: "cancelled")
+            return
+        }
+        val map = Arguments.createMap()
+        data.getStringExtra(CameraMissionActivity.EXTRA_PATH)?.let { map.putString("path", it) }
+        data.getStringExtra(CameraMissionActivity.EXTRA_VALUE)?.let { map.putString("value", it) }
+        map.putInt("count", data.getIntExtra(CameraMissionActivity.EXTRA_COUNT, 0))
+        map.putBoolean("completed", data.getBooleanExtra(CameraMissionActivity.EXTRA_COMPLETED, false))
+        promise.resolve(map)
+    }
+
+    override fun onNewIntent(intent: Intent) = Unit
 
     @ReactMethod
     fun addListener(eventName: String) {

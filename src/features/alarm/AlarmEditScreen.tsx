@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
-  Modal,
   ScrollView,
   Switch,
   Text,
@@ -9,10 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
+import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
@@ -65,6 +67,15 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       NativeAlarm.stopSoundPreview();
     };
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const picked = takeWallpaperPick();
+      if (picked) {
+        setDraft(current => ({ ...current, wallpaper: picked }));
+      }
+    }, []),
+  );
 
   const patch = (next: Partial<Omit<Alarm, 'id'>>) =>
     setDraft(current => ({ ...current, ...next }));
@@ -380,13 +391,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </View>
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() =>
-                navigation.navigate('WallpaperGallery', {
-                  onSelect: (id: string) => {
-                    patch({ wallpaper: id });
-                  },
-                })
-              }
+              onPress={() => navigation.navigate('WallpaperGallery', { pickForAlarm: true })}
               className="py-1 px-3 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30"
             >
               <Text className="text-xs font-bold text-[#4E7D5B]">
@@ -419,7 +424,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   }`}
                 >
                   <Image
-                    source={w.source}
+                    source={wallpaperThumb(w.id) ?? w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
                   />
@@ -678,6 +683,26 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
+      {/* Mission capture setup */}
+      {draft.missions.includes('photo') ? (
+        <TouchableOpacity
+          onPress={async () => {
+            const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
+            if (shot?.path) {
+              patch({ photoReferencePath: shot.path, photoMatchThreshold: 72 });
+            }
+          }}
+          className="bg-white rounded-3xl p-4 mb-4 border border-slate-100"
+        >
+          <Text className="text-sm font-bold text-[#1A2E22]">
+            {draft.photoReferencePath ? 'Reference photo saved' : 'Register reference photo'}
+          </Text>
+          <Text className="text-xs text-[#5E7166] mt-1">
+            The alarm accepts a new photo only when it matches this one.
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
       {/* Fixed Bottom Save Button with Safe Area Inset - Flex sibling so it never obscures content */}
       <View
         style={{ paddingBottom: Math.max(bottomInset, 52) }}
@@ -694,28 +719,19 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Wake-up Mission Selection Modal */}
-      <Modal
-        visible={showMissionModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowMissionModal(false)}
-      >
-        <View className="flex-1 bg-black/50 justify-end">
-          {/* Backdrop Dismiss Area */}
+      {showMissionModal ? (
+        <View className="absolute inset-0 justify-end bg-black/50 z-40">
           <TouchableOpacity
             activeOpacity={1}
-            className="absolute inset-0"
+            className="flex-1"
             onPress={() => setShowMissionModal(false)}
           />
-
-          {/* Bottom Sheet Card with Fixed Height and Flexbox Hierarchy */}
           <View
             style={{
-              height: '78%',
+              maxHeight: '78%',
               paddingBottom: Math.max(insets.bottom, 16),
             }}
-            className="bg-white rounded-t-3xl p-5 shadow-2xl z-10"
+            className="bg-white rounded-t-3xl p-5"
           >
             {/* Header */}
             <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
@@ -739,7 +755,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
             {/* Mission List with style={{ flex: 1 }} so bottom button is never pushed off screen */}
             <ScrollView
-              style={{ flex: 1 }}
+              style={{ maxHeight: 420 }}
               className="mt-3"
               showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
@@ -837,7 +853,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </View>
           </View>
         </View>
-      </Modal>
+      ) : null}
 
       {/* Custom Delete Confirmation Modal */}
       <CustomConfirmModal

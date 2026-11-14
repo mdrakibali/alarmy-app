@@ -12,6 +12,7 @@ import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { formatTime } from '@/features/alarm/format';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -142,7 +143,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       <StatusBar barStyle="light-content" />
       {/* 100% Edge-to-Edge Animated GIF Background with physical screen dimensions */}
       <Image
-        source={activeBg.source}
+        source={wallpaperThumb(wallpaper) ?? activeBg.source}
         style={[
           StyleSheet.absoluteFill,
           { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },

@@ -121,22 +121,28 @@ export function StepMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   }, [navigation, route.params]);
 
-  const addStep = useCallback(() => {
-    setStepsWalked(prev => {
-      const next = prev + 1;
-      if (next >= TARGET_STEPS) {
-        completeMission();
-      }
-      return next;
-    });
+  const addStep = useCallback((count: number) => {
+    setStepsWalked(count);
+    if (count >= TARGET_STEPS) {
+      completeMission();
+    }
   }, [completeMission]);
 
-  // Real physical motion detection via accelerometer
+  const [sensorMissing, setSensorMissing] = useState(false);
+
   useEffect(() => {
-    const unsub = NativeAlarm.onShake(() => {
-      addStep();
+    let stopped = false;
+    NativeAlarm.startStepCounter().then(ok => {
+      if (!ok && !stopped) setSensorMissing(true);
     });
-    return () => unsub();
+    const unsub = NativeAlarm.onStepCount(count => addStep(count));
+    const unsubMissing = NativeAlarm.onStepUnavailable(() => setSensorMissing(true));
+    return () => {
+      stopped = true;
+      unsub();
+      unsubMissing();
+      NativeAlarm.stopStepCounter();
+    };
   }, [addStep]);
 
   const progressPct = Math.min(100, Math.round((stepsWalked / TARGET_STEPS) * 100));
@@ -183,17 +189,11 @@ export function StepMissionScreen({ navigation, route }: Props) {
         </View>
 
         {/* Step Button / Walking Sensor Trigger */}
-        <View className="items-center mb-4">
-          <Pressable
-            onPress={addStep}
-            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:bg-[#3D6347] mb-3"
-          >
-            <Text className="text-white text-base font-black tracking-wide">
-              Take Step (or Walk with Phone) 👟
-            </Text>
-          </Pressable>
-          <Text className="text-xs font-bold text-slate-400 text-center">
-            Hold your phone while walking or tap the step button
+        <View className="items-center mb-4 px-2">
+          <Text className="text-xs font-bold text-[#5E7166] text-center">
+            {sensorMissing
+              ? 'This phone has no step counter. The mission cannot be completed by tapping.'
+              : 'Walk with the phone. Steps come from the step counter sensor.'}
           </Text>
         </View>
       </View>

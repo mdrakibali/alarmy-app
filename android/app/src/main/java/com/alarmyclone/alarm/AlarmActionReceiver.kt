@@ -23,15 +23,7 @@ class AlarmActionReceiver : BroadcastReceiver() {
             ACTION_SNOOZE -> {
                 val alarm = AlarmStorage.getAlarm(context, alarmId)
                 val intervalMin = alarm?.snoozeIntervalMin ?: 5
-                val snoozeTimeMs = System.currentTimeMillis() + (intervalMin * 60 * 1000L)
-
-                // Reschedule for snooze time
-                alarm?.let {
-                    val snoozedAlarm = it.copy(triggerTimeMs = snoozeTimeMs)
-                    AlarmScheduler.schedule(context, snoozedAlarm, explicitTriggerTimeMs = snoozeTimeMs)
-                }
-
-                // Stop current ringing
+                AlarmScheduler.scheduleSnooze(context, alarmId, intervalMin)
                 AlarmService.stop(context)
             }
         }

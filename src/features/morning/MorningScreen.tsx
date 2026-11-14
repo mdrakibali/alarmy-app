@@ -1,11 +1,15 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/ui/Screen';
 import { DAILY_QUOTES, DEFAULT_ROUTINES, useMorningStore } from '@/storage/morningStore';
 import { useAppInsets } from '@/utils/safeArea';
+import type { RootStackParamList } from '@/navigation/types';
 
 export function MorningScreen() {
   const insets = useAppInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const completed = useMorningStore(s => s.completedItems);
   const streakDays = useMorningStore(s => s.streakDays);
@@ -33,6 +37,12 @@ export function MorningScreen() {
         <Text className="text-sm text-[#5E7166] mt-1">
           Start your day energized, focused, and intentional
         </Text>
+        <Pressable
+          onPress={() => navigation.navigate('Report')}
+          className="mt-4 self-start px-3 py-2 rounded-full bg-white border border-[#6B8F71]"
+        >
+          <Text className="text-xs font-bold text-[#1A2E22]">Wake history</Text>
+        </Pressable>
 
         {/* Wake-up Streak Card */}
         <View className="bg-white rounded-3xl p-6 mt-5 border border-slate-100 shadow-sm">

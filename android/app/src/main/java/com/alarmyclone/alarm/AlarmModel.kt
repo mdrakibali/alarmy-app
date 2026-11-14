@@ -18,7 +18,9 @@ data class AlarmModel(
     val missions: List<String> = emptyList(),
     val enabled: Boolean = true,
     var triggerTimeMs: Long = 0L,
-    val gentleWakeup: Boolean = true
+    val gentleWakeup: Boolean = true,
+    val requestCode: Int = 0,
+    val snoozeUsed: Int = 0,
 ) {
     fun toJsonObject(): JSONObject {
         val obj = JSONObject()
@@ -35,6 +37,8 @@ data class AlarmModel(
         obj.put("enabled", enabled)
         obj.put("triggerTimeMs", triggerTimeMs)
         obj.put("gentleWakeup", gentleWakeup)
+        obj.put("requestCode", requestCode)
+        obj.put("snoozeUsed", snoozeUsed)
 
         val daysArray = JSONArray()
         repeatDays.forEach { daysArray.put(it) }
@@ -78,7 +82,9 @@ data class AlarmModel(
                 missions = missionsList,
                 enabled = obj.optBoolean("enabled", true),
                 triggerTimeMs = obj.optLong("triggerTimeMs", 0L),
-                gentleWakeup = obj.optBoolean("gentleWakeup", true)
+                gentleWakeup = obj.optBoolean("gentleWakeup", true),
+                requestCode = obj.optInt("requestCode", 0),
+                snoozeUsed = obj.optInt("snoozeUsed", 0),
             )
         }
     }

@@ -22,11 +22,12 @@ import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
 import { PermissionScreen } from '@/features/onboarding/PermissionScreen';
 import { SplashScreen } from '@/features/onboarding/SplashScreen';
 import { WelcomeWizardScreen } from '@/features/onboarding/WelcomeWizardScreen';
-import { ReportScreen } from '@/features/report/ReportScreen';
 import { TabVectorIcon } from '@/components/ui/TabVectorIcon';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { SleepScreen } from '@/features/sleep/SleepScreen';
 import { WallpaperGalleryScreen } from '@/features/wallpaper/WallpaperGalleryScreen';
+import { WallpaperPreviewScreen } from '@/features/wallpaper/WallpaperPreviewScreen';
+import { ReportScreen } from '@/features/report/ReportScreen';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -72,7 +73,6 @@ function CustomBottomTabBar({
           | 'alarm'
           | 'sleep'
           | 'morning'
-          | 'report'
           | 'settings';
 
         return (
@@ -117,7 +117,6 @@ function Tabs() {
       <Tab.Screen name="Alarm" component={AlarmListScreen} />
       <Tab.Screen name="Sleep" component={SleepScreen} />
       <Tab.Screen name="Morning" component={MorningScreen} />
-      <Tab.Screen name="Report" component={ReportScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
@@ -156,7 +155,6 @@ export function RootNavigator() {
         component={AlarmEditScreen}
         options={{
           headerShown: false,
-          presentation: 'modal',
         }}
       />
       <Stack.Screen
@@ -246,6 +244,19 @@ export function RootNavigator() {
         options={{
           headerShown: false,
         }}
+      />
+      <Stack.Screen
+        name="WallpaperPreview"
+        component={WallpaperPreviewScreen}
+        options={{
+          headerShown: false,
+          animation: 'fade',
+        }}
+      />
+      <Stack.Screen
+        name="Report"
+        component={ReportScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

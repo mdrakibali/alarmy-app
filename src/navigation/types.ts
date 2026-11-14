@@ -4,7 +4,6 @@ export type TabParamList = {
   Alarm: undefined;
   Sleep: undefined;
   Morning: undefined;
-  Report: undefined;
   Settings: undefined;
 };
 
@@ -35,7 +34,15 @@ export type RootStackParamList = {
   TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   StepMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  PhotoMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  PhotoMission: {
+    alarmId?: string;
+    missionIndex?: number;
+    missions?: string[];
+    referencePath?: string;
+    matchThreshold?: number;
+  } | undefined;
   SquatMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  WallpaperGallery: { onSelect?: (wallpaperId: string) => void } | undefined;
+  WallpaperGallery: { pickForAlarm?: boolean } | undefined;
+  WallpaperPreview: { wallpaperId: string; pickForAlarm?: boolean };
+  Report: undefined;
 };

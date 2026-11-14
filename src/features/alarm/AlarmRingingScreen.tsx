@@ -108,7 +108,13 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         return;
       }
       if (firstMission === 'photo') {
-        navigation.navigate('PhotoMission', { alarmId: id, missionIndex: 0, missions });
+        navigation.navigate('PhotoMission', {
+          alarmId: id,
+          missionIndex: 0,
+          missions,
+          referencePath: alarmFromStore?.photoReferencePath,
+          matchThreshold: alarmFromStore?.photoMatchThreshold ?? 72,
+        });
         return;
       }
       if (firstMission === 'squat') {

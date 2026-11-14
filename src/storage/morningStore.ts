@@ -27,10 +27,12 @@ interface MorningState {
   completedItems: string[];
   streakDays: number;
   lastActiveDate: string;
+  lastDismissDate: string;
   quoteIndex: number;
 
   toggleRoutine: (id: string) => void;
   incrementStreak: () => void;
+  markAlarmDismissed: () => void;
   nextQuote: () => void;
 }
 
@@ -42,9 +44,10 @@ const getTodayString = () => {
 };
 
 const defaultState = {
-  completedItems: ['water'],
-  streakDays: 5,
+  completedItems: [] as string[],
+  streakDays: 0,
   lastActiveDate: getTodayString(),
+  lastDismissDate: '',
   quoteIndex: 0,
 };
 
@@ -98,9 +101,18 @@ export const useMorningStore = create<MorningState>((set, get) => {
     },
 
     incrementStreak: () => {
+      get().markAlarmDismissed();
+    },
+
+    markAlarmDismissed: () => {
       set(state => {
-        const nextStreak = state.streakDays + 1;
-        const updated = { streakDays: nextStreak, lastActiveDate: getTodayString() };
+        const today = getTodayString();
+        if (state.lastDismissDate === today) return state;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const y = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        const nextStreak = state.lastDismissDate === y ? state.streakDays + 1 : 1;
+        const updated = { streakDays: nextStreak, lastDismissDate: today, lastActiveDate: today };
         saveState({ ...state, ...updated });
         return updated;
       });

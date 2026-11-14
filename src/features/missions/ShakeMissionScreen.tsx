@@ -167,35 +167,24 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
 
         {/* Middle Shake Visual */}
         <View className="items-center justify-center my-8">
-          <Pressable
-            onPress={handleShake}
-            className="h-64 w-64 rounded-full bg-white border-4 border-[#4E7D5B] items-center justify-center active:scale-95 shadow-2xl"
-          >
+          <View className="h-64 w-64 rounded-full bg-white border-4 border-[#6B8F71] items-center justify-center shadow-2xl">
             <Text className="text-6xl font-black text-[#1A2E22]">
               {shakesLeft}
             </Text>
-            <Text className="text-xs font-black tracking-wider text-[#4E7D5B] mt-2">
+            <Text className="text-xs font-black tracking-wider text-[#6B8F71] mt-2">
               SHAKES LEFT
             </Text>
             <Text className="text-xs text-slate-400 mt-1">
-              Tap or Shake phone
+              Shake the phone
             </Text>
-          </Pressable>
+          </View>
         </View>
 
         {/* Bottom helper */}
         <View className="w-full items-center">
           <Text className="text-[#5E7166] text-center text-sm font-medium mb-4">
-            Physical movement raises your heart rate to wake your body up!
+            Only the accelerometer counts. Tapping the screen does nothing.
           </Text>
-          <Pressable
-            onPress={handleShake}
-            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-sm"
-          >
-            <Text className="text-white font-extrabold text-base tracking-wide">
-              Shake Phone! 📱
-            </Text>
-          </Pressable>
         </View>
       </View>
 

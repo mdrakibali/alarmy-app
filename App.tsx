@@ -25,9 +25,9 @@ import { ToastProvider } from '@/components/ui/AppToast';
 function App() {
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
-  const rescheduleAll = useAlarmStore(s => s.rescheduleAll);
+  const syncFromNative = useAlarmStore(s => s.syncFromNative);
 
-  useEffect(() => {
+    useEffect(() => {
     // Check if an alarm is already ringing when app opens
     const checkRingingAlarm = async () => {
       const ringing = await NativeAlarm.getCurrentlyRingingAlarm();
@@ -57,8 +57,9 @@ function App() {
       });
     }
 
-    // Sync all enabled alarms to native scheduler
-    rescheduleAll();
+    syncFromNative().finally(() => {
+      useAlarmStore.getState().rescheduleAll();
+    });
 
     // Listen to real-time alarm trigger event from background service
     const ringSub = NativeAlarm.onAlarmRinging(alarmId => {
@@ -86,7 +87,7 @@ function App() {
       ringSub?.remove();
       sub.remove();
     };
-  }, [rescheduleAll]);
+  }, [syncFromNative]);
 
   return (
     <GestureHandlerRootView className="flex-1">
