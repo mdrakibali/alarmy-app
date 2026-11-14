@@ -1,5 +1,9 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Pressable, Text, View } from 'react-native';
+import {
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAppInsets } from '@/utils/safeArea';
 import { AlarmEditScreen } from '@/features/alarm/AlarmEditScreen';
@@ -21,86 +25,88 @@ import type { RootStackParamList, TabParamList } from './types';
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function Tabs() {
+function CustomBottomTabBar({
+  state,
+  descriptors,
+  navigation,
+}: BottomTabBarProps) {
   const insets = useAppInsets();
-  const bottomInset = insets.bottom;
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#F1F5F9',
-          borderTopWidth: 1,
-          height: 60 + bottomInset,
-          paddingBottom: bottomInset,
-          paddingTop: 8,
-          elevation: 8,
-        },
-        tabBarActiveTintColor: '#0F172A',
-        tabBarInactiveTintColor: '#94A3B8',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '700',
-        },
-      }}
+    <View
+      style={{ paddingBottom: Math.max(insets.bottom + 4, 12) }}
+      className="flex-row bg-white border-t border-slate-100 pt-2.5 items-center justify-around shadow-sm"
     >
-      <Tab.Screen
-        name="Alarm"
-        component={AlarmListScreen}
-        options={{
-          tabBarLabel: 'Alarm',
-          tabBarIcon: ({ focused, color }) => (
-            <TabVectorIcon name="alarm" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Sleep"
-        component={SleepScreen}
-        options={{
-          tabBarLabel: 'Sleep',
-          tabBarIcon: ({ focused, color }) => (
-            <TabVectorIcon name="sleep" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Morning"
-        component={MorningScreen}
-        options={{
-          tabBarLabel: 'Morning',
-          tabBarIcon: ({ focused, color }) => (
-            <TabVectorIcon name="morning" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Report"
-        component={ReportScreen}
-        options={{
-          tabBarLabel: 'Report',
-          tabBarIcon: ({ focused, color }) => (
-            <TabVectorIcon name="report" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarLabel: 'Setting',
-          tabBarIcon: ({ focused, color }) => (
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
+        const color = isFocused ? '#0F172A' : '#94A3B8';
+        const label =
+          options.tabBarLabel !== undefined
+            ? options.tabBarLabel
+            : options.title !== undefined
+            ? options.title
+            : route.name;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        const iconName = route.name.toLowerCase() as
+          | 'alarm'
+          | 'sleep'
+          | 'morning'
+          | 'report'
+          | 'settings';
+
+        return (
+          <Pressable
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            onPress={onPress}
+            className="flex-1 items-center justify-center py-1 active:opacity-75"
+          >
             <TabVectorIcon
-              name="settings"
-              focused={focused}
+              name={iconName}
+              focused={isFocused}
               color={color}
-              hasBadge
+              hasBadge={route.name === 'Settings'}
             />
-          ),
-        }}
-      />
+            <Text
+              className={`text-[11px] font-bold mt-1 ${
+                isFocused ? 'text-slate-900' : 'text-slate-400'
+              }`}
+            >
+              {typeof label === 'string' ? label : route.name}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function Tabs() {
+  return (
+    <Tab.Navigator
+      tabBar={CustomBottomTabBar}
+      screenOptions={{ headerShown: false }}
+    >
+      <Tab.Screen name="Alarm" component={AlarmListScreen} />
+      <Tab.Screen name="Sleep" component={SleepScreen} />
+      <Tab.Screen name="Morning" component={MorningScreen} />
+      <Tab.Screen name="Report" component={ReportScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }

@@ -1,9 +1,7 @@
 import React from 'react';
 import {
   Image,
-  StyleSheet,
   View,
-  ViewStyle,
 } from 'react-native';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
@@ -13,14 +11,14 @@ interface Props {
   target?: BackgroundTarget;
   backgroundId?: string;
   children: React.ReactNode;
-  style?: ViewStyle;
+  className?: string;
 }
 
 export function AppBackground({
   target = 'home',
   backgroundId: overrideId,
   children,
-  style,
+  className = '',
 }: Props) {
   const homeBackground = useThemeStore(s => s.homeBackground);
   const alarmBackground = useThemeStore(s => s.alarmBackground);
@@ -52,31 +50,20 @@ export function AppBackground({
     : wallpaperItem?.source || bgItem?.source || WALLPAPERS[0].source;
 
   return (
-    <View style={[styles.container, style]}>
+    <View className={`flex-1 relative bg-slate-50 ${className}`}>
       {/* Background Image Layer */}
       <Image
         source={imageSource}
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            width: '100%',
-            height: '100%',
-            opacity: brightness,
-          },
-        ]}
+        style={{ opacity: brightness }}
+        className="absolute inset-0 w-full h-full"
         resizeMode="cover"
       />
 
       {/* Scrim / Overlay for readability */}
       {overlayOpacity > 0 && (
         <View
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: '#000000',
-              opacity: overlayOpacity,
-            },
-          ]}
+          style={{ opacity: overlayOpacity }}
+          className="absolute inset-0 bg-black"
           pointerEvents="none"
         />
       )}
@@ -86,11 +73,3 @@ export function AppBackground({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: '#F8FAFC',
-  },
-});

@@ -133,24 +133,14 @@ export function AlarmListScreen() {
 
         {/* Floating Action Button (FAB) */}
         <View
-          style={{
-            position: 'absolute',
-            bottom: 76 + insets.bottom,
-            right: 20,
-          }}
+          style={{ bottom: 76 + insets.bottom }}
+          className="absolute right-5"
         >
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
             onPress={() => navigation.navigate('AlarmEdit')}
-            className="h-16 w-16 items-center justify-center rounded-full bg-[#FF385C] shadow-lg active:scale-95"
-            style={{
-              elevation: 8,
-              shadowColor: '#FF385C',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.35,
-              shadowRadius: 8,
-            }}
+            className="h-16 w-16 items-center justify-center rounded-full bg-[#FF385C] shadow-2xl active:scale-95"
           >
             <Text className="text-3xl font-light text-white leading-none">
               +

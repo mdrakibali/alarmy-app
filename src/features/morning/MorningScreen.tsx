@@ -24,8 +24,8 @@ export function MorningScreen() {
     <Screen padded={false}>
       <ScrollView
         className="flex-1 bg-[#F5F6F8]"
+        contentContainerClassName="px-5"
         contentContainerStyle={{
-          paddingHorizontal: 20,
           paddingTop: insets.top + 10,
           paddingBottom: 120 + insets.bottom,
         }}

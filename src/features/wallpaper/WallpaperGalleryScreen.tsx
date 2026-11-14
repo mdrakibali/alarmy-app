@@ -263,25 +263,16 @@ function WallpaperCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`mr-3 h-52 w-36 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
+      className={`mr-3 h-52 w-36 rounded-3xl overflow-hidden justify-between items-center relative border-2 bg-slate-50 ${
         isSelected
           ? 'border-[#FF385C] scale-102 shadow-lg'
           : 'border-slate-200 bg-white shadow-xs active:scale-98'
       }`}
-      style={{ backgroundColor: '#F8FAFC' }}
     >
       {/* Animated Looping GIF Image */}
       <Image
         source={wallpaper.source}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100%',
-          height: '100%',
-        }}
+        className="absolute inset-0 w-full h-full"
         resizeMode="cover"
       />
 

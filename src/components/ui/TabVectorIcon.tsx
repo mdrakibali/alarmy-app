@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 
 export type TabIconType = 'alarm' | 'sleep' | 'morning' | 'report' | 'settings';
 
@@ -14,464 +14,191 @@ interface TabVectorIconProps {
 export function TabVectorIcon({
   name,
   focused,
-  color,
-  size = 24,
   hasBadge = false,
 }: TabVectorIconProps) {
-  const activeColor = color ?? (focused ? '#0F172A' : '#94A3B8');
-
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      {name === 'alarm' && <AlarmIcon color={activeColor} />}
-      {name === 'sleep' && <SleepIcon color={activeColor} />}
-      {name === 'morning' && <MorningIcon color={activeColor} />}
-      {name === 'report' && <ReportIcon color={activeColor} />}
-      {name === 'settings' && <SettingsIcon color={activeColor} />}
+    <View className="w-6 h-6 items-center justify-center relative">
+      {name === 'alarm' && <AlarmIcon focused={focused} />}
+      {name === 'sleep' && <SleepIcon focused={focused} />}
+      {name === 'morning' && <MorningIcon focused={focused} />}
+      {name === 'report' && <ReportIcon focused={focused} />}
+      {name === 'settings' && <SettingsIcon focused={focused} />}
 
       {hasBadge && (
-        <View style={styles.badge} />
+        <View className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#FF385C] border border-white" />
       )}
     </View>
   );
 }
 
-function AlarmIcon({ color }: { color: string }) {
+function AlarmIcon({ focused }: { focused: boolean }) {
+  const bg = focused ? 'bg-slate-900' : 'bg-slate-400';
+  const border = focused ? 'border-slate-900' : 'border-slate-400';
+
   return (
-    <View style={styles.iconBox}>
+    <View className="w-[22px] h-[22px] items-center justify-center relative">
       {/* Top bells */}
       <View
-        style={[
-          styles.bell,
-          {
-            backgroundColor: color,
-            top: 0,
-            left: 2,
-            transform: [{ rotate: '-35deg' }],
-          },
-        ]}
+        className={`absolute w-1.5 h-[3px] rounded-sm -rotate-45 top-0 left-0.5 ${bg}`}
       />
       <View
-        style={[
-          styles.bell,
-          {
-            backgroundColor: color,
-            top: 0,
-            right: 2,
-            transform: [{ rotate: '35deg' }],
-          },
-        ]}
+        className={`absolute w-1.5 h-[3px] rounded-sm rotate-45 top-0 right-0.5 ${bg}`}
       />
 
       {/* Clock Face Ring */}
       <View
-        style={[
-          styles.clockRing,
-          {
-            borderColor: color,
-          },
-        ]}
+        className={`w-[18px] h-[18px] rounded-full border-[1.8px] items-center justify-center relative ${border}`}
       >
         {/* Hour Hand */}
         <View
-          style={[
-            styles.clockHandHour,
-            {
-              backgroundColor: color,
-            },
-          ]}
+          className={`absolute w-[1.6px] h-[5px] rounded-full top-[2.5px] left-[6.2px] ${bg}`}
         />
         {/* Minute Hand */}
         <View
-          style={[
-            styles.clockHandMinute,
-            {
-              backgroundColor: color,
-            },
-          ]}
+          className={`absolute w-[4.5px] h-[1.6px] rounded-full top-[6.2px] left-[6.2px] ${bg}`}
         />
         {/* Center pin */}
         <View
-          style={[
-            styles.centerPin,
-            {
-              backgroundColor: color,
-            },
-          ]}
+          className={`absolute w-[2.5px] h-[2.5px] rounded-full top-[6px] left-[6px] ${bg}`}
         />
       </View>
 
       {/* Bottom feet */}
       <View
-        style={[
-          styles.clockFoot,
-          {
-            backgroundColor: color,
-            bottom: 0,
-            left: 3,
-            transform: [{ rotate: '25deg' }],
-          },
-        ]}
+        className={`absolute w-[2px] h-1 rounded-sm rotate-[25deg] bottom-0 left-1 ${bg}`}
       />
       <View
-        style={[
-          styles.clockFoot,
-          {
-            backgroundColor: color,
-            bottom: 0,
-            right: 3,
-            transform: [{ rotate: '-25deg' }],
-          },
-        ]}
+        className={`absolute w-[2px] h-1 rounded-sm -rotate-[25deg] bottom-0 right-1 ${bg}`}
       />
     </View>
   );
 }
 
-function SleepIcon({ color }: { color: string }) {
+function SleepIcon({ focused }: { focused: boolean }) {
+  const borderLeft = focused ? 'border-l-slate-900' : 'border-l-slate-400';
+  const borderBottom = focused ? 'border-b-slate-900' : 'border-b-slate-400';
+  const bg = focused ? 'bg-slate-900' : 'bg-slate-400';
+
   return (
-    <View style={styles.iconBox}>
+    <View className="w-[22px] h-[22px] items-center justify-center relative">
       {/* Crescent Moon */}
       <View
-        style={[
-          styles.moonShape,
-          {
-            borderLeftColor: color,
-            borderBottomColor: color,
-          },
-        ]}
+        className={`w-[17px] h-[17px] rounded-full border-2 border-transparent -rotate-[35deg] ${borderLeft} ${borderBottom}`}
       />
-      {/* Tiny companion star */}
+      {/* Companion star */}
       <View
-        style={[
-          styles.starDot,
-          {
-            backgroundColor: color,
-          },
-        ]}
+        className={`absolute top-0.5 right-0.5 w-1 h-1 rounded-full ${bg}`}
       />
     </View>
   );
 }
 
-function MorningIcon({ color }: { color: string }) {
+function MorningIcon({ focused }: { focused: boolean }) {
+  const bg = focused ? 'bg-slate-900' : 'bg-slate-400';
+  const border = focused ? 'border-slate-900' : 'border-slate-400';
+
   return (
-    <View style={styles.iconBox}>
+    <View className="w-[22px] h-[22px] items-center justify-center relative">
       {/* Central Sun Circle */}
       <View
-        style={[
-          styles.sunRing,
-          {
-            borderColor: color,
-          },
-        ]}
+        className={`w-2.5 h-2.5 rounded-full border-[1.8px] ${border}`}
       />
 
       {/* Cardinal Rays */}
-      <View style={[styles.rayVertical, { backgroundColor: color, top: 0, left: 10 }]} />
-      <View style={[styles.rayVertical, { backgroundColor: color, bottom: 0, left: 10 }]} />
-      <View style={[styles.rayHorizontal, { backgroundColor: color, top: 10, left: 0 }]} />
-      <View style={[styles.rayHorizontal, { backgroundColor: color, top: 10, right: 0 }]} />
+      <View
+        className={`absolute w-[1.8px] h-[3px] rounded-full top-0 left-[10px] ${bg}`}
+      />
+      <View
+        className={`absolute w-[1.8px] h-[3px] rounded-full bottom-0 left-[10px] ${bg}`}
+      />
+      <View
+        className={`absolute w-[3px] h-[1.8px] rounded-full top-[10px] left-0 ${bg}`}
+      />
+      <View
+        className={`absolute w-[3px] h-[1.8px] rounded-full top-[10px] right-0 ${bg}`}
+      />
 
       {/* Diagonal Rays */}
       <View
-        style={[
-          styles.rayDiagonal,
-          {
-            backgroundColor: color,
-            top: 2.5,
-            left: 2.5,
-            transform: [{ rotate: '45deg' }],
-          },
-        ]}
+        className={`absolute w-[1.8px] h-[2.5px] rounded-full rotate-45 top-[2.5px] left-[2.5px] ${bg}`}
       />
       <View
-        style={[
-          styles.rayDiagonal,
-          {
-            backgroundColor: color,
-            top: 2.5,
-            right: 2.5,
-            transform: [{ rotate: '-45deg' }],
-          },
-        ]}
+        className={`absolute w-[1.8px] h-[2.5px] rounded-full -rotate-45 top-[2.5px] right-[2.5px] ${bg}`}
       />
       <View
-        style={[
-          styles.rayDiagonal,
-          {
-            backgroundColor: color,
-            bottom: 2.5,
-            left: 2.5,
-            transform: [{ rotate: '-45deg' }],
-          },
-        ]}
+        className={`absolute w-[1.8px] h-[2.5px] rounded-full -rotate-45 bottom-[2.5px] left-[2.5px] ${bg}`}
       />
       <View
-        style={[
-          styles.rayDiagonal,
-          {
-            backgroundColor: color,
-            bottom: 2.5,
-            right: 2.5,
-            transform: [{ rotate: '45deg' }],
-          },
-        ]}
+        className={`absolute w-[1.8px] h-[2.5px] rounded-full rotate-45 bottom-[2.5px] right-[2.5px] ${bg}`}
       />
     </View>
   );
 }
 
-function ReportIcon({ color }: { color: string }) {
+function ReportIcon({ focused }: { focused: boolean }) {
+  const bg = focused ? 'bg-slate-900' : 'bg-slate-400';
+
   return (
-    <View style={styles.iconBox}>
+    <View className="w-[22px] h-[22px] items-center justify-center relative">
       {/* Baseline */}
-      <View style={[styles.chartBaseline, { backgroundColor: color }]} />
+      <View
+        className={`absolute bottom-0.5 left-0.5 right-0.5 h-[1.6px] rounded-full ${bg}`}
+      />
 
       {/* 3 Analytics Bars */}
       <View
-        style={[
-          styles.chartBar,
-          {
-            height: 8,
-            backgroundColor: color,
-            left: 2.5,
-          },
-        ]}
+        className={`absolute bottom-1 left-1 w-1 h-2 rounded-t-sm ${bg}`}
       />
       <View
-        style={[
-          styles.chartBar,
-          {
-            height: 15,
-            backgroundColor: color,
-            left: 8.5,
-          },
-        ]}
+        className={`absolute bottom-1 left-[9px] w-1 h-[15px] rounded-t-sm ${bg}`}
       />
       <View
-        style={[
-          styles.chartBar,
-          {
-            height: 11,
-            backgroundColor: color,
-            left: 14.5,
-          },
-        ]}
+        className={`absolute bottom-1 left-4 w-1 h-[11px] rounded-t-sm ${bg}`}
       />
     </View>
   );
 }
 
-function SettingsIcon({ color }: { color: string }) {
+function SettingsIcon({ focused }: { focused: boolean }) {
+  const bg = focused ? 'bg-slate-900' : 'bg-slate-400';
+  const border = focused ? 'border-slate-900' : 'border-slate-400';
+
   return (
-    <View style={styles.iconBox}>
+    <View className="w-[22px] h-[22px] items-center justify-center relative">
       {/* Main Gear Ring */}
       <View
-        style={[
-          styles.gearRing,
-          {
-            borderColor: color,
-          },
-        ]}
+        className={`w-[13px] h-[13px] rounded-full border-[1.8px] items-center justify-center ${border}`}
       >
-        {/* Inner Hub Dot */}
-        <View style={[styles.gearHub, { backgroundColor: color }]} />
+        <View className={`w-1 h-1 rounded-full ${bg}`} />
       </View>
 
       {/* 4 Outer Cogs / Teeth */}
-      <View style={[styles.cogVertical, { backgroundColor: color, top: 1, left: 9 }]} />
-      <View style={[styles.cogVertical, { backgroundColor: color, bottom: 1, left: 9 }]} />
-      <View style={[styles.cogHorizontal, { backgroundColor: color, top: 9, left: 1 }]} />
-      <View style={[styles.cogHorizontal, { backgroundColor: color, top: 9, right: 1 }]} />
+      <View
+        className={`absolute w-[3.5px] h-[2px] rounded-sm top-0.5 left-[9.2px] ${bg}`}
+      />
+      <View
+        className={`absolute w-[3.5px] h-[2px] rounded-sm bottom-0.5 left-[9.2px] ${bg}`}
+      />
+      <View
+        className={`absolute w-[2px] h-[3.5px] rounded-sm top-[9.2px] left-0.5 ${bg}`}
+      />
+      <View
+        className={`absolute w-[2px] h-[3.5px] rounded-sm top-[9.2px] right-0.5 ${bg}`}
+      />
 
-      {/* 4 Diagonal Cogs */}
+      {/* Diagonal Cogs */}
       <View
-        style={[
-          styles.cogDiagonal,
-          { backgroundColor: color, top: 3, left: 3, transform: [{ rotate: '45deg' }] },
-        ]}
+        className={`absolute w-[2px] h-[2px] rounded-sm rotate-45 top-1 left-1 ${bg}`}
       />
       <View
-        style={[
-          styles.cogDiagonal,
-          { backgroundColor: color, top: 3, right: 3, transform: [{ rotate: '-45deg' }] },
-        ]}
+        className={`absolute w-[2px] h-[2px] rounded-sm -rotate-45 top-1 right-1 ${bg}`}
       />
       <View
-        style={[
-          styles.cogDiagonal,
-          { backgroundColor: color, bottom: 3, left: 3, transform: [{ rotate: '-45deg' }] },
-        ]}
+        className={`absolute w-[2px] h-[2px] rounded-sm -rotate-45 bottom-1 left-1 ${bg}`}
       />
       <View
-        style={[
-          styles.cogDiagonal,
-          { backgroundColor: color, bottom: 3, right: 3, transform: [{ rotate: '45deg' }] },
-        ]}
+        className={`absolute w-[2px] h-[2px] rounded-sm rotate-45 bottom-1 right-1 ${bg}`}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  iconBox: {
-    width: 22,
-    height: 22,
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    right: -3,
-    width: 6.5,
-    height: 6.5,
-    borderRadius: 3.25,
-    backgroundColor: '#FF385C',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-  },
-  // Alarm
-  bell: {
-    position: 'absolute',
-    width: 4.5,
-    height: 2.2,
-    borderRadius: 1,
-  },
-  clockRing: {
-    width: 17,
-    height: 17,
-    borderRadius: 8.5,
-    borderWidth: 1.8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  clockHandHour: {
-    position: 'absolute',
-    width: 1.6,
-    height: 5,
-    borderRadius: 0.8,
-    top: 2.5,
-    left: 6.1,
-  },
-  clockHandMinute: {
-    position: 'absolute',
-    width: 4,
-    height: 1.6,
-    borderRadius: 0.8,
-    top: 6.1,
-    left: 6.1,
-  },
-  centerPin: {
-    position: 'absolute',
-    width: 2.5,
-    height: 2.5,
-    borderRadius: 1.25,
-    top: 5.6,
-    left: 5.6,
-  },
-  clockFoot: {
-    position: 'absolute',
-    width: 1.6,
-    height: 3.2,
-    borderRadius: 0.8,
-  },
-  // Sleep
-  moonShape: {
-    width: 17,
-    height: 17,
-    borderRadius: 8.5,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    transform: [{ rotate: '-35deg' }],
-  },
-  starDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 3.5,
-    height: 3.5,
-    borderRadius: 1.75,
-  },
-  // Morning
-  sunRing: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    borderWidth: 1.8,
-  },
-  rayVertical: {
-    position: 'absolute',
-    width: 1.8,
-    height: 3,
-    borderRadius: 0.9,
-  },
-  rayHorizontal: {
-    position: 'absolute',
-    width: 3,
-    height: 1.8,
-    borderRadius: 0.9,
-  },
-  rayDiagonal: {
-    position: 'absolute',
-    width: 1.8,
-    height: 2.5,
-    borderRadius: 0.9,
-  },
-  // Report
-  chartBaseline: {
-    position: 'absolute',
-    bottom: 1.5,
-    left: 1,
-    right: 1,
-    height: 1.6,
-    borderRadius: 0.8,
-  },
-  chartBar: {
-    position: 'absolute',
-    bottom: 3.5,
-    width: 4,
-    borderTopLeftRadius: 1.5,
-    borderTopRightRadius: 1.5,
-  },
-  // Settings
-  gearRing: {
-    width: 13,
-    height: 13,
-    borderRadius: 6.5,
-    borderWidth: 1.8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gearHub: {
-    width: 3.5,
-    height: 3.5,
-    borderRadius: 1.75,
-  },
-  cogVertical: {
-    position: 'absolute',
-    width: 3.5,
-    height: 2.2,
-    borderRadius: 1,
-  },
-  cogHorizontal: {
-    position: 'absolute',
-    width: 2.2,
-    height: 3.5,
-    borderRadius: 1,
-  },
-  cogDiagonal: {
-    position: 'absolute',
-    width: 2.5,
-    height: 2.2,
-    borderRadius: 0.8,
-  },
-});
-

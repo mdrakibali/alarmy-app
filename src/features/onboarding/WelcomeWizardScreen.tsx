@@ -115,6 +115,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       {/* Step Content */}
       <ScrollView
         className="flex-1"
+        nestedScrollEnabled={true}
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 16,
@@ -124,11 +125,11 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       >
         {/* STEP 1: TIME PICKER */}
         {step === 1 && (
-          <View className="items-center justify-center py-6">
-            <Text className="text-slate-500 text-sm font-medium mb-5 text-center">
+          <View className="items-center justify-center py-2">
+            <Text className="text-slate-500 text-sm font-medium mb-3 text-center">
               Scroll or tap to choose when you want to wake up
             </Text>
-            <View className="bg-white border border-slate-100 rounded-3xl p-6 w-full items-center shadow-sm">
+            <View className="bg-white border border-slate-100 rounded-3xl p-4 w-full items-center shadow-sm">
               <WheelTimePicker
                 hour={selectedHour}
                 minute={selectedMinute}
@@ -158,24 +159,15 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       <Pressable
                         key={w.id}
                         onPress={() => setSelectedWallpaper(w.id)}
-                        className={`mr-3 h-48 w-32 rounded-3xl overflow-hidden justify-between items-center border-2 relative ${
+                        className={`mr-3 h-48 w-32 rounded-3xl overflow-hidden justify-between items-center border-2 relative bg-slate-50 ${
                           isSelected
                             ? 'border-[#FF385C] scale-102 shadow-md'
-                            : 'border-slate-200 bg-white'
+                            : 'border-slate-200'
                         }`}
-                        style={{ backgroundColor: '#F8FAFC' }}
                       >
                         <Image
                           source={w.source}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            width: '100%',
-                            height: '100%',
-                          }}
+                          className="absolute inset-0 w-full h-full"
                           resizeMode="cover"
                         />
                         <View className="items-center justify-center flex-1" />
@@ -301,14 +293,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
 
       {/* Bottom Button with Safe Area */}
       <View
-        style={{
-          paddingBottom: bottomInset,
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          elevation: 10,
-          zIndex: 100,
-        }}
-        className="bg-white border-t border-slate-100 shadow-sm"
+        style={{ paddingBottom: Math.max(bottomInset, 52) }}
+        className="bg-white border-t border-slate-100 shadow-sm px-5 pt-3 z-50"
       >
         <Pressable
           onPress={handleNext}

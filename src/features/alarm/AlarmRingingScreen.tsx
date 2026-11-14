@@ -115,16 +115,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
 
         {/* Middle section: Big circular clock */}
         <View className="items-center justify-center my-8">
-          <View
-            style={{
-              elevation: 10,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.08,
-              shadowRadius: 16,
-            }}
-            className="h-68 w-68 rounded-full border-4 border-white items-center justify-center bg-white shadow-lg"
-          >
+          <View className="h-68 w-68 rounded-full border-4 border-white items-center justify-center bg-white shadow-2xl">
             <Text className="text-6xl font-black text-slate-900 tracking-tight">
               {time}
             </Text>

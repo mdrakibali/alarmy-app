@@ -4,18 +4,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 /**
  * Custom hook to safely provide bottom and top insets across Android and iOS.
  * On Android devices with 3-button navigation (Infinix, Xiaomi, Samsung, etc.),
- * system insets can be 0 if edge-to-edge hasn't dispatched, causing navigation buttons
- * to overlap bottom tab bars and floating action buttons.
- * This hook guarantees a safe bottom padding of at least 48dp on Android if insets.bottom is 0.
+ * the navigation bar height is at least 48dp. If insets are too small or 0,
+ * system navigation buttons will overlap bottom tab bars and action buttons.
+ * This hook guarantees a safe bottom padding of at least 48dp on Android.
  */
 export function useAppInsets() {
   const insets = useSafeAreaInsets();
 
   const bottom =
-    insets.bottom > 0 ? insets.bottom : Platform.OS === 'android' ? 48 : 12;
+    Platform.OS === 'android'
+      ? Math.max(insets.bottom, 48)
+      : Math.max(insets.bottom, 16);
 
   const top =
-    insets.top > 0 ? insets.top : Platform.OS === 'android' ? 24 : 12;
+    Platform.OS === 'android'
+      ? Math.max(insets.top, 24)
+      : Math.max(insets.top, 16);
 
   return {
     ...insets,
@@ -24,4 +28,3 @@ export function useAppInsets() {
     rawBottom: insets.bottom,
   };
 }
-

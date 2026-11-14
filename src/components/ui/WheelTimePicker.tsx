@@ -1,17 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-const ITEM_HEIGHT = 48;
-const VISIBLE_ITEMS = 3;
-const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS; // 144px
+const ITEM_HEIGHT = 40;
+const PADDING_VERTICAL = ITEM_HEIGHT * 3; // 120px (3 items above, 1 center, 3 items below)
 
 const HOURS_12 = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
@@ -21,413 +19,285 @@ interface WheelTimePickerProps {
   hour: number; // 0-23
   minute: number; // 0-59
   onChange: (hour: number, minute: number) => void;
-  onInteractionChange?: (isInteracting: boolean) => void;
 }
 
 export function WheelTimePicker({
   hour,
   minute,
   onChange,
-  onInteractionChange,
 }: WheelTimePickerProps) {
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  const isPM = hour >= 12;
+  const initialHour12 = hour % 12 === 0 ? 12 : hour % 12;
+  const initialIsPM = hour >= 12;
+
+  // Local active state for instant real-time visual highlight during scroll
+  const [activeHour12, setActiveHour12] = useState(initialHour12);
+  const [activeMin, setActiveMin] = useState(minute);
+  const [activeIsPM, setActiveIsPM] = useState(initialIsPM);
 
   const hourScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
   const minScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
   const periodScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
 
-  const isInteracting = useRef(false);
-  const isMounted = useRef(false);
+  // Keep refs in sync for handlers without stale closures
+  const activeHour12Ref = useRef(activeHour12);
+  activeHour12Ref.current = activeHour12;
+  const activeMinRef = useRef(activeMin);
+  activeMinRef.current = activeMin;
+  const activeIsPMRef = useRef(activeIsPM);
+  activeIsPMRef.current = activeIsPM;
 
-  // Sync scroll position whenever hour or minute changes (only when user is not actively interacting)
+  const notifyChange = (h12: number, min: number, isPm: boolean) => {
+    const new24h = isPm
+      ? h12 === 12
+        ? 12
+        : h12 + 12
+      : h12 === 12
+      ? 0
+      : h12;
+    onChange(new24h, min);
+  };
+
+  // Initial scroll position on mount only
   useEffect(() => {
-    if (isInteracting.current) return;
+    const timer = setTimeout(() => {
+      const hourIdx = HOURS_12.indexOf(initialHour12);
+      if (hourIdx !== -1) {
+        hourScrollRef.current?.scrollTo({
+          y: hourIdx * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
 
-    const hourIdx = HOURS_12.indexOf(hour12);
-    if (hourIdx !== -1) {
-      hourScrollRef.current?.scrollTo({
-        y: hourIdx * ITEM_HEIGHT,
-        animated: isMounted.current,
+      const minIdx = MINUTES.indexOf(minute);
+      if (minIdx !== -1) {
+        minScrollRef.current?.scrollTo({
+          y: minIdx * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
+
+      const periodIdx = initialIsPM ? 1 : 0;
+      periodScrollRef.current?.scrollTo({
+        y: periodIdx * ITEM_HEIGHT,
+        animated: false,
       });
-    }
+    }, 60);
 
-    const minIdx = MINUTES.indexOf(minute);
-    if (minIdx !== -1) {
-      minScrollRef.current?.scrollTo({
-        y: minIdx * ITEM_HEIGHT,
-        animated: isMounted.current,
-      });
-    }
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    const periodIdx = isPM ? 1 : 0;
-    periodScrollRef.current?.scrollTo({
-      y: periodIdx * ITEM_HEIGHT,
-      animated: isMounted.current,
-    });
-
-    isMounted.current = true;
-  }, [hour12, minute, isPM]);
-
-  const handleHourScrollEnd = (
-    e: NativeSyntheticEvent<NativeScrollEvent>,
-  ) => {
+  // Real-time scroll handlers (throttle 16ms = 60fps)
+  const handleHourScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
     const index = Math.max(
       0,
       Math.min(HOURS_12.length - 1, Math.round(y / ITEM_HEIGHT)),
     );
-    hourScrollRef.current?.scrollTo({
-      y: index * ITEM_HEIGHT,
-      animated: true,
-    });
-    const selectedH12 = HOURS_12[index];
-    const new24h = isPM
-      ? selectedH12 === 12
-        ? 12
-        : selectedH12 + 12
-      : selectedH12 === 12
-      ? 0
-      : selectedH12;
-    onChange(new24h, minute);
-    setTimeout(() => {
-      isInteracting.current = false;
-      onInteractionChange?.(false);
-    }, 120);
+    const h12 = HOURS_12[index];
+    if (h12 !== activeHour12Ref.current) {
+      setActiveHour12(h12);
+      notifyChange(h12, activeMinRef.current, activeIsPMRef.current);
+    }
   };
 
-  const handleMinScrollEnd = (
-    e: NativeSyntheticEvent<NativeScrollEvent>,
-  ) => {
+  const handleMinScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
     const index = Math.max(
       0,
       Math.min(MINUTES.length - 1, Math.round(y / ITEM_HEIGHT)),
     );
-    minScrollRef.current?.scrollTo({
-      y: index * ITEM_HEIGHT,
-      animated: true,
-    });
-    const selectedMin = MINUTES[index];
-    onChange(hour, selectedMin);
-    setTimeout(() => {
-      isInteracting.current = false;
-      onInteractionChange?.(false);
-    }, 120);
+    const m = MINUTES[index];
+    if (m !== activeMinRef.current) {
+      setActiveMin(m);
+      notifyChange(activeHour12Ref.current, m, activeIsPMRef.current);
+    }
   };
 
-  const handlePeriodScrollEnd = (
-    e: NativeSyntheticEvent<NativeScrollEvent>,
-  ) => {
+  const handlePeriodScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
     const index = Math.max(
       0,
       Math.min(PERIODS.length - 1, Math.round(y / ITEM_HEIGHT)),
     );
-    periodScrollRef.current?.scrollTo({
-      y: index * ITEM_HEIGHT,
-      animated: true,
-    });
-    const targetPM = index === 1;
-    if (targetPM !== isPM) {
-      const new24h = targetPM
-        ? hour12 === 12
-          ? 12
-          : hour12 + 12
-        : hour12 === 12
-        ? 0
-        : hour12;
-      onChange(new24h, minute);
+    const isPm = index === 1;
+    if (isPm !== activeIsPMRef.current) {
+      setActiveIsPM(isPm);
+      notifyChange(activeHour12Ref.current, activeMinRef.current, isPm);
     }
-    setTimeout(() => {
-      isInteracting.current = false;
-      onInteractionChange?.(false);
-    }, 120);
   };
 
+  // Direct tap selectors
   const selectHour = (h: number) => {
     const idx = HOURS_12.indexOf(h);
     if (idx !== -1) {
+      setActiveHour12(h);
       hourScrollRef.current?.scrollTo({
         y: idx * ITEM_HEIGHT,
         animated: true,
       });
-      const new24h = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
-      onChange(new24h, minute);
+      notifyChange(h, activeMinRef.current, activeIsPMRef.current);
     }
-  };
-
-  const stepHour = (delta: number) => {
-    let nextH12 = hour12 + delta;
-    if (nextH12 < 1) nextH12 = 12;
-    if (nextH12 > 12) nextH12 = 1;
-    selectHour(nextH12);
   };
 
   const selectMinute = (m: number) => {
     const idx = MINUTES.indexOf(m);
     if (idx !== -1) {
+      setActiveMin(m);
       minScrollRef.current?.scrollTo({
         y: idx * ITEM_HEIGHT,
         animated: true,
       });
-      onChange(hour, m);
+      notifyChange(activeHour12Ref.current, m, activeIsPMRef.current);
     }
   };
 
-  const stepMinute = (delta: number) => {
-    let nextMin = minute + delta;
-    if (nextMin < 0) nextMin = 59;
-    if (nextMin > 59) nextMin = 0;
-    selectMinute(nextMin);
-  };
-
   const selectPeriod = (p: 'AM' | 'PM') => {
-    const idx = p === 'PM' ? 1 : 0;
+    const isPm = p === 'PM';
+    const idx = isPm ? 1 : 0;
+    setActiveIsPM(isPm);
     periodScrollRef.current?.scrollTo({
       y: idx * ITEM_HEIGHT,
       animated: true,
     });
-    const targetPM = p === 'PM';
-    const new24h = targetPM
-      ? hour12 === 12
-        ? 12
-        : hour12 + 12
-      : hour12 === 12
-      ? 0
-      : hour12;
-    onChange(new24h, minute);
+    notifyChange(activeHour12Ref.current, activeMinRef.current, isPm);
   };
 
   return (
-    <View style={styles.container}>
-      {/* Step Up Buttons Row */}
-      <View style={styles.chevronRow}>
-        <Pressable
-          hitSlop={8}
-          onPress={() => stepHour(-1)}
-          style={styles.stepButton}
-        >
-          <Text style={styles.stepChevron}>▲</Text>
-        </Pressable>
-        <View style={{ width: 24 }} />
-        <Pressable
-          hitSlop={8}
-          onPress={() => stepMinute(-1)}
-          style={styles.stepButton}
-        >
-          <Text style={styles.stepChevron}>▲</Text>
-        </Pressable>
-        <View style={{ width: 70 }} />
-      </View>
-
-      {/* Main Wheel Drums */}
+    <View className="relative w-full h-[280px] flex-row items-center justify-center overflow-hidden my-1">
+      {/* Center highlight rounded pill across all 3 columns (Alarmy Style) */}
       <View
-        style={{ height: PICKER_HEIGHT }}
-        className="relative w-full flex-row items-center justify-center overflow-hidden"
-      >
-        {/* Center highlight rounded capsule */}
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: ITEM_HEIGHT,
-            left: 12,
-            right: 12,
-            height: ITEM_HEIGHT,
+        pointerEvents="none"
+        className="absolute top-[120px] left-3 right-3 h-[40px] rounded-2xl bg-slate-100 border border-slate-200/80 shadow-xs"
+      />
+
+      {/* Hours Column (Single-digit 1-9 or 10-12 like native Alarmy) */}
+      <View className="h-[280px] w-20">
+        <ScrollView
+          ref={hourScrollRef}
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          decelerationRate="fast"
+          scrollEventThrottle={16}
+          onScroll={handleHourScroll}
+          onScrollEndDrag={handleHourScroll}
+          onMomentumScrollEnd={handleHourScroll}
+          contentContainerStyle={{
+            paddingTop: PADDING_VERTICAL,
+            paddingBottom: PADDING_VERTICAL,
           }}
-          className="rounded-2xl bg-slate-100 border border-slate-200/60"
-        />
-
-        {/* Hours column */}
-        <View style={{ height: PICKER_HEIGHT, width: 76 }}>
-          <ScrollView
-            ref={hourScrollRef}
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={false}
-            snapToInterval={ITEM_HEIGHT}
-            snapToAlignment="center"
-            decelerationRate="fast"
-            onScrollBeginDrag={() => {
-              isInteracting.current = true;
-              onInteractionChange?.(true);
-            }}
-            onScrollEndDrag={handleHourScrollEnd}
-            onMomentumScrollEnd={handleHourScrollEnd}
-            contentContainerStyle={{
-              paddingTop: ITEM_HEIGHT,
-              paddingBottom: ITEM_HEIGHT,
-            }}
-          >
-            {HOURS_12.map(h => {
-              const isSelected = h === hour12;
-              const str = h.toString().padStart(2, '0');
-              return (
-                <Pressable
-                  key={h}
-                  onPress={() => selectHour(h)}
-                  style={{ height: ITEM_HEIGHT }}
-                  className="items-center justify-center"
-                >
-                  <Text
-                    className={`text-2xl font-bold ${
-                      isSelected
-                        ? 'text-slate-900'
-                        : 'text-slate-400 opacity-60'
-                    }`}
-                  >
-                    {str}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* Colon separator */}
-        <View
-          style={{ height: ITEM_HEIGHT, width: 24 }}
-          className="items-center justify-center z-10"
         >
-          <Text className="text-2xl font-bold text-slate-800">:</Text>
-        </View>
+          {HOURS_12.map(h => {
+            const distance = Math.abs(h - activeHour12);
+            const isSelected = distance === 0;
 
-        {/* Minutes column */}
-        <View style={{ height: PICKER_HEIGHT, width: 76 }}>
-          <ScrollView
-            ref={minScrollRef}
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={false}
-            snapToInterval={ITEM_HEIGHT}
-            snapToAlignment="center"
-            decelerationRate="fast"
-            onScrollBeginDrag={() => {
-              isInteracting.current = true;
-              onInteractionChange?.(true);
-            }}
-            onScrollEndDrag={handleMinScrollEnd}
-            onMomentumScrollEnd={handleMinScrollEnd}
-            contentContainerStyle={{
-              paddingTop: ITEM_HEIGHT,
-              paddingBottom: ITEM_HEIGHT,
-            }}
-          >
-            {MINUTES.map(m => {
-              const isSelected = m === minute;
-              const str = m.toString().padStart(2, '0');
-              return (
-                <Pressable
-                  key={m}
-                  onPress={() => selectMinute(m)}
-                  style={{ height: ITEM_HEIGHT }}
-                  className="items-center justify-center"
-                >
-                  <Text
-                    className={`text-2xl font-bold ${
-                      isSelected
-                        ? 'text-slate-900'
-                        : 'text-slate-400 opacity-60'
-                    }`}
-                  >
-                    {str}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+            const textStyle = isSelected
+              ? 'text-3xl font-extrabold text-slate-900 scale-105'
+              : distance === 1
+              ? 'text-2xl font-bold text-slate-400/80'
+              : distance === 2
+              ? 'text-xl font-semibold text-slate-300/70'
+              : 'text-base font-medium text-slate-200/40';
 
-        {/* AM / PM column */}
-        <View style={{ height: PICKER_HEIGHT, width: 70 }} className="ml-2">
-          <ScrollView
-            ref={periodScrollRef}
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={false}
-            snapToInterval={ITEM_HEIGHT}
-            snapToAlignment="center"
-            decelerationRate="fast"
-            onScrollBeginDrag={() => {
-              isInteracting.current = true;
-              onInteractionChange?.(true);
-            }}
-            onScrollEndDrag={handlePeriodScrollEnd}
-            onMomentumScrollEnd={handlePeriodScrollEnd}
-            contentContainerStyle={{
-              paddingTop: ITEM_HEIGHT,
-              paddingBottom: ITEM_HEIGHT,
-            }}
-          >
-            {PERIODS.map(p => {
-              const isSelected = (p === 'PM') === isPM;
-              return (
-                <Pressable
-                  key={p}
-                  onPress={() => selectPeriod(p)}
-                  style={{ height: ITEM_HEIGHT }}
-                  className="items-center justify-center"
-                >
-                  <Text
-                    className={`text-lg font-bold ${
-                      isSelected
-                        ? 'text-slate-900'
-                        : 'text-slate-400 opacity-50'
-                    }`}
-                  >
-                    {p}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+            return (
+              <Pressable
+                key={h}
+                onPress={() => selectHour(h)}
+                className="h-[40px] items-center justify-center active:opacity-60"
+              >
+                <Text className={`text-center ${textStyle}`}>{h}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* Step Down Buttons Row */}
-      <View style={styles.chevronRow}>
-        <Pressable
-          hitSlop={8}
-          onPress={() => stepHour(1)}
-          style={styles.stepButton}
+      {/* Subtle Natural Spacing (No colon) */}
+      <View className="w-3" />
+
+      {/* Minutes Column (00-59) */}
+      <View className="h-[280px] w-20">
+        <ScrollView
+          ref={minScrollRef}
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          decelerationRate="fast"
+          scrollEventThrottle={16}
+          onScroll={handleMinScroll}
+          onScrollEndDrag={handleMinScroll}
+          onMomentumScrollEnd={handleMinScroll}
+          contentContainerStyle={{
+            paddingTop: PADDING_VERTICAL,
+            paddingBottom: PADDING_VERTICAL,
+          }}
         >
-          <Text style={styles.stepChevron}>▼</Text>
-        </Pressable>
-        <View style={{ width: 24 }} />
-        <Pressable
-          hitSlop={8}
-          onPress={() => stepMinute(1)}
-          style={styles.stepButton}
+          {MINUTES.map(m => {
+            const distance = Math.abs(m - activeMin);
+            const isSelected = distance === 0;
+            const str = m.toString().padStart(2, '0');
+
+            const textStyle = isSelected
+              ? 'text-3xl font-extrabold text-slate-900 scale-105'
+              : distance === 1
+              ? 'text-2xl font-bold text-slate-400/80'
+              : distance === 2
+              ? 'text-xl font-semibold text-slate-300/70'
+              : 'text-base font-medium text-slate-200/40';
+
+            return (
+              <Pressable
+                key={m}
+                onPress={() => selectMinute(m)}
+                className="h-[40px] items-center justify-center active:opacity-60"
+              >
+                <Text className={`text-center ${textStyle}`}>{str}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Spacing between Minute and AM/PM */}
+      <View className="w-4" />
+
+      {/* AM / PM Column */}
+      <View className="h-[280px] w-16">
+        <ScrollView
+          ref={periodScrollRef}
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          decelerationRate="fast"
+          scrollEventThrottle={16}
+          onScroll={handlePeriodScroll}
+          onScrollEndDrag={handlePeriodScroll}
+          onMomentumScrollEnd={handlePeriodScroll}
+          contentContainerStyle={{
+            paddingTop: PADDING_VERTICAL,
+            paddingBottom: PADDING_VERTICAL,
+          }}
         >
-          <Text style={styles.stepChevron}>▼</Text>
-        </Pressable>
-        <View style={{ width: 70 }} />
+          {PERIODS.map(p => {
+            const isSelected = (p === 'PM') === activeIsPM;
+
+            const textStyle = isSelected
+              ? 'text-2xl font-extrabold text-slate-900 scale-105'
+              : 'text-xl font-bold text-slate-300/70';
+
+            return (
+              <Pressable
+                key={p}
+                onPress={() => selectPeriod(p)}
+                className="h-[40px] items-center justify-center active:opacity-60"
+              >
+                <Text className={`text-center ${textStyle}`}>{p}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 4,
-  },
-  chevronRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    paddingVertical: 2,
-  },
-  stepButton: {
-    width: 76,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-  },
-  stepChevron: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '700',
-  },
-});

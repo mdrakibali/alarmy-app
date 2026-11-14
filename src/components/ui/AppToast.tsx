@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 
 export interface ToastOptions {
@@ -80,95 +80,39 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {toast && (
         <Animated.View
-          style={[
-            styles.toastContainer,
-            {
-              top: insets.top + 8,
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+          style={{
+            top: insets.top + 8,
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
+          className="absolute left-4 right-4 z-50"
         >
           <Pressable
             onPress={hideToast}
-            style={styles.toastCard}
+            className="bg-slate-900 rounded-2xl py-3 px-4 flex-row items-center justify-between border border-slate-700 shadow-xl"
           >
-            <View style={styles.toastLeft}>
-              <Text style={styles.toastIcon}>
+            <View className="flex-row items-center flex-1 pr-3">
+              <Text className="text-xl mr-3">
                 {toast.icon || (toast.type === 'error' ? '⚠️' : '✨')}
               </Text>
-              <View style={styles.textContainer}>
-                <Text style={styles.toastTitle}>{toast.title}</Text>
+              <View className="flex-1">
+                <Text className="text-sm font-extrabold text-white tracking-tight">
+                  {toast.title}
+                </Text>
                 {Boolean(toast.message) && (
-                  <Text style={styles.toastMessage} numberOfLines={2}>
+                  <Text
+                    className="text-xs font-medium text-slate-300 mt-0.5 leading-4"
+                    numberOfLines={2}
+                  >
                     {toast.message}
                   </Text>
                 )}
               </View>
             </View>
-            <Text style={styles.closeBtn}>✕</Text>
+            <Text className="text-sm text-slate-400 font-bold p-1">✕</Text>
           </Pressable>
         </Animated.View>
       )}
     </ToastContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  toastContainer: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    zIndex: 9999,
-    elevation: 9999,
-  },
-  toastCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#334155',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  toastLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    paddingRight: 12,
-  },
-  toastIcon: {
-    fontSize: 22,
-    marginRight: 12,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  toastTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.2,
-  },
-  toastMessage: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#94A3B8',
-    marginTop: 1.5,
-    lineHeight: 16,
-  },
-  closeBtn: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '700',
-    padding: 4,
-  },
-});
-

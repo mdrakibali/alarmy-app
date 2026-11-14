@@ -161,10 +161,7 @@ export function SleepScreen() {
               </Text>
             </View>
             <View className="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
-              <View
-                className="bg-[#38BDF8] h-full rounded-full"
-                style={{ width: '85%' }}
-              />
+              <View className="bg-[#38BDF8] h-full rounded-full w-[85%]" />
             </View>
           </View>
 
@@ -299,12 +296,8 @@ export function SleepScreen() {
         {/* Floating Mini Player (Shown when sound is active) */}
         {activeItem && (
           <View
-            style={{
-              position: 'absolute',
-              bottom: 68 + insets.bottom,
-              left: 16,
-              right: 16,
-            }}
+            style={{ bottom: 68 + insets.bottom }}
+            className="absolute left-4 right-4"
           >
             <Pressable
               onPress={() => setShowFullPlayer(true)}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
@@ -76,17 +76,11 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       {/* Animated GIF Background */}
       <Image
         source={activeBg.source}
-        style={[
-          StyleSheet.absoluteFill,
-          { width: '100%', height: '100%', opacity: 0.85 },
-        ]}
+        className="absolute inset-0 w-full h-full opacity-85"
         resizeMode="cover"
       />
       <View
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: '#000000', opacity: 0.35 },
-        ]}
+        className="absolute inset-0 bg-black/35"
         pointerEvents="none"
       />
 

@@ -69,14 +69,7 @@ export function ShakeMissionScreen({ navigation }: Props) {
         <View className="items-center justify-center my-8">
           <Pressable
             onPress={handleShake}
-            style={{
-              elevation: 8,
-              shadowColor: '#0284C7',
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.15,
-              shadowRadius: 16,
-            }}
-            className="h-64 w-64 rounded-full bg-white border-4 border-[#38BDF8] items-center justify-center active:scale-95 shadow-lg"
+            className="h-64 w-64 rounded-full bg-white border-4 border-[#38BDF8] items-center justify-center active:scale-95 shadow-2xl"
           >
             <Text className="text-6xl font-black text-slate-900">
               {shakesLeft}

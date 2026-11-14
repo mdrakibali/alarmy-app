@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   TouchableWithoutFeedback,
   View,
@@ -39,47 +38,50 @@ export function CustomConfirmModal({
       onRequestClose={onCancel}
     >
       <TouchableWithoutFeedback onPress={onCancel}>
-        <View style={styles.backdrop}>
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
           <TouchableWithoutFeedback>
-            <View style={styles.card}>
+            <View className="w-full max-w-[340px] bg-white rounded-3xl p-6 items-center shadow-2xl">
               {/* Icon Bubble */}
               <View
-                style={[
-                  styles.iconBubble,
-                  {
-                    backgroundColor: isDestructive ? '#FEE2E2' : '#E0F2FE',
-                  },
-                ]}
+                className={`w-14 h-14 rounded-full items-center justify-center mb-4 ${
+                  isDestructive ? 'bg-red-100' : 'bg-sky-100'
+                }`}
               >
-                <Text style={styles.icon}>{icon}</Text>
+                <Text className="text-2xl">{icon}</Text>
               </View>
 
               {/* Title & Message */}
-              <Text style={styles.title}>{title}</Text>
+              <Text className="text-lg font-extrabold text-slate-900 text-center mb-2">
+                {title}
+              </Text>
               {Boolean(message) && (
-                <Text style={styles.message}>{message}</Text>
+                <Text className="text-xs font-medium text-slate-500 text-center leading-relaxed mb-5 px-2">
+                  {message}
+                </Text>
               )}
 
               {/* Buttons */}
-              <View style={styles.buttonRow}>
+              <View className="flex-row w-full gap-3">
                 {Boolean(cancelText) && (
                   <Pressable
                     onPress={onCancel}
-                    style={[styles.btn, styles.cancelBtn]}
+                    className="flex-1 py-3.5 rounded-2xl items-center justify-center bg-slate-100 active:bg-slate-200"
                   >
-                    <Text style={styles.cancelText}>{cancelText}</Text>
+                    <Text className="text-sm font-bold text-slate-500">
+                      {cancelText}
+                    </Text>
                   </Pressable>
                 )}
 
                 <Pressable
                   onPress={onConfirm}
-                  style={[
-                    styles.btn,
-                    isDestructive ? styles.destructiveBtn : styles.confirmBtn,
-                    !cancelText && { flex: 1 },
-                  ]}
+                  className={`flex-1 py-3.5 rounded-2xl items-center justify-center active:opacity-90 shadow-sm ${
+                    isDestructive ? 'bg-rose-500' : 'bg-[#FF385C]'
+                  } ${!cancelText ? 'flex-1' : ''}`}
                 >
-                  <Text style={styles.confirmText}>{confirmText}</Text>
+                  <Text className="text-sm font-extrabold text-white">
+                    {confirmText}
+                  </Text>
                 </Pressable>
               </View>
             </View>
@@ -89,90 +91,3 @@ export function CustomConfirmModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 340,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 20,
-  },
-  iconBubble: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  icon: {
-    fontSize: 28,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  message: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 20,
-    paddingHorizontal: 8,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: 12,
-  },
-  btn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelBtn: {
-    backgroundColor: '#F1F5F9',
-  },
-  cancelText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#64748B',
-  },
-  confirmBtn: {
-    backgroundColor: '#FF385C',
-    shadowColor: '#FF385C',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  destructiveBtn: {
-    backgroundColor: '#EF4444',
-  },
-  confirmText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-});
-

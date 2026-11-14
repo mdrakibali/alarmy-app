@@ -3,7 +3,6 @@ import {
   Animated,
   Image,
   StatusBar,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -49,116 +48,53 @@ export function SplashScreen({ navigation }: Props) {
   }, [fadeAnim, scaleAnim, navigation]);
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-white items-center justify-center relative">
       <StatusBar barStyle="dark-content" />
 
       {/* Center Branding Block */}
       <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
+        style={{
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }],
+        }}
+        className="items-center justify-center"
       >
-        {/* Glow Behind Logo */}
-        <View style={styles.logoGlow} />
-
-        {/* App Logo */}
-        <Image
-          source={require('@/assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-
-        {/* App Title */}
-        <Text style={styles.title}>Alarmy</Text>
-
-        {/* Tagline Badge */}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Sleep if u can ⏰</Text>
+        {/* Circular Logo Badge - Logo fits 100% inside with clean padding */}
+        <View className="w-48 h-48 rounded-full bg-slate-50 border border-slate-100 items-center justify-center shadow-md mb-6 relative overflow-hidden">
+          <View className="absolute inset-2 rounded-full bg-indigo-50/70" />
+          <Image
+            source={require('@/assets/images/logo.png')}
+            className="w-32 h-32"
+            resizeMode="contain"
+          />
         </View>
 
-        <Text style={styles.subtitle}>
+        {/* App Title */}
+        <Text className="text-4xl font-black text-slate-900 tracking-tight mb-1.5">
+          Alarmy
+        </Text>
+
+        {/* Tagline Badge */}
+        <View className="bg-rose-100 px-3 py-1 rounded-full border border-rose-200 mb-2.5">
+          <Text className="text-xs font-extrabold text-[#FF385C]">
+            Sleep if u can ⏰
+          </Text>
+        </View>
+
+        <Text className="text-xs font-semibold text-slate-500 tracking-wide">
           Smart Wake-Up • Unbeatable Alarms
         </Text>
       </Animated.View>
 
       {/* Bottom Footer */}
       <View
-        style={[
-          styles.footer,
-          { paddingBottom: Math.max(insets.bottom, 24) },
-        ]}
+        style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+        className="absolute bottom-0 items-center w-full"
       >
-        <Text style={styles.versionText}>Version 1.0.0 • Light Edition</Text>
+        <Text className="text-xs font-semibold text-slate-400">
+          Version 1.0.0 • Light Edition
+        </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoGlow: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: '#E0E7FF',
-    opacity: 0.6,
-  },
-  logo: {
-    width: 160,
-    height: 160,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 38,
-    fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: -0.5,
-    marginBottom: 6,
-  },
-  badge: {
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-    marginBottom: 10,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#FF385C',
-    letterSpacing: 0.2,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
-    letterSpacing: 0.2,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    alignItems: 'center',
-    width: '100%',
-  },
-  versionText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#94A3B8',
-  },
-});

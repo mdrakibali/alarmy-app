@@ -54,7 +54,6 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
-  const [isTimePickerActive, setIsTimePickerActive] = useState(false);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const currentWallpaper =
@@ -198,13 +197,12 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             <Text className="text-sm font-semibold text-rose-500">Delete</Text>
           </Pressable>
         ) : (
-          <View style={{ width: 30 }} />
+          <View className="w-[30px]" />
         )}
       </View>
 
       <ScrollView
         className="flex-1"
-        scrollEnabled={!isTimePickerActive}
         nestedScrollEnabled={true}
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -233,17 +231,11 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </Text>
 
         {/* Custom Wheel / Drum Time Picker */}
-        <View
-          onTouchStart={() => setIsTimePickerActive(true)}
-          onTouchEnd={() => setIsTimePickerActive(false)}
-          onTouchCancel={() => setIsTimePickerActive(false)}
-          className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm items-center"
-        >
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm items-center">
           <WheelTimePicker
             hour={draft.hour}
             minute={draft.minute}
             onChange={(h, m) => patch({ hour: h, minute: m })}
-            onInteractionChange={setIsTimePickerActive}
           />
         </View>
 
@@ -403,15 +395,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 >
                   <Image
                     source={w.source}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      width: '100%',
-                      height: '100%',
-                    }}
+                    className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
                   />
                   {/* Selected Badge */}
@@ -663,14 +647,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
       {/* Fixed Bottom Save Button with Safe Area Inset - Flex sibling so it never obscures content */}
       <View
-        style={{
-          paddingBottom: bottomInset,
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          elevation: 10,
-          zIndex: 100,
-        }}
-        className="bg-white border-t border-slate-100 shadow-lg"
+        style={{ paddingBottom: Math.max(bottomInset, 52) }}
+        className="bg-white border-t border-slate-100 shadow-lg px-5 pt-3 z-50"
       >
         <Pressable
           onPress={save}
@@ -693,11 +671,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           <View className="flex-1 bg-black/40 justify-end">
             <TouchableWithoutFeedback>
               <View
-                style={{
-                  maxHeight: '80%',
-                  paddingBottom: Math.max(insets.bottom, 24),
-                }}
-                className="bg-white rounded-t-3xl p-5 shadow-2xl"
+                style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+                className="bg-white rounded-t-3xl p-5 shadow-2xl max-h-[80%]"
               >
                 {/* Header */}
                 <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">

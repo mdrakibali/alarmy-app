@@ -3,7 +3,6 @@ import {
   Image,
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   TouchableWithoutFeedback,
   View,
@@ -97,19 +96,13 @@ export function WallpaperPreviewModal({
         {/* Full-Screen Animated GIF */}
         <Image
           source={wallpaper.source}
-          style={[
-            StyleSheet.absoluteFill,
-            { width: '100%', height: '100%' },
-          ]}
+          className="absolute inset-0 w-full h-full"
           resizeMode="cover"
         />
 
         {/* Dark Top & Bottom Vignette Overlays for UI contrast */}
         <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: '#000000', opacity: 0.25 },
-          ]}
+          className="absolute inset-0 bg-black/25"
           pointerEvents="none"
         />
 

@@ -80,8 +80,8 @@ export function SettingsScreen() {
   return (
     <ScrollView
       className="flex-1 bg-[#F5F6F8]"
+      contentContainerClassName="px-5"
       contentContainerStyle={{
-        paddingHorizontal: 20,
         paddingTop: insets.top + 10,
         paddingBottom: 140 + insets.bottom,
       }}
@@ -123,7 +123,7 @@ export function SettingsScreen() {
                 >
                   <Image
                     source={bg.source}
-                    style={{ width: 70, height: 110 }}
+                    className="w-[70px] h-[110px]"
                     resizeMode="cover"
                   />
                   <View className="w-full bg-slate-900/90 py-1 px-1 items-center">
