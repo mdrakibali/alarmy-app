@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   Image,
   Modal,
-  Pressable,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -111,13 +111,14 @@ export function WallpaperPreviewModal({
           className="flex-row items-center justify-between px-5 pb-3 z-10"
         >
           {/* Close button */}
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.7}
             onPress={onClose}
-            hitSlop={10}
-            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center backdrop-blur-md active:opacity-70 border border-white/20"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center border border-white/20"
           >
             <Text className="text-white text-base font-bold">✕</Text>
-          </Pressable>
+          </TouchableOpacity>
 
           <View className="items-center px-3 py-1 rounded-full bg-black/60 border border-white/15">
             <Text className="text-white text-[11px] font-black tracking-widest uppercase">
@@ -126,18 +127,19 @@ export function WallpaperPreviewModal({
           </View>
 
           {/* Favorite button */}
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => toggleFavorite(wallpaper.id)}
-            hitSlop={10}
-            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center backdrop-blur-md active:opacity-70 border border-white/20"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center border border-white/20"
           >
             <Text className="text-xl">{isFav ? '❤️' : '🤍'}</Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
 
         {/* Center Sound Wave / Playing Indicator if audio is on */}
         {isPlayingAudio && (
-          <View className="items-center justify-center self-center bg-black/60 px-5 py-3 rounded-2xl border border-white/20 backdrop-blur-md">
+          <View className="items-center justify-center self-center bg-black/60 px-5 py-3 rounded-2xl border border-white/20">
             <Text className="text-white text-sm font-bold">
               🔊 Playing: {wallpaper.soundName || 'Associated Sound'}
             </Text>
@@ -164,9 +166,10 @@ export function WallpaperPreviewModal({
 
             {/* Sound Pill / Preview audio */}
             {wallpaper.soundId && (
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={handleToggleAudio}
-                className="flex-row items-center self-start mt-2 px-3 py-1.5 rounded-full bg-white/20 border border-white/30 active:bg-white/30"
+                className="flex-row items-center self-start mt-2 px-3 py-1.5 rounded-full bg-white/20 border border-white/30"
               >
                 <Text className="text-sm mr-2">{isPlayingAudio ? '❚❚' : '▶'}</Text>
                 <Text className="text-xs font-bold text-white">
@@ -174,7 +177,7 @@ export function WallpaperPreviewModal({
                     ? 'Pause Sound Preview'
                     : `♪ ${wallpaper.soundName || 'Preview Sound'}`}
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             )}
 
             <Text className="text-[11px] font-medium text-white/60 mt-2">
@@ -184,21 +187,23 @@ export function WallpaperPreviewModal({
 
           {/* Action Buttons */}
           <View className="flex-row space-x-3">
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.85}
               onPress={() => setShowApplySheet(true)}
-              className="flex-1 bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-lg mr-2"
+              className="flex-1 bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-lg mr-2"
             >
               <Text className="text-white text-base font-black tracking-wide">
                 Apply Wallpaper ✨
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Target Selection Bottom Sheet (Non-nested overlay to avoid Android window focus deadlock) */}
+        {/* Target Selection Bottom Sheet */}
         {showApplySheet && (
           <View className="absolute inset-0 bg-black/70 justify-end z-50">
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={1}
               className="absolute inset-0"
               onPress={() => setShowApplySheet(false)}
             />
@@ -214,9 +219,10 @@ export function WallpaperPreviewModal({
                 Choose where to display "{wallpaper.name}"
               </Text>
 
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => handleApplyTo('all')}
-                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700 active:bg-neutral-700"
+                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700"
               >
                 <Text className="text-sm font-extrabold text-white">
                   📱 Apply to All (Global Default)
@@ -224,11 +230,12 @@ export function WallpaperPreviewModal({
                 <Text className="text-xs text-neutral-400 mt-0.5">
                   Sets as background for Home, Alarm, and Ringing screens
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => handleApplyTo('alarm')}
-                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700 active:bg-neutral-700"
+                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700"
               >
                 <Text className="text-sm font-extrabold text-white">
                   ⏰ Apply to Alarm Screen
@@ -236,11 +243,12 @@ export function WallpaperPreviewModal({
                 <Text className="text-xs text-neutral-400 mt-0.5">
                   Display when viewing or configuring alarms
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => handleApplyTo('ringing')}
-                className="p-4 rounded-2xl bg-neutral-800 mb-4 border border-neutral-700 active:bg-neutral-700"
+                className="p-4 rounded-2xl bg-neutral-800 mb-4 border border-neutral-700"
               >
                 <Text className="text-sm font-extrabold text-white">
                   🔔 Apply to Ringing Screen
@@ -248,16 +256,17 @@ export function WallpaperPreviewModal({
                 <Text className="text-xs text-neutral-400 mt-0.5">
                   Shows full-screen looping GIF when morning alarm rings
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => setShowApplySheet(false)}
-                className="py-3.5 rounded-2xl bg-neutral-800 items-center active:bg-neutral-700"
+                className="py-3.5 rounded-2xl bg-neutral-800 items-center"
               >
                 <Text className="text-sm font-bold text-neutral-400">
                   Cancel
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
           </View>
         )}

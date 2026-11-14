@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import {
   Image,
-  Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -86,13 +86,14 @@ export function WallpaperGalleryScreen() {
         className="px-5 pb-3 border-b border-slate-100 bg-white z-10 shadow-xs"
       >
         <View className="flex-row items-center justify-between mb-2">
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => navigation.goBack()}
-            hitSlop={10}
-            className="h-10 w-10 rounded-full bg-slate-100 items-center justify-center active:bg-slate-200"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="h-10 w-10 rounded-full bg-slate-100 items-center justify-center"
           >
             <Text className="text-slate-800 text-lg font-bold">←</Text>
-          </Pressable>
+          </TouchableOpacity>
 
           <View className="px-3 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30">
             <Text className="text-[10px] font-black text-[#4E7D5B] uppercase tracking-widest">
@@ -116,14 +117,15 @@ export function WallpaperGalleryScreen() {
           contentContainerStyle={{ paddingHorizontal: 2 }}
         >
           {categoryTabs.map(tab => (
-            <Pressable
+            <TouchableOpacity
               key={tab}
-              hitSlop={6}
+              activeOpacity={0.8}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               onPress={() => setSelectedCategory(tab)}
               className={`mr-2 px-3.5 py-1.5 rounded-xl border ${
                 selectedCategory === tab
                   ? 'bg-[#0F172A] border-[#0F172A]'
-                  : 'bg-white border-slate-200 active:bg-slate-100'
+                  : 'bg-white border-slate-200'
               }`}
             >
               <Text
@@ -133,7 +135,7 @@ export function WallpaperGalleryScreen() {
               >
                 {tab}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
@@ -160,9 +162,10 @@ export function WallpaperGalleryScreen() {
             {displayedItems.map(w => {
               const isSelected = currentAlarmBg === w.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={w.id}
-                  hitSlop={8}
+                  activeOpacity={0.85}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   onPress={() => handleCardPress(w)}
                   className={`w-[48%] h-56 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
@@ -175,14 +178,10 @@ export function WallpaperGalleryScreen() {
                     source={w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
-                    pointerEvents="none"
                   />
 
                   {/* Top Favorite / Selected indicator badge */}
-                  <View
-                    className="w-full flex-row justify-end p-2.5 z-10"
-                    pointerEvents="none"
-                  >
+                  <View className="w-full flex-row justify-end p-2.5 z-10">
                     {isSelected && (
                       <View className="h-6 w-6 rounded-full bg-[#4E7D5B] border border-white items-center justify-center shadow-md">
                         <Text className="text-white text-[10px] font-black">✓</Text>
@@ -191,10 +190,7 @@ export function WallpaperGalleryScreen() {
                   </View>
 
                   {/* Bottom Title Bar */}
-                  <View
-                    className="w-full py-2 px-2 bg-black/70 z-10 border-t border-white/10"
-                    pointerEvents="none"
-                  >
+                  <View className="w-full py-2 px-2 bg-black/70 z-10 border-t border-white/10">
                     <Text
                       className={`text-xs font-black text-center ${
                         isSelected ? 'text-[#E2A938]' : 'text-white'
@@ -204,7 +200,7 @@ export function WallpaperGalleryScreen() {
                       ♪ {w.name}
                     </Text>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
