@@ -16,7 +16,13 @@ Python-generated GIF thumbnails under `src/assets/wallpapers/thumbs/` are no lon
 | `src/assets/backgrounds/minimal/soft-field.jpg` | 1166209 | https://www.pexels.com/photo/1166209/ | Motivational gallery |
 | `src/assets/backgrounds/night/lake-stars.jpg` | 1252869 | https://www.pexels.com/photo/1252869/ | Night gallery |
 | `src/assets/backgrounds/night/starry-night.jpg` | 355465 | https://www.pexels.com/photo/355465/ | Night gallery |
-| `src/assets/backgrounds/night/storm-island.jpg` | 1118873 | https://www.pexels.com/photo/1118873/ | Night gallery |
+| `flowers/sunflower.jpg` | 1366630 | https://www.pexels.com/photo/1366630/ | Flowers |
+| `flowers/pink-bloom.jpg` | 931177 | https://www.pexels.com/photo/931177/ | Flowers |
+| `mountains/ridge.jpg` | 417074 | https://www.pexels.com/photo/417074/ | Mountains |
+| `minimal/fog.jpg` | 167699 | https://www.pexels.com/photo/167699/ | Minimal |
+| `nature/waterfall.jpg` | 931018 | https://www.pexels.com/photo/931018/ | Nature, aerial coast |
+| `abstract/sand.jpg` | 235615 | https://www.pexels.com/photo/235615/ | Abstract |
+| `night/moon-sea.jpg` | 355288 | https://www.pexels.com/photo/355288/ | Abstract water |
 
 Rejected after inspection:
 
