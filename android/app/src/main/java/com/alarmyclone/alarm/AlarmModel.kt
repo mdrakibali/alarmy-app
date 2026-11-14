@@ -21,6 +21,7 @@ data class AlarmModel(
     val gentleWakeup: Boolean = true,
     val requestCode: Int = 0,
     val snoozeUsed: Int = 0,
+    val wakeUpCheckMin: Int = 0,
 ) {
     fun toJsonObject(): JSONObject {
         val obj = JSONObject()
@@ -39,6 +40,7 @@ data class AlarmModel(
         obj.put("gentleWakeup", gentleWakeup)
         obj.put("requestCode", requestCode)
         obj.put("snoozeUsed", snoozeUsed)
+        obj.put("wakeUpCheckMin", wakeUpCheckMin)
 
         val daysArray = JSONArray()
         repeatDays.forEach { daysArray.put(it) }
@@ -85,6 +87,7 @@ data class AlarmModel(
                 gentleWakeup = obj.optBoolean("gentleWakeup", true),
                 requestCode = obj.optInt("requestCode", 0),
                 snoozeUsed = obj.optInt("snoozeUsed", 0),
+                wakeUpCheckMin = obj.optInt("wakeUpCheckMin", 0),
             )
         }
     }

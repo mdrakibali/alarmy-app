@@ -98,6 +98,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             }
 
             val gentleWakeup = if (alarmMap.hasKey("gentleWakeup")) alarmMap.getBoolean("gentleWakeup") else true
+            val wakeUpCheckMin = if (alarmMap.hasKey("wakeUpCheckMin")) alarmMap.getInt("wakeUpCheckMin") else 0
 
             val model = AlarmModel(
                 id = id,
@@ -113,7 +114,8 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 snoozeMaxCount = snoozeMaxCount,
                 missions = missionsList,
                 enabled = enabled,
-                gentleWakeup = gentleWakeup
+                gentleWakeup = gentleWakeup,
+                wakeUpCheckMin = wakeUpCheckMin.coerceIn(0, 30),
             )
 
             val scheduled = if (enabled) {
@@ -158,7 +160,17 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun stopAlarm(promise: Promise) {
         try {
+            val ringingId = AlarmService.currentAlarmId
+            val alarm = ringingId?.let { AlarmStorage.getAlarm(reactContext, it) }
             AlarmService.stop(reactContext)
+            if (alarm != null && alarm.wakeUpCheckMin > 0) {
+                val whenMs = System.currentTimeMillis() + alarm.wakeUpCheckMin * 60_000L
+                AlarmScheduler.schedule(
+                    reactContext,
+                    alarm.copy(enabled = true),
+                    explicitTriggerTimeMs = whenMs,
+                )
+            }
             sendEvent("onAlarmDismissed", null)
             promise.resolve(true)
         } catch (e: Exception) {

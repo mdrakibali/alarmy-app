@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ALBA_BACKGROUNDS, findAlbaBackground } from '@/data/albaBackgrounds';
+import { ALBA_BACKGROUNDS, AlbaGroup, findAlbaBackground } from '@/data/albaBackgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -17,9 +17,19 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
 
-type GroupId = 'Nature' | 'Minimal' | 'Motivational' | 'Night' | 'Custom' | 'Favorites';
+type GroupId = AlbaGroup | 'Custom' | 'Favorites';
 
-const GROUPS: GroupId[] = ['Nature', 'Minimal', 'Motivational', 'Night', 'Custom', 'Favorites'];
+const GROUPS: GroupId[] = [
+  'Nature',
+  'Mountains',
+  'Flowers',
+  'Minimal',
+  'Abstract',
+  'Motivational',
+  'Night',
+  'Custom',
+  'Favorites',
+];
 
 const Card = React.memo(function WallpaperCard({
   id,

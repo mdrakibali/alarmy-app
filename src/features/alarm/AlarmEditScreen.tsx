@@ -59,6 +59,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [registeringCode, setRegisteringCode] = useState(false);
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isPlayingSound, setIsPlayingSound] = useState(false);
+  const [soundQuery, setSoundQuery] = useState('');
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const selectedVisualId = draft.wallpaper || alarmBackground;
@@ -528,7 +529,16 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           {/* Sound options expansion */}
           {showSoundPicker && (
             <View className="mb-3 px-1">
-              {SOUND_OPTIONS.map(opt => (
+              <TextInput
+                value={soundQuery}
+                onChangeText={setSoundQuery}
+                placeholder="Search sounds"
+                placeholderTextColor="#5E7166"
+                className="bg-[#FBFBF9] border border-slate-200 rounded-xl px-3 py-2 mb-2 text-sm text-[#1A2E22]"
+              />
+              {SOUND_OPTIONS.filter(opt =>
+                opt.label.toLowerCase().includes(soundQuery.trim().toLowerCase()),
+              ).map(opt => (
                 <TouchableOpacity
                   key={opt.id}
                   activeOpacity={0.8}
@@ -605,6 +615,37 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 {draft.vibrate ? 'ON' : 'OFF'}
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
+          <Text className="text-sm font-bold text-[#1A2E22]">Gradual volume</Text>
+          <TouchableOpacity
+            onPress={() => patch({ gentleWakeup: !(draft.gentleWakeup ?? true) })}
+            className="mt-2 self-start px-3 py-2 rounded-full bg-[#FBFBF9] border border-[#6B8F71]"
+          >
+            <Text className="text-xs font-bold text-[#1A2E22]">
+              {(draft.gentleWakeup ?? true) ? 'Crescendo on' : 'Crescendo off'}
+            </Text>
+          </TouchableOpacity>
+          <Text className="text-sm font-bold text-[#1A2E22] mt-4">Wake Up Check</Text>
+          <Text className="text-xs text-[#5E7166] mt-1">
+            After you dismiss, Alba rings again to see if you are still up.
+          </Text>
+          <View className="flex-row mt-2">
+            {[0, 3, 5, 10].map(mins => (
+              <TouchableOpacity
+                key={mins}
+                onPress={() => patch({ wakeUpCheckMin: mins })}
+                className={`mr-2 px-3 py-2 rounded-full border ${
+                  (draft.wakeUpCheckMin ?? 0) === mins ? 'bg-[#1A2E22]' : 'bg-white border-slate-200'
+                }`}
+              >
+                <Text className={`text-xs font-bold ${(draft.wakeUpCheckMin ?? 0) === mins ? 'text-white' : 'text-[#1A2E22]'}`}>
+                  {mins === 0 ? 'Off' : `${mins} min`}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 

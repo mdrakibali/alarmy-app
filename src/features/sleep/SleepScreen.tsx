@@ -3,6 +3,7 @@ import {
   Animated,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -108,10 +109,15 @@ export function SleepScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  const [query, setQuery] = useState('');
   const filteredItems = useMemo(() => {
-    if (selectedCategory === 'All') return SLEEP_MUSIC_ITEMS;
-    return SLEEP_MUSIC_ITEMS.filter(item => item.category === selectedCategory);
-  }, [selectedCategory]);
+    const q = query.trim().toLowerCase();
+    return SLEEP_MUSIC_ITEMS.filter(item => {
+      const inCategory = selectedCategory === 'All' || item.category === selectedCategory;
+      const inQuery = q.length === 0 || item.title.toLowerCase().includes(q);
+      return inCategory && inQuery;
+    });
+  }, [selectedCategory, query]);
 
   const activeSound = useMemo(
     () => SLEEP_MUSIC_ITEMS.find(s => s.id === currentPlayingId),
@@ -233,6 +239,13 @@ export function SleepScreen() {
             </View>
           </View>
 
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search sleep sounds"
+            placeholderTextColor="#5E7166"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3 text-sm text-[#1A2E22]"
+          />
           {/* Category Filter Pills */}
           <ScrollView
             horizontal
