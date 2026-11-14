@@ -85,6 +85,8 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 }
             }
 
+            val gentleWakeup = if (alarmMap.hasKey("gentleWakeup")) alarmMap.getBoolean("gentleWakeup") else true
+
             val model = AlarmModel(
                 id = id,
                 hour = hour,
@@ -98,7 +100,8 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 snoozeIntervalMin = snoozeIntervalMin,
                 snoozeMaxCount = snoozeMaxCount,
                 missions = missionsList,
-                enabled = enabled
+                enabled = enabled,
+                gentleWakeup = gentleWakeup
             )
 
             if (enabled) {

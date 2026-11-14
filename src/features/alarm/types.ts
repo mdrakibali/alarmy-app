@@ -25,4 +25,5 @@ export interface Alarm {
   missions: MissionType[];
   wallpaper?: string;
   snoozedUntil?: number;
+  gentleWakeup?: boolean;
 }
