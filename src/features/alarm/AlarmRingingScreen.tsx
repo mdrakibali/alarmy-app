@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, Pressable, Text, View } from 'react-native';
+import {
+  BackHandler,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
@@ -178,25 +183,27 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         {/* Bottom section: Actions */}
         <View className="w-full">
           {/* Main Action (Dismiss or Mission) */}
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.85}
             onPress={handleDismissOrMission}
-            className="w-full bg-[#4E7D5B] py-5 rounded-2xl items-center active:opacity-90 shadow-md mb-3"
+            className="w-full bg-[#4E7D5B] py-5 rounded-2xl items-center shadow-md mb-3"
           >
             <Text className="text-white text-lg font-black tracking-wide">
               {hasMission ? missionButtonText : 'Dismiss Alarm'}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
 
           {/* Snooze Button */}
           {snoozeEnabled && (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={handleSnooze}
-              className="w-full bg-white border border-slate-200 py-4 rounded-2xl items-center active:bg-slate-50"
+              className="w-full bg-white border border-slate-200 py-4 rounded-2xl items-center shadow-xs"
             >
               <Text className="text-slate-700 text-base font-bold">
                 Snooze ({snoozeInterval} min)
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
       </View>

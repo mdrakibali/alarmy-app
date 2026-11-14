@@ -2,11 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
   Modal,
-  Pressable,
   ScrollView,
   Switch,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -193,7 +193,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         style={{ paddingTop: Math.max(insets.top, 12) }}
         className="flex-row items-center justify-between px-5 pb-3 bg-white border-b border-slate-100"
       >
-        <Pressable
+        <TouchableOpacity
+          activeOpacity={0.7}
           onPress={() => {
             NativeAlarm.stopSoundPreview();
             navigation.goBack();
@@ -202,14 +203,19 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           className="p-1"
         >
           <Text className="text-xl font-bold text-slate-700">✕</Text>
-        </Pressable>
+        </TouchableOpacity>
         <Text className="text-base font-bold text-slate-900">
           Wake-up alarm
         </Text>
         {existingId ? (
-          <Pressable onPress={confirmDelete} hitSlop={10} className="p-1">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={confirmDelete}
+            hitSlop={10}
+            className="p-1"
+          >
             <Text className="text-sm font-semibold text-rose-500">Delete</Text>
-          </Pressable>
+          </TouchableOpacity>
         ) : (
           <View className="w-[30px]" />
         )}
@@ -257,9 +263,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-sm">
           <View className="flex-row items-center justify-between mb-3 px-1">
             <Text className="text-sm font-bold text-slate-800">Repeat</Text>
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={toggleDaily}
-              className="flex-row items-center active:opacity-75"
+              className="flex-row items-center"
             >
               <View
                 className={`h-4 w-4 rounded items-center justify-center mr-1.5 border ${
@@ -273,7 +280,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 )}
               </View>
               <Text className="text-xs font-semibold text-slate-600">Daily</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
 
           {/* 7 Days Pills */}
@@ -281,8 +288,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             {DAY_LABELS.map((dayLabel, index) => {
               const selected = draft.repeatDays.includes(index);
               return (
-                <Pressable
+                <TouchableOpacity
                   key={index}
+                  activeOpacity={0.8}
                   onPress={() => toggleDay(index)}
                   className={`h-11 w-11 items-center justify-center rounded-2xl border ${
                     selected
@@ -297,7 +305,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   >
                     {dayLabel}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -322,8 +330,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
               if (details) {
                 return (
-                  <Pressable
+                  <TouchableOpacity
                     key={slotIndex}
+                    activeOpacity={0.8}
                     onPress={() => removeMission(slotIndex)}
                     className="h-14 w-14 items-center justify-center rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] relative shadow-sm"
                   >
@@ -340,18 +349,19 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                         ✕
                       </Text>
                     </View>
-                  </Pressable>
+                  </TouchableOpacity>
                 );
               }
 
               return (
-                <Pressable
+                <TouchableOpacity
                   key={slotIndex}
+                  activeOpacity={0.8}
                   onPress={() => setShowMissionModal(true)}
-                  className="h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-dashed border-slate-300 active:bg-slate-100"
+                  className="h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-dashed border-slate-300"
                 >
                   <Text className="text-xl font-light text-slate-400">+</Text>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -368,7 +378,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 {currentWallpaper.name} • {currentWallpaper.category}
               </Text>
             </View>
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() =>
                 navigation.navigate('WallpaperGallery', {
                   onSelect: (id: string) => {
@@ -376,12 +387,12 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   },
                 })
               }
-              className="py-1 px-3 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30 active:bg-[#DCEADA]"
+              className="py-1 px-3 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30"
             >
               <Text className="text-xs font-bold text-[#4E7D5B]">
                 Browse All (31+) ›
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
 
           {/* Quick Horizontal Carousel of Wallpapers with Live Selection */}
@@ -394,9 +405,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             {WALLPAPERS.slice(0, 5).map(w => {
               const isSelected = (draft.wallpaper || alarmBackground) === w.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={w.id}
-                  hitSlop={8}
+                  activeOpacity={0.85}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   onPress={() => {
                     patch({ wallpaper: w.id });
                   }}
@@ -410,13 +422,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     source={w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
-                    pointerEvents="none"
                   />
                   {/* Selected Badge */}
-                  <View
-                    className="w-full flex-row justify-end p-1.5 z-10"
-                    pointerEvents="none"
-                  >
+                  <View className="w-full flex-row justify-end p-1.5 z-10">
                     {isSelected && (
                       <View className="h-5 w-5 rounded-full bg-[#4E7D5B] items-center justify-center shadow-sm">
                         <Text className="text-white text-[9px] font-black">✓</Text>
@@ -424,10 +432,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     )}
                   </View>
                   {/* Title Bar */}
-                  <View
-                    className="w-full py-1.5 px-1 bg-black/60 z-10"
-                    pointerEvents="none"
-                  >
+                  <View className="w-full py-1.5 px-1 bg-black/60 z-10">
                     <Text
                       className={`text-[10px] font-bold text-center ${
                         isSelected ? 'text-[#E2A938]' : 'text-white'
@@ -437,7 +442,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                       ♪ {w.name}
                     </Text>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </ScrollView>
@@ -451,18 +456,20 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
           {/* Sound selection row with Audio Preview */}
           <View className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-3 mb-3 border border-slate-100">
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => toggleSoundPreview()}
-              className={`h-9 w-9 rounded-full items-center justify-center mr-3 active:opacity-75 ${
+              className={`h-9 w-9 rounded-full items-center justify-center mr-3 ${
                 isPlayingSound ? 'bg-amber-600' : 'bg-[#4E7D5B]'
               }`}
             >
               <Text className="text-white text-xs font-black">
                 {isPlayingSound ? '■' : '▶'}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
 
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setShowSoundPicker(prev => !prev)}
               className="flex-1 flex-row items-center justify-between"
             >
@@ -478,22 +485,23 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               <Text className="text-xs font-bold text-slate-400">
                 {showSoundPicker ? '▲' : '▼'}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
 
           {/* Sound options expansion */}
           {showSoundPicker && (
             <View className="mb-3 px-1">
               {SOUND_OPTIONS.map(opt => (
-                <Pressable
+                <TouchableOpacity
                   key={opt.id}
+                  activeOpacity={0.8}
                   onPress={() => {
                     patch({ soundId: opt.id });
                     setShowSoundPicker(false);
                     toggleSoundPreview(opt.id, true);
                   }}
                   className={`flex-row items-center justify-between py-2.5 px-3 rounded-xl mb-1 ${
-                    draft.soundId === opt.id ? 'bg-[#E0F2FE]' : 'active:bg-slate-50'
+                    draft.soundId === opt.id ? 'bg-[#E0F2FE]' : ''
                   }`}
                 >
                   <View className="flex-row items-center">
@@ -511,7 +519,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   {draft.soundId === opt.id && (
                     <Text className="text-[#0284C7] font-bold text-xs">✓</Text>
                   )}
-                </Pressable>
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -522,8 +530,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             {/* Volume selector pills */}
             <View className="flex-1 flex-row mx-2">
               {[0.4, 0.7, 1.0].map((vol, i) => (
-                <Pressable
+                <TouchableOpacity
                   key={vol}
+                  activeOpacity={0.8}
                   onPress={() => patch({ volume: vol })}
                   className={`flex-1 py-1.5 mx-1 items-center rounded-lg ${
                     draft.volume === vol ? 'bg-[#4E7D5B]' : 'bg-slate-100'
@@ -536,12 +545,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   >
                     {i === 0 ? 'Low' : i === 1 ? 'Med' : 'Max'}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               ))}
             </View>
 
             {/* Vibrate toggle */}
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => patch({ vibrate: !draft.vibrate })}
               className={`flex-row items-center ml-2 px-2.5 py-1.5 rounded-lg border ${
                 draft.vibrate
@@ -557,7 +567,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               >
                 {draft.vibrate ? 'ON' : 'OFF'}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -567,7 +577,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             Custom setting
           </Text>
 
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.8}
             onPress={() => setShowSnoozePicker(prev => !prev)}
             className="flex-row items-center justify-between py-2 px-1"
           >
@@ -577,7 +588,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 ? `${draft.snooze.intervalMin} min, ${draft.snooze.maxCount} times ›`
                 : 'Off ›'}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
 
           {showSnoozePicker && (
             <View className="mt-3 pt-3 border-t border-slate-100">
@@ -602,8 +613,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   </Text>
                   <View className="flex-row flex-wrap mb-3">
                     {SNOOZE_INTERVALS.map(min => (
-                      <Pressable
+                      <TouchableOpacity
                         key={min}
+                        activeOpacity={0.8}
                         onPress={() =>
                           patch({
                             snooze: { ...draft.snooze, intervalMin: min },
@@ -624,7 +636,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                         >
                           {min}m
                         </Text>
-                      </Pressable>
+                      </TouchableOpacity>
                     ))}
                   </View>
 
@@ -633,8 +645,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   </Text>
                   <View className="flex-row flex-wrap">
                     {SNOOZE_COUNTS.map(count => (
-                      <Pressable
+                      <TouchableOpacity
                         key={count}
+                        activeOpacity={0.8}
                         onPress={() =>
                           patch({
                             snooze: { ...draft.snooze, maxCount: count },
@@ -655,7 +668,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                         >
                           {count}x
                         </Text>
-                      </Pressable>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 </>
@@ -670,14 +683,15 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         style={{ paddingBottom: Math.max(bottomInset, 52) }}
         className="bg-white border-t border-slate-100 shadow-lg px-5 pt-3 z-50"
       >
-        <Pressable
+        <TouchableOpacity
+          activeOpacity={0.85}
           onPress={save}
-          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-sm"
+          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
         >
           <Text className="text-white text-base font-extrabold tracking-wide">
             Save
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       {/* Wake-up Mission Selection Modal */}
@@ -689,7 +703,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       >
         <View className="flex-1 bg-black/50 justify-end">
           {/* Backdrop Dismiss Area */}
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={1}
             className="absolute inset-0"
             onPress={() => setShowMissionModal(false)}
           />
@@ -712,13 +727,14 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   Select up to 5 missions ({draft.missions.length}/5 selected)
                 </Text>
               </View>
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.7}
                 onPress={() => setShowMissionModal(false)}
-                hitSlop={12}
-                className="h-9 w-9 rounded-full bg-slate-100 items-center justify-center active:bg-slate-200"
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                className="h-9 w-9 rounded-full bg-slate-100 items-center justify-center"
               >
                 <Text className="text-base font-bold text-slate-500">✕</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
 
             {/* Mission List with style={{ flex: 1 }} so bottom button is never pushed off screen */}
@@ -743,13 +759,14 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                           : 'bg-white border-slate-100 shadow-sm'
                       }`}
                     >
-                      <Pressable
+                      <TouchableOpacity
+                        activeOpacity={0.8}
                         onPress={() => {
                           if (canAddMore) {
                             addMission(missionKey);
                           }
                         }}
-                        className="flex-row items-center flex-1 pr-2 active:opacity-70"
+                        className="flex-row items-center flex-1 pr-2"
                       >
                         <Text className="text-3xl mr-3">{item.icon}</Text>
                         <View className="flex-1">
@@ -767,36 +784,38 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                             {item.desc}
                           </Text>
                         </View>
-                      </Pressable>
+                      </TouchableOpacity>
 
                       <View className="flex-row items-center">
                         {count > 0 && (
-                          <Pressable
+                          <TouchableOpacity
+                            activeOpacity={0.7}
                             onPress={() => removeMissionByKey(missionKey)}
-                            hitSlop={8}
-                            className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-2 active:bg-slate-300"
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-2"
                           >
                             <Text className="text-slate-700 font-black text-sm">−</Text>
-                          </Pressable>
+                          </TouchableOpacity>
                         )}
-                        <Pressable
+                        <TouchableOpacity
+                          activeOpacity={0.8}
                           onPress={() => {
                             if (canAddMore) {
                               addMission(missionKey);
                             }
                           }}
-                          hitSlop={8}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                           disabled={!canAddMore}
                           className={`px-3.5 py-1.5 rounded-full shadow-xs ${
                             canAddMore
-                              ? 'bg-[#4E7D5B] active:opacity-80'
+                              ? 'bg-[#4E7D5B]'
                               : 'bg-slate-300'
                           }`}
                         >
                           <Text className="text-white text-xs font-black">
                             {count > 0 ? `+ Add (${count})` : '+ Add'}
                           </Text>
-                        </Pressable>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   );
@@ -806,14 +825,15 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
             {/* ✅ Fixed Bottom Action Bar — সবসময় স্পষ্ট দৃশ্যমান */}
             <View className="pt-3 border-t border-slate-100">
-              <Pressable
+              <TouchableOpacity
+                activeOpacity={0.85}
                 onPress={() => setShowMissionModal(false)}
-                className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:opacity-90"
+                className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
               >
                 <Text className="text-white text-base font-black tracking-wide">
                   Done ({draft.missions.length}/5 Missions Added) ✓
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
           </View>
         </View>

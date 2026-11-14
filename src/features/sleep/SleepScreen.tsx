@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -29,6 +30,62 @@ const TIMER_OPTIONS = [
   { label: '60m', minutes: 60 },
 ];
 
+function AnimatedEqualizer({ color = '#4E7D5B' }: { color?: string }) {
+  const anim1 = useRef(new Animated.Value(4)).current;
+  const anim2 = useRef(new Animated.Value(12)).current;
+  const anim3 = useRef(new Animated.Value(7)).current;
+
+  useEffect(() => {
+    const loop = (anim: Animated.Value, to: number, dur: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: to,
+            duration: dur,
+            useNativeDriver: false,
+          }),
+          Animated.timing(anim, {
+            toValue: 3,
+            duration: dur,
+            useNativeDriver: false,
+          }),
+        ]),
+      );
+    };
+
+    const a1 = loop(anim1, 14, 380);
+    const a2 = loop(anim2, 16, 280);
+    const a3 = loop(anim3, 12, 440);
+
+    a1.start();
+    a2.start();
+    a3.start();
+
+    return () => {
+      a1.stop();
+      a2.stop();
+      a3.stop();
+    };
+  }, [anim1, anim2, anim3]);
+
+  return (
+    <View className="flex-row items-end h-3.5 w-3.5 justify-between px-0.5">
+      <Animated.View
+        style={{ height: anim1, backgroundColor: color }}
+        className="w-0.5 rounded-full"
+      />
+      <Animated.View
+        style={{ height: anim2, backgroundColor: color }}
+        className="w-0.5 rounded-full"
+      />
+      <Animated.View
+        style={{ height: anim3, backgroundColor: color }}
+        className="w-0.5 rounded-full"
+      />
+    </View>
+  );
+}
+
 export function SleepScreen() {
   const insets = useAppInsets();
   const [selectedCategory, setSelectedCategory] =
@@ -55,6 +112,11 @@ export function SleepScreen() {
     if (selectedCategory === 'All') return SLEEP_MUSIC_ITEMS;
     return SLEEP_MUSIC_ITEMS.filter(item => item.category === selectedCategory);
   }, [selectedCategory]);
+
+  const activeSound = useMemo(
+    () => SLEEP_MUSIC_ITEMS.find(s => s.id === currentPlayingId),
+    [currentPlayingId],
+  );
 
   const togglePlay = (soundId: string) => {
     if (currentPlayingId === soundId && isPlaying) {
@@ -220,13 +282,26 @@ export function SleepScreen() {
                   onPress={() => togglePlay(sound.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
                     isThisPlaying
-                      ? 'bg-[#EBF3ED] border-[#6B8F71]/40 shadow-sm'
+                      ? 'bg-[#EBF3ED] border-[#4E7D5B] shadow-sm'
                       : 'bg-white border-slate-100 shadow-xs'
                   }`}
                 >
                   <View className="flex-row items-center flex-1 pr-3">
-                    <View className="h-12 w-12 rounded-2xl bg-slate-100 items-center justify-center mr-3">
-                      <Text className="text-2xl">{sound.icon}</Text>
+                    <View className="relative mr-3">
+                      <View
+                        className={`h-12 w-12 rounded-2xl items-center justify-center border ${
+                          isThisPlaying
+                            ? 'bg-white border-[#4E7D5B]'
+                            : 'bg-slate-100 border-transparent'
+                        }`}
+                      >
+                        <Text className="text-2xl">{sound.icon}</Text>
+                      </View>
+                      {isThisPlaying && (
+                        <View className="absolute -bottom-1 -right-1 bg-[#4E7D5B] rounded-full h-5 w-5 items-center justify-center border-2 border-white shadow-xs">
+                          <Text className="text-[10px]">🔊</Text>
+                        </View>
+                      )}
                     </View>
                     <View className="flex-1">
                       <View className="flex-row items-center mb-0.5">
@@ -237,11 +312,20 @@ export function SleepScreen() {
                         >
                           {sound.title}
                         </Text>
-                        <View className="ml-2 rounded bg-slate-100 px-1.5 py-0.5">
-                          <Text className="text-[9px] font-bold text-slate-500">
-                            {sound.category}
-                          </Text>
-                        </View>
+                        {isThisPlaying ? (
+                          <View className="ml-2 rounded-full bg-[#4E7D5B] px-2 py-0.5 flex-row items-center shadow-xs">
+                            <AnimatedEqualizer color="#FFFFFF" />
+                            <Text className="text-[9px] font-black text-white ml-1 tracking-wider uppercase">
+                              PLAYING
+                            </Text>
+                          </View>
+                        ) : (
+                          <View className="ml-2 rounded bg-slate-100 px-1.5 py-0.5">
+                            <Text className="text-[9px] font-bold text-slate-500">
+                              {sound.category}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                       <Text
                         className="text-xs text-slate-500 font-medium leading-tight"
@@ -297,6 +381,42 @@ export function SleepScreen() {
             </View>
           </View>
         </ScrollView>
+
+        {/* Floating Now Playing Mini-Player Bar when Audio is Active */}
+        {isPlaying && activeSound && (
+          <View
+            style={{ bottom: Math.max(insets.bottom + 8, 20) }}
+            className="absolute left-4 right-4 bg-slate-900 rounded-2xl p-3.5 flex-row items-center justify-between border border-slate-700 shadow-2xl"
+          >
+            <View className="flex-row items-center flex-1 mr-3">
+              <View className="h-10 w-10 rounded-xl bg-white/10 items-center justify-center mr-2.5">
+                <Text className="text-xl">{activeSound.icon}</Text>
+              </View>
+              <View className="flex-1">
+                <View className="flex-row items-center">
+                  <Text
+                    className="text-white text-xs font-black mr-2"
+                    numberOfLines={1}
+                  >
+                    {activeSound.title}
+                  </Text>
+                  <AnimatedEqualizer color="#E2A938" />
+                </View>
+                <Text className="text-slate-400 text-[10px] font-semibold mt-0.5">
+                  Playing now • {timerMinutes > 0 ? `Timer: ${timerMinutes}m` : 'Looping'}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => togglePlay(activeSound.id)}
+              className="bg-rose-500 px-3.5 py-2 rounded-xl flex-row items-center shadow-xs"
+            >
+              <Text className="text-white text-xs font-black mr-1">■</Text>
+              <Text className="text-white text-xs font-black">Stop</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </Screen>
   );

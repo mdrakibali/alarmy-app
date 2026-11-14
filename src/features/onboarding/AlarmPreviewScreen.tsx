@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   Image,
-  Pressable,
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -223,15 +223,16 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
               ) : (
                 <View className="w-full flex-row flex-wrap justify-between mt-1">
                   {mathProblem.options.map((opt, i) => (
-                    <Pressable
+                    <TouchableOpacity
                       key={`${opt}-${i}`}
+                      activeOpacity={0.8}
                       onPress={() => handleSelectMathOption(opt)}
-                      className="w-[48%] bg-white/20 border border-white/30 py-3 rounded-xl mb-2 items-center active:bg-white/40 shadow-sm"
+                      className="w-[48%] bg-white/20 border border-white/30 py-3 rounded-xl mb-2 items-center shadow-sm"
                     >
                       <Text className="text-white font-black text-lg">
                         {opt}
                       </Text>
-                    </Pressable>
+                    </TouchableOpacity>
                   ))}
                 </View>
               )}
@@ -252,14 +253,15 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
                   <Text className="text-white/80 text-xs font-semibold mb-2 text-center">
                     📱 Shake phone physically or tap button below:
                   </Text>
-                  <Pressable
+                  <TouchableOpacity
+                    activeOpacity={0.8}
                     onPress={() => setShakeCount(prev => Math.max(0, prev - 1))}
-                    className="bg-white/25 border border-white/40 px-6 py-3 rounded-xl active:scale-95 items-center w-full"
+                    className="bg-white/25 border border-white/40 px-6 py-3 rounded-xl items-center w-full"
                   >
                     <Text className="text-white font-black text-base">
                       Shake / Tap ({shakeCount} left) 📱
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -278,27 +280,29 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
               ) : (
-                <Pressable
+                <TouchableOpacity
+                  activeOpacity={0.8}
                   onPress={() => setBarcodeScanned(true)}
-                  className="bg-white/25 border border-white/40 px-6 py-3 rounded-xl active:bg-white/35 items-center w-full"
+                  className="bg-white/25 border border-white/40 px-6 py-3 rounded-xl items-center w-full"
                 >
                   <Text className="text-white font-black text-sm">
                     📷 Tap to Test Scan Barcode
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               )}
             </View>
           )}
 
           {/* Final Button */}
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.85}
             onPress={handleFinish}
-            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-lg mt-3"
+            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-lg mt-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
               Done - Activate Alba ✨
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </View>
 

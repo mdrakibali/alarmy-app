@@ -3,9 +3,9 @@ import {
   AppState,
   PermissionsAndroid,
   Platform,
-  Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -98,13 +98,14 @@ export function PermissionScreen({ navigation, route }: Props) {
         className="px-6 pb-4 bg-white border-b border-slate-100 shadow-xs"
       >
         <View className="flex-row items-center justify-between mb-2">
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => navigation.goBack()}
-            hitSlop={10}
-            className="py-1 px-2.5 rounded-full bg-slate-100 active:bg-slate-200"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="py-1 px-2.5 rounded-full bg-slate-100"
           >
             <Text className="text-slate-700 font-extrabold text-xs">‹ Back</Text>
-          </Pressable>
+          </TouchableOpacity>
           <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-3 py-0.5 rounded-full">
             <Text className="text-[#4E7D5B] font-black text-[10px] uppercase tracking-wider">
               STEP 5/5 • SECURITY 🛡️
@@ -152,12 +153,13 @@ export function PermissionScreen({ navigation, route }: Props) {
               <Text className="text-emerald-700 font-extrabold text-xs">Allowed</Text>
             </View>
           ) : (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => NativeAlarm.openExactAlarmSettings()}
-              className="px-4 py-2 rounded-xl bg-[#0284C7] active:bg-[#0369A1] shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#4E7D5B] shadow-xs"
             >
               <Text className="text-white text-xs font-black">Enable</Text>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -183,12 +185,13 @@ export function PermissionScreen({ navigation, route }: Props) {
               <Text className="text-emerald-700 font-extrabold text-xs">Allowed</Text>
             </View>
           ) : (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={requestNotificationPermission}
-              className="px-4 py-2 rounded-xl bg-[#F59E0B] active:bg-[#D97706] shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#4E7D5B] shadow-xs"
             >
               <Text className="text-white text-xs font-black">Allow</Text>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -203,7 +206,7 @@ export function PermissionScreen({ navigation, route }: Props) {
                 Run in Background
               </Text>
               <Text className="text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">
-                Prevents Android from killing Alarmy while you are sleeping
+                Prevents Android from killing Alba while you are sleeping
               </Text>
             </View>
           </View>
@@ -214,12 +217,13 @@ export function PermissionScreen({ navigation, route }: Props) {
               <Text className="text-emerald-700 font-extrabold text-xs">Allowed</Text>
             </View>
           ) : (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => NativeAlarm.requestIgnoreBatteryOptimizations()}
-              className="px-4 py-2 rounded-xl bg-[#10B981] active:bg-[#059669] shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#4E7D5B] shadow-xs"
             >
               <Text className="text-white text-xs font-black">Allow</Text>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -245,17 +249,18 @@ export function PermissionScreen({ navigation, route }: Props) {
               <Text className="text-emerald-700 font-extrabold text-xs">Allowed</Text>
             </View>
           ) : (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => NativeAlarm.openOverlaySettings()}
-              className="px-4 py-2 rounded-xl bg-[#8B5CF6] active:bg-[#7C3AED] shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#4E7D5B] shadow-xs"
             >
               <Text className="text-white text-xs font-black">Enable</Text>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
 
         {/* Tip Box */}
-        <View className="bg-rose-50/70 border border-rose-100 rounded-2xl p-3.5 mt-2 flex-row items-center">
+        <View className="bg-[#EBF3ED]/60 border border-[#6B8F71]/30 rounded-2xl p-3.5 mt-2 flex-row items-center">
           <Text className="text-xl mr-2.5">💡</Text>
           <Text className="text-xs text-slate-600 font-medium flex-1 leading-relaxed">
             You can enable these permissions now or adjust them later anytime in Settings.
@@ -268,15 +273,15 @@ export function PermissionScreen({ navigation, route }: Props) {
         style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
         className="bg-white border-t border-slate-100 shadow-md px-5 pt-3 z-50"
       >
-        <Pressable
+        <TouchableOpacity
+          activeOpacity={0.85}
           onPress={handleContinue}
-          hitSlop={15}
-          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:bg-[#3D6347]"
+          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
         >
           <Text className="text-white text-base font-black tracking-wide">
             Continue to Alarm Preview ✨
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     </View>
   );
