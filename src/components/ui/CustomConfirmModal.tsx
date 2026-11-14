@@ -76,7 +76,7 @@ export function CustomConfirmModal({
                 <Pressable
                   onPress={onConfirm}
                   className={`flex-1 py-3.5 rounded-2xl items-center justify-center active:opacity-90 shadow-sm ${
-                    isDestructive ? 'bg-rose-500' : 'bg-[#FF385C]'
+                    isDestructive ? 'bg-rose-500' : 'bg-[#4E7D5B]'
                   } ${!cancelText ? 'flex-1' : ''}`}
                 >
                   <Text className="text-sm font-extrabold text-white">

@@ -186,7 +186,7 @@ export function WallpaperPreviewModal({
           <View className="flex-row space-x-3">
             <Pressable
               onPress={() => setShowApplySheet(true)}
-              className="flex-1 bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-lg mr-2"
+              className="flex-1 bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-lg mr-2"
             >
               <Text className="text-white text-base font-black tracking-wide">
                 Apply Wallpaper ✨

@@ -15,6 +15,7 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TypingMission'>;
@@ -102,7 +103,34 @@ export function TypingMissionScreen({ navigation, route }: Props) {
         });
         return;
       }
+      if (nextMissionKey === 'photo') {
+        navigation.replace('PhotoMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'squat') {
+        navigation.replace('SquatMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
     }
+
+    const now = new Date();
+    const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+    useReportStore.getState().logAlarmDismissed({
+      label: 'Morning Alarm',
+      scheduledTime: timeStr,
+      dismissedTime: timeStr,
+      onTime: true,
+      missionsCompleted: allMissions.length > 0 ? allMissions : ['typing'],
+      snoozeCount: 0,
+    });
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
@@ -136,8 +164,8 @@ export function TypingMissionScreen({ navigation, route }: Props) {
         >
           {/* Header */}
           <View className="items-center">
-            <View className="px-3 py-1 rounded-full bg-violet-50 border border-violet-200 mb-2">
-              <Text className="text-violet-700 font-extrabold text-[11px] uppercase tracking-wider">
+            <View className="px-3 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30 mb-2">
+              <Text className="text-[#4E7D5B] font-extrabold text-[11px] uppercase tracking-wider">
                 Typing Wake-up Mission ⌨️
               </Text>
             </View>
@@ -183,7 +211,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
               }}
               disabled={!isMatched}
               className={`w-full py-4 rounded-2xl items-center shadow-md ${
-                isMatched ? 'bg-violet-600' : 'bg-slate-300'
+                isMatched ? 'bg-[#4E7D5B]' : 'bg-slate-300'
               }`}
             >
               <Text className="text-white font-black text-base">

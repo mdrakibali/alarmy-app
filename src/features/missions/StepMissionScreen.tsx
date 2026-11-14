@@ -11,6 +11,7 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StepMission'>;
@@ -87,7 +88,34 @@ export function StepMissionScreen({ navigation, route }: Props) {
         });
         return;
       }
+      if (nextMissionKey === 'photo') {
+        navigation.replace('PhotoMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'squat') {
+        navigation.replace('SquatMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
     }
+
+    const now = new Date();
+    const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+    useReportStore.getState().logAlarmDismissed({
+      label: 'Morning Alarm',
+      scheduledTime: timeStr,
+      dismissedTime: timeStr,
+      onTime: true,
+      missionsCompleted: allMissions.length > 0 ? allMissions : ['step'],
+      snoozeCount: 0,
+    });
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
@@ -124,8 +152,8 @@ export function StepMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
-          <View className="bg-rose-50 border border-rose-200 px-4 py-1.5 rounded-full mb-2">
-            <Text className="text-[#FF385C] font-extrabold text-xs uppercase tracking-wider">
+          <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-4 py-1.5 rounded-full mb-2">
+            <Text className="text-[#4E7D5B] font-extrabold text-xs uppercase tracking-wider">
               STEP MISSION 🚶
             </Text>
           </View>
@@ -139,15 +167,15 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
         {/* Center Progress Circle */}
         <View className="items-center justify-center my-6">
-          <View className="h-56 w-56 rounded-full border-8 border-rose-100 bg-white items-center justify-center shadow-xl">
+          <View className="h-56 w-56 rounded-full border-8 border-[#6B8F71]/20 bg-white items-center justify-center shadow-xl">
             <Text className="text-5xl font-black text-slate-900">
               {stepsWalked}
             </Text>
             <Text className="text-sm font-bold text-slate-400 mt-1">
               / {TARGET_STEPS} Steps
             </Text>
-            <View className="mt-3 px-3 py-1 rounded-full bg-rose-50">
-              <Text className="text-xs font-black text-[#FF385C]">
+            <View className="mt-3 px-3 py-1 rounded-full bg-[#EBF3ED]">
+              <Text className="text-xs font-black text-[#4E7D5B]">
                 {progressPct}% Walked
               </Text>
             </View>
@@ -158,7 +186,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
         <View className="items-center mb-4">
           <Pressable
             onPress={addStep}
-            className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-md active:bg-[#E03150] mb-3"
+            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:bg-[#3D6347] mb-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
               Take Step (or Walk with Phone) 👟

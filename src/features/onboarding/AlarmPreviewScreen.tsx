@@ -293,10 +293,10 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
           {/* Final Button */}
           <Pressable
             onPress={handleFinish}
-            className="w-full bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-lg mt-3"
+            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-lg mt-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
-              Done - Activate Alarmy ✨
+              Done - Activate Alba ✨
             </Text>
           </Pressable>
         </View>

@@ -215,7 +215,7 @@ export function SleepScreen() {
                   key={sound.id}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
                     isThisPlaying
-                      ? 'bg-[#E0F2FE] border-[#38BDF8] shadow-sm'
+                      ? 'bg-[#EBF3ED] border-[#6B8F71]/40 shadow-sm'
                       : 'bg-white border-slate-100 shadow-xs'
                   }`}
                 >
@@ -227,7 +227,7 @@ export function SleepScreen() {
                       <View className="flex-row items-center mb-0.5">
                         <Text
                           className={`text-sm font-extrabold ${
-                            isThisPlaying ? 'text-[#0284C7]' : 'text-slate-900'
+                            isThisPlaying ? 'text-[#4E7D5B]' : 'text-slate-900'
                           }`}
                         >
                           {sound.title}

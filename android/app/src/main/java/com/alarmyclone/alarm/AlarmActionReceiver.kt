@@ -28,7 +28,7 @@ class AlarmActionReceiver : BroadcastReceiver() {
                 // Reschedule for snooze time
                 alarm?.let {
                     val snoozedAlarm = it.copy(triggerTimeMs = snoozeTimeMs)
-                    AlarmScheduler.schedule(context, snoozedAlarm)
+                    AlarmScheduler.schedule(context, snoozedAlarm, explicitTriggerTimeMs = snoozeTimeMs)
                 }
 
                 // Stop current ringing

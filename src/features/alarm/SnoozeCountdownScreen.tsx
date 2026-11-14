@@ -127,7 +127,7 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={handleSolveMissionNow}
-            className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-lg active:bg-[#E03150] mb-3"
+            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-lg active:bg-[#3D6347] mb-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
               I'm Awake - Solve Mission ☀️

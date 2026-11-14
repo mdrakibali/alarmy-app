@@ -5,6 +5,7 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MathMission'>;
@@ -154,9 +155,35 @@ export function MathMissionScreen({ navigation, route }: Props) {
             });
             return;
           }
+          if (nextMissionKey === 'photo') {
+            navigation.replace('PhotoMission', {
+              alarmId,
+              missionIndex: nextMissionIdx,
+              missions: allMissions,
+            });
+            return;
+          }
+          if (nextMissionKey === 'squat') {
+            navigation.replace('SquatMission', {
+              alarmId,
+              missionIndex: nextMissionIdx,
+              missions: allMissions,
+            });
+            return;
+          }
         }
 
         // All missions complete! Dismiss the alarm!
+        const now = new Date();
+        const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+        useReportStore.getState().logAlarmDismissed({
+          label: 'Morning Alarm',
+          scheduledTime: timeStr,
+          dismissedTime: timeStr,
+          onTime: true,
+          missionsCompleted: allMissions.length > 0 ? allMissions : ['math'],
+          snoozeCount: 0,
+        });
         await NativeAlarm.stopAlarm();
         setShowSuccessModal(true);
       } else {
@@ -205,8 +232,8 @@ export function MathMissionScreen({ navigation, route }: Props) {
         {/* Top Header & Progress */}
         <View className="items-center">
           <View className="flex-row items-center justify-between w-full mb-2">
-            <View className="px-3 py-1 rounded-full bg-rose-50 border border-rose-200">
-              <Text className="text-[#FF385C] font-extrabold text-[11px] uppercase tracking-wider">
+            <View className="px-3 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30">
+              <Text className="text-[#4E7D5B] font-extrabold text-[11px] uppercase tracking-wider">
                 Math Wake-up Mission
               </Text>
             </View>
@@ -251,7 +278,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
           {/* Progress Bar */}
           <View className="w-full bg-slate-200/80 h-2 rounded-full mt-2 overflow-hidden">
             <View
-              className="bg-[#FF385C] h-full rounded-full"
+              className="bg-[#4E7D5B] h-full rounded-full"
               style={{
                 width: `${((problemIndex + 1) / TOTAL_PROBLEMS) * 100}%`,
               }}
@@ -266,8 +293,8 @@ export function MathMissionScreen({ navigation, route }: Props) {
           </Text>
 
           {inputMode === 'keypad' ? (
-            <View className="h-14 w-48 border-b-2 border-[#38BDF8] items-center justify-center mt-4">
-              <Text className="text-4xl font-extrabold text-[#0284C7]">
+            <View className="h-14 w-48 border-b-2 border-[#4E7D5B] items-center justify-center mt-4">
+              <Text className="text-4xl font-extrabold text-[#4E7D5B]">
                 {userInput || '?'}
               </Text>
             </View>
@@ -303,13 +330,13 @@ export function MathMissionScreen({ navigation, route }: Props) {
                     onPress={() => handleOptionPress(opt)}
                     className={`w-[48%] py-5 rounded-2xl mb-3 flex-row items-center px-4 border ${
                       isSelected
-                        ? 'bg-[#E0F2FE] border-[#38BDF8]'
+                        ? 'bg-[#EBF3ED] border-[#4E7D5B]'
                         : 'bg-white/95 border-slate-100 shadow-sm active:bg-slate-50'
                     }`}
                   >
                     <View
                       className={`h-8 w-8 rounded-full items-center justify-center mr-3 ${
-                        isSelected ? 'bg-[#0284C7]' : 'bg-slate-100'
+                        isSelected ? 'bg-[#4E7D5B]' : 'bg-slate-100'
                       }`}
                     >
                       <Text
@@ -375,7 +402,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
             {/* Submit Button */}
             <Pressable
               onPress={handleSubmitKeypad}
-              className="w-full bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-sm"
+              className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-sm"
             >
               <Text className="text-white text-base font-extrabold tracking-wide">
                 Submit Answer

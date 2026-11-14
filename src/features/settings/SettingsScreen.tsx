@@ -59,7 +59,7 @@ export function SettingsScreen() {
       hour: now.getHours(),
       minute: now.getMinutes(),
       label: 'Test Alarm ⏰',
-      repeatDays: [],
+      repeatDays: [0, 1, 2, 3, 4, 5, 6],
       enabled: true,
       soundId: 'alarm_rooster',
       volume: 1.0,
@@ -118,7 +118,7 @@ export function SettingsScreen() {
                   key={bg.id}
                   onPress={() => setBackground('all', bg.id)}
                   className={`mr-3 rounded-2xl overflow-hidden border-2 items-center ${
-                    isSelected ? 'border-[#FF385C]' : 'border-transparent'
+                    isSelected ? 'border-[#4E7D5B]' : 'border-transparent'
                   }`}
                 >
                   <Image
@@ -252,7 +252,7 @@ export function SettingsScreen() {
             {!exactAlarmAllowed && (
               <Pressable
                 onPress={() => NativeAlarm.openExactAlarmSettings()}
-                className="bg-[#38BDF8] px-3.5 py-1.5 rounded-xl active:opacity-80"
+                className="bg-[#4E7D5B] px-3.5 py-1.5 rounded-xl active:opacity-80"
               >
                 <Text className="text-xs font-bold text-white">Grant</Text>
               </Pressable>
@@ -273,7 +273,7 @@ export function SettingsScreen() {
             {!batteryIgnored && (
               <Pressable
                 onPress={() => NativeAlarm.requestIgnoreBatteryOptimizations()}
-                className="bg-[#38BDF8] px-3.5 py-1.5 rounded-xl active:opacity-80"
+                className="bg-[#4E7D5B] px-3.5 py-1.5 rounded-xl active:opacity-80"
               >
                 <Text className="text-xs font-bold text-white">Disable</Text>
               </Pressable>
@@ -294,7 +294,7 @@ export function SettingsScreen() {
             onPress={() => Linking.openURL('https://dontkillmyapp.com')}
             className="flex-row items-center py-1"
           >
-            <Text className="text-sm font-bold text-[#FF385C]">
+            <Text className="text-sm font-bold text-[#4E7D5B]">
               Read guide on Don't Kill My App ↗
             </Text>
           </Pressable>
@@ -304,8 +304,8 @@ export function SettingsScreen() {
       {/* About */}
       <Section title="About">
         <View className="p-4">
-          <Text className="text-slate-900 font-bold">Alarmy Clone</Text>
-          <Text className="text-xs text-slate-400 mt-1">
+          <Text className="text-[#1A2E22] font-black text-base">Alba — Smart Alarm & Sleep</Text>
+          <Text className="text-xs text-[#5E7166] mt-1">
             Version 1.0.0 • React Native 0.88 + Kotlin Engine
           </Text>
         </View>

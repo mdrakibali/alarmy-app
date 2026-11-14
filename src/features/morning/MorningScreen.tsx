@@ -1,66 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Screen } from '@/components/ui/Screen';
+import { DAILY_QUOTES, DEFAULT_ROUTINES, useMorningStore } from '@/storage/morningStore';
 import { useAppInsets } from '@/utils/safeArea';
-
-const ROUTINE_ITEMS = [
-  { id: 'water', label: 'Drink a glass of water', icon: '💧' },
-  { id: 'stretch', label: '5-minute morning stretch', icon: '🧘' },
-  { id: 'sunlight', label: 'Get direct sunlight for 10 mins', icon: '☀️' },
-  { id: 'plan', label: 'Review today’s top 3 priorities', icon: '🎯' },
-];
 
 export function MorningScreen() {
   const insets = useAppInsets();
-  const [completed, setCompleted] = useState<string[]>(['water']);
 
-  const toggleRoutine = (id: string) => {
-    setCompleted(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
-    );
-  };
+  const completed = useMorningStore(s => s.completedItems);
+  const streakDays = useMorningStore(s => s.streakDays);
+  const toggleRoutine = useMorningStore(s => s.toggleRoutine);
+  const quoteIndex = useMorningStore(s => s.quoteIndex);
+  const nextQuote = useMorningStore(s => s.nextQuote);
+
+  const currentQuote = DAILY_QUOTES[quoteIndex] || DAILY_QUOTES[0];
+  const completedCount = completed.length;
+  const totalCount = DEFAULT_ROUTINES.length;
+  const progressPercent = Math.round((completedCount / totalCount) * 100);
 
   return (
     <Screen padded={false}>
       <ScrollView
-        className="flex-1 bg-[#F5F6F8]"
+        className="flex-1 bg-[#FBFBF9]"
         contentContainerClassName="px-5"
         contentContainerStyle={{
           paddingTop: insets.top + 10,
           paddingBottom: 120 + insets.bottom,
         }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-extrabold text-slate-900">Morning</Text>
-        <Text className="text-sm text-slate-500 mt-1">
-          Start your day energized and focused
+        <Text className="text-3xl font-black text-[#1A2E22] tracking-tight">Morning</Text>
+        <Text className="text-sm text-[#5E7166] mt-1">
+          Start your day energized, focused, and intentional
         </Text>
 
         {/* Wake-up Streak Card */}
         <View className="bg-white rounded-3xl p-6 mt-5 border border-slate-100 shadow-sm">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-xs uppercase font-bold tracking-wider text-amber-500">
+              <Text className="text-[11px] uppercase font-black tracking-wider text-[#D97706]">
                 WAKE-UP STREAK
               </Text>
-              <Text className="text-4xl font-black text-slate-900 mt-1">
-                5 Days 🔥
+              <Text className="text-4xl font-black text-[#1A2E22] mt-1">
+                {streakDays} Days 🔥
               </Text>
             </View>
-            <View className="h-14 w-14 rounded-full bg-amber-50 items-center justify-center">
+            <View className="h-14 w-14 rounded-full bg-[#FEF3C7] items-center justify-center border border-[#FDE68A]">
               <Text className="text-3xl">⚡</Text>
             </View>
           </View>
-          <Text className="text-xs text-slate-500 mt-3">
-            Waking up on time consistently improves dopamine and morning clarity.
+          <Text className="text-xs text-[#5E7166] mt-3">
+            Waking up on time consistently boosts morning dopamine, focus, and energy.
           </Text>
         </View>
 
-        {/* Morning Routine Checklist */}
+        {/* Morning Routine Checklist (Persistent in MMKV) */}
         <View className="mt-6">
-          <Text className="text-lg font-bold text-slate-900 mb-3 px-1">
-            Morning Routine
-          </Text>
-          {ROUTINE_ITEMS.map(item => {
+          <View className="flex-row items-center justify-between mb-3 px-1">
+            <Text className="text-lg font-black text-[#1A2E22]">
+              Morning Routine Checklist
+            </Text>
+            <View className="bg-[#EBF3ED] px-2.5 py-1 rounded-full border border-[#6B8F71]/30">
+              <Text className="text-xs font-bold text-[#4E7D5B]">
+                {completedCount}/{totalCount} Done ({progressPercent}%)
+              </Text>
+            </View>
+          </View>
+
+          {DEFAULT_ROUTINES.map(item => {
             const isDone = completed.includes(item.id);
             return (
               <Pressable
@@ -68,8 +75,8 @@ export function MorningScreen() {
                 onPress={() => toggleRoutine(item.id)}
                 className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
                   isDone
-                    ? 'bg-slate-50 border-slate-200/60'
-                    : 'bg-white border-slate-100 shadow-sm'
+                    ? 'bg-[#EBF3ED]/60 border-[#6B8F71]/20'
+                    : 'bg-white border-slate-100 shadow-xs active:bg-slate-50'
                 }`}
               >
                 <View className="flex-row items-center flex-1 pr-3">
@@ -77,8 +84,8 @@ export function MorningScreen() {
                   <Text
                     className={`text-base font-semibold ${
                       isDone
-                        ? 'text-slate-400 line-through'
-                        : 'text-slate-800'
+                        ? 'text-[#5E7166] line-through'
+                        : 'text-[#1A2E22]'
                     }`}
                   >
                     {item.label}
@@ -87,12 +94,12 @@ export function MorningScreen() {
                 <View
                   className={`h-6 w-6 rounded-full items-center justify-center border ${
                     isDone
-                      ? 'bg-[#38BDF8] border-[#38BDF8]'
+                      ? 'bg-[#4E7D5B] border-[#4E7D5B]'
                       : 'border-slate-300 bg-white'
                   }`}
                 >
                   {isDone && (
-                    <Text className="text-white font-bold text-xs">✓</Text>
+                    <Text className="text-white font-black text-xs">✓</Text>
                   )}
                 </View>
               </Pressable>
@@ -100,15 +107,24 @@ export function MorningScreen() {
           })}
         </View>
 
-        {/* Daily Motivation */}
-        <View className="bg-white rounded-3xl p-5 mt-4 border border-slate-100 shadow-sm">
-          <Text className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-            DAILY QUOTE
+        {/* Daily Motivation Card with Cycle Action */}
+        <Pressable
+          onPress={nextQuote}
+          className="bg-white rounded-3xl p-5 mt-4 border border-slate-100 shadow-sm active:bg-slate-50"
+        >
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-xs font-black uppercase tracking-wider text-[#4E7D5B]">
+              DAILY WISDOM ☀️
+            </Text>
+            <Text className="text-xs text-[#5E7166] font-semibold">Tap to cycle ↻</Text>
+          </View>
+          <Text className="text-sm font-medium text-[#1A2E22] italic leading-relaxed">
+            "{currentQuote.quote}"
           </Text>
-          <Text className="text-sm font-medium text-slate-700 italic leading-relaxed">
-            "Every morning you have two choices: continue to sleep with your dreams, or wake up and chase them."
+          <Text className="text-xs font-bold text-[#5E7166] mt-2 text-right">
+            — {currentQuote.author}
           </Text>
-        </View>
+        </Pressable>
       </ScrollView>
     </Screen>
   );

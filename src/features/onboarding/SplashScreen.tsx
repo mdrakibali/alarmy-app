@@ -70,19 +70,19 @@ export function SplashScreen({ navigation }: Props) {
         </View>
 
         {/* App Title */}
-        <Text className="text-4xl font-black text-slate-900 tracking-tight mb-1.5">
-          Alarmy
+        <Text className="text-4xl font-black text-[#1A2E22] tracking-tight mb-1.5">
+          Alba
         </Text>
 
         {/* Tagline Badge */}
-        <View className="bg-rose-100 px-3 py-1 rounded-full border border-rose-200 mb-2.5">
-          <Text className="text-xs font-extrabold text-[#FF385C]">
-            Sleep if u can ⏰
+        <View className="bg-[#EBF3ED] px-3.5 py-1 rounded-full border border-[#6B8F71]/30 mb-2.5">
+          <Text className="text-xs font-extrabold text-[#4E7D5B]">
+            Smart Wake-Up & Sleep ☀️
           </Text>
         </View>
 
-        <Text className="text-xs font-semibold text-slate-500 tracking-wide">
-          Smart Wake-Up • Unbeatable Alarms
+        <Text className="text-xs font-semibold text-[#5E7166] tracking-wide">
+          Unbeatable Morning Alarms • Gentle Routines
         </Text>
       </Animated.View>
 

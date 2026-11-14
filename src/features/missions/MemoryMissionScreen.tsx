@@ -11,6 +11,7 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MemoryMission'>;
@@ -116,7 +117,34 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
         });
         return;
       }
+      if (nextMissionKey === 'photo') {
+        navigation.replace('PhotoMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'squat') {
+        navigation.replace('SquatMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
     }
+
+    const now = new Date();
+    const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+    useReportStore.getState().logAlarmDismissed({
+      label: 'Morning Alarm',
+      scheduledTime: timeStr,
+      dismissedTime: timeStr,
+      onTime: true,
+      missionsCompleted: allMissions.length > 0 ? allMissions : ['memory'],
+      snoozeCount: 0,
+    });
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
@@ -187,8 +215,8 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
-          <View className="bg-rose-50 border border-rose-200 px-4 py-1.5 rounded-full mb-2">
-            <Text className="text-[#FF385C] font-extrabold text-xs uppercase tracking-wider">
+          <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-4 py-1.5 rounded-full mb-2">
+            <Text className="text-[#4E7D5B] font-extrabold text-xs uppercase tracking-wider">
               MEMORY MISSION 🧩
             </Text>
           </View>
@@ -212,7 +240,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
                   card.isMatched
                     ? 'bg-emerald-50 border-emerald-400'
                     : showFace
-                    ? 'bg-white border-[#FF385C]'
+                    ? 'bg-white border-[#4E7D5B]'
                     : 'bg-slate-100 border-slate-200 active:bg-slate-200'
                 }`}
               >

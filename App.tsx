@@ -93,7 +93,7 @@ function App() {
                 ...DefaultTheme.colors,
                 background: '#F5F6F8',
                 card: '#FFFFFF',
-                primary: '#FF385C',
+                primary: '#4E7D5B',
                 text: '#0F172A',
                 border: '#F1F5F9',
               },

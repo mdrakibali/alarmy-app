@@ -190,8 +190,43 @@ class AlarmService : Service() {
 
     private fun startAlarmAudio(alarm: AlarmModel?) {
         try {
+            // Guard: If audio is already playing, skip duplicate initialization
+            if (mediaPlayer?.isPlaying == true) {
+                Log.d(TAG, "Audio is already playing, skipping duplicate start request")
+                return
+            }
+
             mediaPlayer?.release()
             mediaPlayer = null
+
+            // Request AudioFocus & Ensure Stream Volume
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setLegacyStreamType(AudioManager.STREAM_ALARM)
+                .build()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val focusRequest = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                    .setAudioAttributes(audioAttributes)
+                    .build()
+                audioManager?.requestAudioFocus(focusRequest)
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager?.requestAudioFocus(null, AudioManager.STREAM_ALARM, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+            }
+
+            // Ensure physical alarm stream is audible (prevent silent playback if phone was muted)
+            val maxStreamVol = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 1
+            val currentStreamVol = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
+            if (currentStreamVol < (maxStreamVol * 0.4f).toInt()) {
+                audioManager?.setStreamVolume(
+                    AudioManager.STREAM_ALARM,
+                    (maxStreamVol * 0.8f).toInt().coerceAtLeast(1),
+                    0
+                )
+            }
 
             var soundUri: Uri? = null
 
@@ -216,21 +251,35 @@ class AlarmService : Service() {
                 soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             }
 
+            val targetVol = (alarm?.volume ?: 1.0f).coerceIn(0.1f, 1.0f)
+
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(this@AlarmService, soundUri!!)
-                val audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setLegacyStreamType(AudioManager.STREAM_ALARM)
-                    .build()
                 setAudioAttributes(audioAttributes)
                 isLooping = true
-                val vol = alarm?.volume ?: 1.0f
+                setOnErrorListener { _, what, extra ->
+                    Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra. Falling back to default ringtone.")
+                    try {
+                        reset()
+                        val fallbackUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                        setDataSource(this@AlarmService, fallbackUri)
+                        prepare()
+                        start()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Fallback ringtone also failed", e)
+                    }
+                    true
+                }
                 prepare()
                 start()
-                startCrescendoVolume(this, vol)
+                if (alarm?.gentleWakeup == true) {
+                    startCrescendoVolume(this, targetVol)
+                } else {
+                    setVolume(targetVol, targetVol)
+                }
             }
-            Log.d(TAG, "Audio started playing successfully with URI: $soundUri")
+            Log.d(TAG, "Audio started playing successfully with URI: $soundUri (vol: $targetVol)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to play alarm audio", e)
         }

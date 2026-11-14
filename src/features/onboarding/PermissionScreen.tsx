@@ -105,8 +105,8 @@ export function PermissionScreen({ navigation, route }: Props) {
           >
             <Text className="text-slate-700 font-extrabold text-xs">‹ Back</Text>
           </Pressable>
-          <View className="bg-rose-50 border border-rose-200 px-3 py-0.5 rounded-full">
-            <Text className="text-[#FF385C] font-black text-[10px] uppercase tracking-wider">
+          <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-3 py-0.5 rounded-full">
+            <Text className="text-[#4E7D5B] font-black text-[10px] uppercase tracking-wider">
               STEP 5/5 • SECURITY 🛡️
             </Text>
           </View>
@@ -116,7 +116,7 @@ export function PermissionScreen({ navigation, route }: Props) {
           Required Permissions
         </Text>
         <Text className="text-xs text-slate-500 font-medium mt-0.5">
-          Enable these permissions so Alarmy wakes you up reliably every time
+          Enable these permissions so Alba wakes you up reliably every time
         </Text>
       </View>
 
@@ -271,7 +271,7 @@ export function PermissionScreen({ navigation, route }: Props) {
         <Pressable
           onPress={handleContinue}
           hitSlop={15}
-          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-md active:bg-[#E03150]"
+          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:bg-[#3D6347]"
         >
           <Text className="text-white text-base font-black tracking-wide">
             Continue to Alarm Preview ✨

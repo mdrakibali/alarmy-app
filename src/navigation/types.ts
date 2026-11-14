@@ -35,5 +35,7 @@ export type RootStackParamList = {
   TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   StepMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  PhotoMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  SquatMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   WallpaperGallery: { onSelect?: (wallpaperId: string) => void } | undefined;
 };

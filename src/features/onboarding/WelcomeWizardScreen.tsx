@@ -43,6 +43,18 @@ const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[]
     desc: 'Type motivational morning affirmations accurately to start your day!',
     icon: '⌨️',
   },
+  {
+    id: 'photo',
+    title: 'Photo Mission',
+    desc: 'Leave bed and photograph a registered object (like your bathroom sink)!',
+    icon: '📸',
+  },
+  {
+    id: 'squat',
+    title: 'Squat Mission',
+    desc: 'Do 10 morning squats holding your phone to activate your blood flow!',
+    icon: '🏋️',
+  },
 ];
 
 // Curated top 6 wallpapers for fast, 60fps rendering without memory overload
@@ -76,7 +88,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
       onPress={() => onSelect(id)}
       className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
         isSelected
-          ? 'border-[#FF385C] shadow-md bg-rose-50/10'
+          ? 'border-[#4E7D5B] shadow-md bg-[#EBF3ED]/30'
           : 'border-slate-200 bg-white shadow-xs'
       }`}
     >
@@ -85,6 +97,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
         source={source}
         className="absolute inset-0 w-full h-full"
         resizeMode="cover"
+        pointerEvents="none"
       />
 
       {/* Top Right Check Badge */}
@@ -93,7 +106,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
         pointerEvents="none"
       >
         {isSelected ? (
-          <View className="h-7 w-7 rounded-full bg-[#FF385C] border-2 border-white items-center justify-center shadow-md">
+          <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center shadow-md">
             <Text className="text-white text-xs font-black">✓</Text>
           </View>
         ) : (
@@ -110,7 +123,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
       >
         <Text
           className={`text-xs font-black ${
-            isSelected ? 'text-[#FF385C]' : 'text-white'
+            isSelected ? 'text-[#E2A938]' : 'text-white'
           }`}
           numberOfLines={1}
         >
@@ -200,7 +213,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <View
-                className="h-full bg-[#FF385C] rounded-full"
+                className="h-full bg-[#4E7D5B] rounded-full"
                 style={{ width: `${(step / 4) * 100}%` }}
               />
             </View>
@@ -286,7 +299,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
-                      ? 'bg-rose-50/70 border-[#FF385C]'
+                      ? 'bg-[#EBF3ED] border-[#6B8F71]/40'
                       : 'bg-white border-slate-100 active:bg-slate-50'
                   }`}
                 >
@@ -295,7 +308,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     <View className="flex-1">
                       <Text
                         className={`text-sm font-bold ${
-                          isSelected ? 'text-[#FF385C]' : 'text-slate-800'
+                          isSelected ? 'text-[#4E7D5B]' : 'text-slate-800'
                         }`}
                       >
                         {s.title}
@@ -310,7 +323,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   <View
                     className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                       isSelected
-                        ? 'border-[#FF385C] bg-[#FF385C]'
+                        ? 'border-[#4E7D5B] bg-[#4E7D5B]'
                         : 'border-slate-300'
                     }`}
                   >
@@ -328,7 +341,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         {step === 4 && (
           <View className="py-2">
             <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
-              Alarmy ensures you never oversleep by requiring a wake-up mission
+              Alba ensures you never oversleep by requiring a wake-up mission
             </Text>
 
             {MISSIONS.map(m => {
@@ -340,7 +353,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
-                      ? 'bg-rose-50/70 border-[#FF385C]'
+                      ? 'bg-[#EBF3ED] border-[#4E7D5B]'
                       : 'bg-white border-slate-100 active:bg-slate-50'
                   }`}
                 >
@@ -354,7 +367,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     <View
                       className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                         isSelected
-                          ? 'border-[#FF385C] bg-[#FF385C]'
+                          ? 'border-[#4E7D5B] bg-[#4E7D5B]'
                           : 'border-slate-300'
                       }`}
                     >
@@ -381,7 +394,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         <Pressable
           onPress={handleNext}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-md active:opacity-80"
+          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md active:opacity-80"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Next: Required Permissions 🔐' : 'Next'}

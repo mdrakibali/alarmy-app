@@ -94,8 +94,8 @@ export function WallpaperGalleryScreen() {
             <Text className="text-slate-800 text-lg font-bold">←</Text>
           </Pressable>
 
-          <View className="px-3 py-1 rounded-full bg-rose-50 border border-rose-200">
-            <Text className="text-[10px] font-black text-[#FF385C] uppercase tracking-widest">
+          <View className="px-3 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30">
+            <Text className="text-[10px] font-black text-[#4E7D5B] uppercase tracking-widest">
               LIVE WALLPAPERS
             </Text>
           </View>
@@ -166,7 +166,7 @@ export function WallpaperGalleryScreen() {
                   onPress={() => handleCardPress(w)}
                   className={`w-[48%] h-56 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
-                      ? 'border-[#FF385C] shadow-md bg-rose-50/10'
+                      ? 'border-[#4E7D5B] shadow-md bg-[#EBF3ED]/40'
                       : 'border-slate-200 bg-white shadow-xs'
                   }`}
                 >
@@ -184,7 +184,7 @@ export function WallpaperGalleryScreen() {
                     pointerEvents="none"
                   >
                     {isSelected && (
-                      <View className="h-6 w-6 rounded-full bg-[#FF385C] border border-white items-center justify-center shadow-md">
+                      <View className="h-6 w-6 rounded-full bg-[#4E7D5B] border border-white items-center justify-center shadow-md">
                         <Text className="text-white text-[10px] font-black">✓</Text>
                       </View>
                     )}
@@ -197,7 +197,7 @@ export function WallpaperGalleryScreen() {
                   >
                     <Text
                       className={`text-xs font-black text-center ${
-                        isSelected ? 'text-[#FF385C]' : 'text-white'
+                        isSelected ? 'text-[#E2A938]' : 'text-white'
                       }`}
                       numberOfLines={1}
                     >

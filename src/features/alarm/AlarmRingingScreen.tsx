@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { useAlarmStore } from './alarmStore';
 import { formatTime } from './format';
@@ -101,9 +102,27 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         navigation.navigate('StepMission', { alarmId: id, missionIndex: 0, missions });
         return;
       }
+      if (firstMission === 'photo') {
+        navigation.navigate('PhotoMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
+      if (firstMission === 'squat') {
+        navigation.navigate('SquatMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
     }
 
     // No mission: direct dismiss
+    const now = new Date();
+    const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+    useReportStore.getState().logAlarmDismissed({
+      label: label || 'Morning Alarm',
+      scheduledTime: `${time} ${period}`,
+      dismissedTime: timeStr,
+      onTime: true,
+      missionsCompleted: [],
+      snoozeCount: 0,
+    });
     await NativeAlarm.stopAlarm();
     navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
@@ -115,6 +134,12 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     ? 'Shake Phone to Dismiss 📱'
     : missions.includes('qr')
     ? 'Scan Barcode to Dismiss 📷'
+    : missions.includes('photo')
+    ? 'Take Photo to Dismiss 📸'
+    : missions.includes('squat')
+    ? 'Perform Squats to Dismiss 🏋️'
+    : missions.includes('typing')
+    ? 'Type Affirmation to Dismiss ⌨️'
     : 'Complete Mission to Dismiss 🎯';
 
   return (
@@ -128,8 +153,8 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
       >
         {/* Top section: Alarm Label & Status */}
         <View className="items-center mt-6">
-          <View className="bg-rose-50 border border-rose-200/60 px-4 py-1.5 rounded-full mb-3">
-            <Text className="text-[#FF385C] font-extrabold tracking-wider uppercase text-xs">
+          <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-4 py-1.5 rounded-full mb-3">
+            <Text className="text-[#4E7D5B] font-extrabold tracking-wider uppercase text-xs">
               ALARM RINGING ⏰
             </Text>
           </View>
@@ -144,7 +169,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
             <Text className="text-6xl font-black text-slate-900 tracking-tight">
               {time}
             </Text>
-            <Text className="text-xl font-bold text-[#FF385C] mt-1">
+            <Text className="text-xl font-bold text-[#4E7D5B] mt-1">
               {period}
             </Text>
           </View>
@@ -155,7 +180,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
           {/* Main Action (Dismiss or Mission) */}
           <Pressable
             onPress={handleDismissOrMission}
-            className="w-full bg-[#FF385C] py-5 rounded-2xl items-center active:opacity-90 shadow-md mb-3"
+            className="w-full bg-[#4E7D5B] py-5 rounded-2xl items-center active:opacity-90 shadow-md mb-3"
           >
             <Text className="text-white text-lg font-black tracking-wide">
               {hasMission ? missionButtonText : 'Dismiss Alarm'}

@@ -12,6 +12,7 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
+import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarcodeMission'>;
@@ -98,7 +99,34 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
         });
         return;
       }
+      if (nextMissionKey === 'photo') {
+        navigation.replace('PhotoMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'squat') {
+        navigation.replace('SquatMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
     }
+
+    const now = new Date();
+    const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+    useReportStore.getState().logAlarmDismissed({
+      label: 'Morning Alarm',
+      scheduledTime: timeStr,
+      dismissedTime: timeStr,
+      onTime: true,
+      missionsCompleted: allMissions.length > 0 ? allMissions : ['qr'],
+      snoozeCount: 0,
+    });
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
@@ -260,7 +288,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
           <Pressable
             onPress={handleSimulateScan}
             disabled={isScanning}
-            className="w-full bg-emerald-600 py-4 rounded-2xl items-center active:opacity-90 shadow-md mb-2"
+            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center active:opacity-90 shadow-md mb-2"
           >
             <Text className="text-white font-extrabold text-base tracking-wide">
               {isScanning ? 'Scanning Barcode...' : 'Scan Target Barcode 📷'}

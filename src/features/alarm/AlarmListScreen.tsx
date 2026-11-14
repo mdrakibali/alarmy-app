@@ -77,14 +77,14 @@ export function AlarmListScreen() {
 
   return (
     <Screen padded={false}>
-      <View className="flex-1 bg-[#F5F6F8]">
+      <View className="flex-1 bg-[#FBFBF9]">
         {/* Top Header Promo Banner */}
         {showPromo && (
-          <View className="mx-4 mt-2 mb-3 flex-row items-center justify-between rounded-2xl bg-[#FF385C] px-4 py-3 shadow-sm">
+          <View className="mx-4 mt-2 mb-3 flex-row items-center justify-between rounded-2xl bg-[#4E7D5B] px-4 py-3 shadow-sm">
             <View className="flex-row items-center flex-1 pr-2">
-              <Text className="mr-2 text-base">⚡</Text>
+              <Text className="mr-2 text-base">☀️</Text>
               <Text className="text-sm font-bold text-white" numberOfLines={1}>
-                Create an unbeatable alarm
+                Alba: Start your day with gentle & unstoppable habits
               </Text>
             </View>
             <Pressable
@@ -103,7 +103,7 @@ export function AlarmListScreen() {
           className="mx-4 mb-3 flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-100"
         >
           <View className="flex-row items-center flex-1">
-            <View className="mr-3 h-8 px-2 items-center justify-center rounded-lg bg-rose-500">
+            <View className="mr-3 h-8 px-2 items-center justify-center rounded-lg bg-[#4E7D5B]">
               <Text className="text-xs font-black tracking-wider text-white">
                 NEW
               </Text>
@@ -112,8 +112,8 @@ export function AlarmListScreen() {
               <Text className="text-xs font-semibold text-slate-400">
                 Overslept AGAIN?
               </Text>
-              <Text className="text-sm font-bold text-slate-800">
-                Try our new wake-up mission
+              <Text className="text-sm font-bold text-[#1A2E22]">
+                Try our new wake-up missions
               </Text>
             </View>
           </View>
@@ -204,7 +204,7 @@ export function AlarmListScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
             onPress={() => navigation.navigate('AlarmEdit')}
-            className="h-16 w-16 items-center justify-center rounded-full bg-[#FF385C] shadow-2xl active:scale-95"
+            className="h-16 w-16 items-center justify-center rounded-full bg-[#4E7D5B] shadow-2xl active:scale-95"
           >
             <Text className="text-3xl font-light text-white leading-none">
               +
@@ -236,6 +236,12 @@ function AlarmCard({
     ? '🧠'
     : alarm.missions.includes('shake')
     ? '📱'
+    : alarm.missions.includes('photo')
+    ? '📸'
+    : alarm.missions.includes('squat')
+    ? '🏋️'
+    : alarm.missions.includes('qr')
+    ? '📷'
     : '🎯';
 
   return (
@@ -252,7 +258,7 @@ function AlarmCard({
               <Text
                 key={index}
                 className={`mr-3 text-xs font-bold ${
-                  isSelected ? 'text-slate-800 font-extrabold' : 'text-slate-300'
+                  isSelected ? 'text-[#1A2E22] font-extrabold' : 'text-slate-300'
                 }`}
               >
                 {dayLabel}
@@ -261,11 +267,11 @@ function AlarmCard({
           })}
         </View>
 
-        {/* Custom Cyan Toggle Switch */}
+        {/* Custom Alba Sage Switch */}
         <Switch
           value={alarm.enabled}
           onValueChange={onToggle}
-          trackColor={{ false: '#E2E8F0', true: '#38BDF8' }}
+          trackColor={{ false: '#E2E8F0', true: '#6B8F71' }}
           thumbColor="#FFFFFF"
         />
       </View>
@@ -325,11 +331,11 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </View>
       <Text className="text-lg font-bold text-slate-800">No alarms yet</Text>
       <Text className="mb-6 mt-1.5 text-center text-sm text-slate-500">
-        Tap the red button below to schedule your first smart alarm.
+        Tap the green button below to schedule your first smart alarm.
       </Text>
       <Pressable
         onPress={onAdd}
-        className="rounded-2xl bg-[#FF385C] px-6 py-3.5 shadow-sm active:opacity-90"
+        className="rounded-2xl bg-[#4E7D5B] px-6 py-3.5 shadow-sm active:opacity-90"
       >
         <Text className="text-sm font-bold text-white">Create Alarm</Text>
       </Pressable>
