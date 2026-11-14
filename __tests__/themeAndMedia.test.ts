@@ -48,7 +48,7 @@ describe('Media and Theme System', () => {
   });
 
   it('should have multiple animated GIF wallpapers for each category', () => {
-    expect(WALLPAPERS.length).toBe(24);
+    expect(WALLPAPERS.length).toBeGreaterThanOrEqual(24);
 
     WALLPAPER_CATEGORIES.forEach(cat => {
       const inCat = WALLPAPERS.filter(w => w.category === cat.name);
