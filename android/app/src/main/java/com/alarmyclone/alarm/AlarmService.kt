@@ -13,7 +13,9 @@ import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -158,7 +160,7 @@ class AlarmService : Service() {
         return START_STICKY
     }
 
-    private var volumeFadeHandler = Handler(Looper.getMainLooper())
+    private val volumeFadeHandler = Handler(Looper.getMainLooper())
     private var volumeFadeRunnable: Runnable? = null
 
     private fun startCrescendoVolume(player: MediaPlayer, targetVolume: Float) {
@@ -168,7 +170,7 @@ class AlarmService : Service() {
             player.setVolume(currentVol, currentVol)
         } catch (e: Exception) {}
 
-        volumeFadeRunnable?.let { volumeFadeHandler.removeCallbacks(it) }
+        volumeFadeRunnable?.let { r: Runnable -> volumeFadeHandler.removeCallbacks(r) }
         volumeFadeRunnable = object : Runnable {
             override fun run() {
                 try {
@@ -263,7 +265,7 @@ class AlarmService : Service() {
         isRinging = false
         currentAlarmId = null
 
-        volumeFadeRunnable?.let { volumeFadeHandler.removeCallbacks(it) }
+        volumeFadeRunnable?.let { r: Runnable -> volumeFadeHandler.removeCallbacks(r) }
         volumeFadeRunnable = null
 
         try {

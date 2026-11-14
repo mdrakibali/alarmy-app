@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -18,6 +18,13 @@ import type { Alarm } from './types';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+function formatCountdownMs(ms: number) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+}
+
 export function AlarmListScreen() {
   const insets = useAppInsets();
   const navigation =
@@ -27,6 +34,19 @@ export function AlarmListScreen() {
   const sorted = sortAlarms(alarms);
 
   const [showPromo, setShowPromo] = useState(true);
+  const [nowTimestamp, setNowTimestamp] = useState(Date.now());
+
+  // Real-time second ticker for live snooze countdown
+  useEffect(() => {
+    const timer = setInterval(() => setNowTimestamp(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const activeSnoozedAlarm = useMemo(() => {
+    return alarms.find(
+      a => a.enabled && a.snoozedUntil && a.snoozedUntil > nowTimestamp,
+    );
+  }, [alarms, nowTimestamp]);
 
   // Compute countdown to earliest upcoming enabled alarm
   const nextAlarmCountdown = useMemo(() => {
@@ -100,10 +120,43 @@ export function AlarmListScreen() {
           <Text className="text-lg font-bold text-slate-400">›</Text>
         </Pressable>
 
+        {/* Active Snooze Countdown Banner (if any alarm is snoozed) */}
+        {activeSnoozedAlarm && (
+          <Pressable
+            onPress={() =>
+              navigation.navigate('SnoozeCountdown', {
+                alarmId: activeSnoozedAlarm.id,
+                intervalMin: activeSnoozedAlarm.snooze.intervalMin,
+                wallpaper: activeSnoozedAlarm.wallpaper,
+              })
+            }
+            className="mx-4 mb-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 p-4 shadow-sm flex-row items-center justify-between active:bg-amber-500/20"
+          >
+            <View className="flex-row items-center flex-1 mr-3">
+              <View className="h-10 w-10 rounded-full bg-amber-500/20 items-center justify-center mr-3">
+                <Text className="text-xl">💤</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-[11px] font-black uppercase tracking-wider text-amber-700">
+                  SNOOZE ACTIVE · {activeSnoozedAlarm.label || 'Alarm'}
+                </Text>
+                <Text className="text-base font-black text-slate-900 mt-0.5">
+                  Re-rings in {formatCountdownMs(activeSnoozedAlarm.snoozedUntil! - nowTimestamp)}
+                </Text>
+              </View>
+            </View>
+            <View className="bg-amber-500 px-3 py-1.5 rounded-xl">
+              <Text className="text-white text-xs font-black">View ›</Text>
+            </View>
+          </Pressable>
+        )}
+
         {/* Countdown Subheader */}
         <View className="flex-row items-center justify-between px-5 py-2">
           <Text className="text-sm font-bold text-slate-700">
-            {nextAlarmCountdown
+            {activeSnoozedAlarm
+              ? `💤 Snoozed: ${formatCountdownMs(activeSnoozedAlarm.snoozedUntil! - nowTimestamp)} left ›`
+              : nextAlarmCountdown
               ? `Ring in ${nextAlarmCountdown} ›`
               : 'No upcoming alarms'}
           </Text>
@@ -125,7 +178,18 @@ export function AlarmListScreen() {
           renderItem={({ item }) => (
             <AlarmCard
               alarm={item}
-              onPress={() => navigation.navigate('AlarmEdit', { id: item.id })}
+              nowTimestamp={nowTimestamp}
+              onPress={() => {
+                if (item.snoozedUntil && item.snoozedUntil > nowTimestamp) {
+                  navigation.navigate('SnoozeCountdown', {
+                    alarmId: item.id,
+                    intervalMin: item.snooze.intervalMin,
+                    wallpaper: item.wallpaper,
+                  });
+                } else {
+                  navigation.navigate('AlarmEdit', { id: item.id });
+                }
+              }}
               onToggle={() => toggleAlarm(item.id)}
             />
           )}
@@ -154,15 +218,20 @@ export function AlarmListScreen() {
 
 function AlarmCard({
   alarm,
+  nowTimestamp,
   onPress,
   onToggle,
 }: {
   alarm: Alarm;
+  nowTimestamp: number;
   onPress: () => void;
   onToggle: () => void;
 }) {
   const { time, period } = formatTime(alarm.hour, alarm.minute);
   const hasMission = alarm.missions.length > 0;
+  const isSnoozed = Boolean(
+    alarm.snoozedUntil && alarm.snoozedUntil > nowTimestamp,
+  );
   const missionIcon = alarm.missions.includes('math')
     ? '🧠'
     : alarm.missions.includes('shake')
@@ -217,13 +286,13 @@ function AlarmCard({
         >
           {period}
         </Text>
-        {alarm.snoozedUntil && alarm.snoozedUntil > Date.now() ? (
-          <View className="ml-2.5 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 flex-row items-center">
-            <Text className="text-[11px] font-extrabold text-amber-800">
-              💤 Snoozed ({Math.max(1, Math.ceil((alarm.snoozedUntil - Date.now()) / 60000))}m left)
+        {isSnoozed && (
+          <View className="ml-2.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 flex-row items-center">
+            <Text className="text-xs font-black text-amber-900">
+              💤 Snoozed ({formatCountdownMs(alarm.snoozedUntil! - nowTimestamp)} left)
             </Text>
           </View>
-        ) : null}
+        )}
         {hasMission && (
           <View className="ml-3 rounded-lg bg-slate-100 px-2 py-0.5">
             <Text className="text-xs">{missionIcon}</Text>

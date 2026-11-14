@@ -63,7 +63,7 @@ interface WallpaperCardProps {
   onSelect: (id: string) => void;
 }
 
-const MemoizedWallpaperCard = React.memo(function MemoizedWallpaperCard({
+const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
   id,
   name,
   source,

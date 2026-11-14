@@ -58,13 +58,6 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
     return () => clearInterval(timer);
   }, [alarmId, navigation]);
 
-  const handleDismissSnooze = async () => {
-    clearSnooze(alarmId);
-    await NativeAlarm.cancelAlarm(alarmId);
-    await NativeAlarm.stopAlarm();
-    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
-  };
-
   const handleSolveMissionNow = () => {
     clearSnooze(alarmId);
     NativeAlarm.startAlarm(alarmId).catch(() => {});
@@ -137,19 +130,15 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
             className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-lg active:bg-[#E03150] mb-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
-              I'm Awake - Stop Snooze ☀️
+              I'm Awake - Solve Mission ☀️
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleDismissSnooze}
-            className="w-full bg-white/20 border border-white/30 py-3.5 rounded-2xl items-center active:bg-white/30"
-          >
-            <Text className="text-white text-sm font-bold">
-              Turn Off Alarm Completely
+          <View className="w-full py-2.5 px-3 rounded-2xl bg-black/40 border border-white/10 items-center">
+            <Text className="text-white/60 text-xs font-semibold text-center">
+              🔒 Unbeatable Wake-Up: Alarm cannot be turned off without solving your mission!
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
