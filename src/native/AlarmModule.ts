@@ -30,6 +30,12 @@ class AlarmModuleBridge {
 
   constructor() {
     if (Platform.OS === 'android' && AlarmModule) {
+      if (typeof AlarmModule.addListener !== 'function') {
+        AlarmModule.addListener = () => {};
+      }
+      if (typeof AlarmModule.removeListeners !== 'function') {
+        AlarmModule.removeListeners = () => {};
+      }
       this.emitter = new NativeEventEmitter(AlarmModule);
     }
   }

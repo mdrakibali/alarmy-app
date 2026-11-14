@@ -367,6 +367,16 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
+    @ReactMethod
+    fun addListener(eventName: String) {
+        // Required for RN built-in Event Emitter Calls.
+    }
+
+    @ReactMethod
+    fun removeListeners(count: Double) {
+        // Required for RN built-in Event Emitter Calls.
+    }
+
     private fun sendEvent(eventName: String, params: Any?) {
         reactContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
