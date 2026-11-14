@@ -13,7 +13,7 @@ import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { WALLPAPERS } from '@/data/wallpapers';
-import { wallpaperThumb } from '@/data/wallpaperThumbs';
+import { ALBA_BACKGROUNDS, findAlbaBackground } from '@/data/albaBackgrounds';
 import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
@@ -57,9 +57,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const [isPlayingSound, setIsPlayingSound] = useState(false);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
-  const currentWallpaper =
-    WALLPAPERS.find(w => w.id === (draft.wallpaper || alarmBackground)) ||
-    WALLPAPERS[0];
+  const selectedVisualId = draft.wallpaper || alarmBackground;
+  const albaVisual = findAlbaBackground(selectedVisualId);
+  const legacyVisual = WALLPAPERS.find(w => w.id === selectedVisualId);
+  const currentWallpaper = {
+    name: albaVisual?.name ?? legacyVisual?.name ?? 'Wallpaper',
+    category: albaVisual?.group ?? legacyVisual?.category ?? 'Nature',
+  };
 
   // Stop preview on unmount
   useEffect(() => {
@@ -407,7 +411,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             keyboardShouldPersistTaps="handled"
             className="-mx-4 px-4 py-1"
           >
-            {WALLPAPERS.slice(0, 5).map(w => {
+            {ALBA_BACKGROUNDS.slice(0, 6).map(w => {
               const isSelected = (draft.wallpaper || alarmBackground) === w.id;
               return (
                 <TouchableOpacity
@@ -424,7 +428,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   }`}
                 >
                   <Image
-                    source={wallpaperThumb(w.id) ?? w.source}
+                    source={w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
                   />

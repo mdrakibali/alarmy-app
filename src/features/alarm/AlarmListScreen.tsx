@@ -15,6 +15,7 @@ import { useAlarmStore } from './alarmStore';
 import { formatTime, sortAlarms } from './format';
 import { nextOccurrence } from './nextOccurrence';
 import type { Alarm } from './types';
+import { DaypartHeader } from './DaypartHeader';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -32,8 +33,6 @@ export function AlarmListScreen() {
   const alarms = useAlarmStore(s => s.alarms);
   const toggleAlarm = useAlarmStore(s => s.toggleAlarm);
   const sorted = sortAlarms(alarms);
-
-  const [showPromo, setShowPromo] = useState(true);
   const [nowTimestamp, setNowTimestamp] = useState(Date.now());
 
   // Real-time second ticker for live snooze countdown
@@ -78,26 +77,7 @@ export function AlarmListScreen() {
   return (
     <Screen padded={false}>
       <View className="flex-1 bg-[#FBFBF9]">
-        {/* Top Header Promo Banner */}
-        {showPromo && (
-          <View className="mx-4 mt-2 mb-3 flex-row items-center justify-between rounded-2xl bg-[#4E7D5B] px-4 py-3 shadow-sm">
-            <View className="flex-row items-center flex-1 pr-2">
-              <Text className="mr-2 text-base">☀️</Text>
-              <Text className="text-sm font-bold text-white" numberOfLines={1}>
-                Alba: Start your day with gentle & unstoppable habits
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => setShowPromo(false)}
-              hitSlop={10}
-              className="p-1"
-            >
-              <Text className="text-base font-bold text-white/80">✕</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Overslept AGAIN Card */}
+        <DaypartHeader now={new Date(nowTimestamp)} countdown={nextAlarmCountdown} />
         <Pressable
           onPress={() => navigation.navigate('AlarmEdit')}
           className="mx-4 mb-3 flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-100"
@@ -204,7 +184,7 @@ export function AlarmListScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
             onPress={() => navigation.navigate('AlarmEdit')}
-            className="h-16 w-16 items-center justify-center rounded-full bg-[#4E7D5B] shadow-2xl active:scale-95"
+            className="h-16 w-16 items-center justify-center rounded-full bg-[#6B8F71] shadow-2xl active:scale-95"
           >
             <Text className="text-3xl font-light text-white leading-none">
               +

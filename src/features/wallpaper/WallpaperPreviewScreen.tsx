@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { WALLPAPERS } from '@/data/wallpapers';
+import { findAlbaBackground } from '@/data/albaBackgrounds';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
@@ -15,10 +16,11 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const toast = useToast();
   const { wallpaperId, pickForAlarm } = route.params;
+  const alba = findAlbaBackground(wallpaperId);
   const wallpaper = WALLPAPERS.find(w => w.id === wallpaperId);
   const isCustom = wallpaperId.startsWith('file://') || wallpaperId.startsWith('content://');
-  const source = isCustom ? { uri: wallpaperId } : wallpaper?.source;
-  const name = wallpaper?.name ?? 'Custom photo';
+  const source = isCustom ? { uri: wallpaperId } : alba?.source ?? wallpaper?.source;
+  const name = alba?.name ?? wallpaper?.name ?? 'Custom photo';
 
   const favorites = useThemeStore(s => s.favorites);
   const toggleFavorite = useThemeStore(s => s.toggleFavorite);

@@ -9,29 +9,17 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { WALLPAPERS, WallpaperItem } from '@/data/wallpapers';
+import { ALBA_BACKGROUNDS, findAlbaBackground } from '@/data/albaBackgrounds';
+import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
 
-type GroupId =
-  | 'Nature'
-  | 'Minimal'
-  | 'Animated'
-  | 'Motivational'
-  | 'Custom'
-  | 'Favorites';
+type GroupId = 'Nature' | 'Minimal' | 'Motivational' | 'Night' | 'Custom' | 'Favorites';
 
-const GROUPS: { id: GroupId; categories: string[] }[] = [
-  { id: 'Nature', categories: ['Nature', 'Galaxy'] },
-  { id: 'Minimal', categories: ['Minimal Animation', 'Aesthetic'] },
-  { id: 'Animated', categories: ['Trending', 'KPOP Trending', 'Anime', 'Cute Animals', 'Funny Memes', 'Gaming', 'Love & Romance'] },
-  { id: 'Motivational', categories: ['Daily Motivation'] },
-  { id: 'Custom', categories: [] },
-  { id: 'Favorites', categories: [] },
-];
+const GROUPS: GroupId[] = ['Nature', 'Minimal', 'Motivational', 'Night', 'Custom', 'Favorites'];
 
 const Card = React.memo(function WallpaperCard({
   id,
@@ -80,17 +68,31 @@ export function WallpaperGalleryScreen() {
 
   const items = useMemo(() => {
     if (selectedGroup === 'Favorites') {
-      return WALLPAPERS.filter(w => favorites.includes(w.id));
+      const stills = ALBA_BACKGROUNDS.filter(item => favorites.includes(item.id)).map(item => ({
+        id: item.id,
+        name: item.name,
+        source: item.source as number,
+      }));
+      const legacy = WALLPAPERS.filter(w => favorites.includes(w.id)).map(w => ({
+        id: w.id,
+        name: w.name,
+        source: wallpaperThumb(w.id) ?? w.source,
+      }));
+      return [...stills, ...legacy];
     }
     if (selectedGroup === 'Custom') {
       return customImages.map(uri => ({
         id: uri,
         name: 'Custom photo',
+        source: { uri },
         custom: true as const,
       }));
     }
-    const group = GROUPS.find(g => g.id === selectedGroup);
-    return WALLPAPERS.filter(w => group?.categories.includes(w.category));
+    return ALBA_BACKGROUNDS.filter(item => item.group === selectedGroup).map(item => ({
+      id: item.id,
+      name: item.name,
+      source: item.source,
+    }));
   }, [selectedGroup, favorites, customImages]);
 
   const onPress = useCallback(
@@ -101,18 +103,13 @@ export function WallpaperGalleryScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: WallpaperItem | { id: string; name: string; custom: true } }) => {
-      const custom = 'custom' in item && item.custom;
-      const thumb = custom ? { uri: item.id } : wallpaperThumb(item.id);
-      if (!thumb) {
-        return null;
-      }
+    ({ item }: { item: { id: string; name: string; source: number | { uri: string }; custom?: boolean } }) => {
       return (
         <Card
           id={item.id}
           name={item.name}
           selected={currentAlarmBg === item.id}
-          source={thumb}
+          source={item.source}
           onPress={onPress}
         />
       );
@@ -144,14 +141,14 @@ export function WallpaperGalleryScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
           {GROUPS.map(tab => (
             <TouchableOpacity
-              key={tab.id}
-              onPress={() => setSelectedGroup(tab.id)}
+              key={tab}
+              onPress={() => setSelectedGroup(tab)}
               className={`mr-2 px-3.5 py-1.5 rounded-xl border ${
-                selectedGroup === tab.id ? 'bg-[#1A2E22] border-[#1A2E22]' : 'bg-white border-slate-200'
+                selectedGroup === tab ? 'bg-[#1A2E22] border-[#1A2E22]' : 'bg-white border-slate-200'
               }`}
             >
-              <Text className={`text-xs font-bold ${selectedGroup === tab.id ? 'text-white' : 'text-[#5E7166]'}`}>
-                {tab.id}
+              <Text className={`text-xs font-bold ${selectedGroup === tab ? 'text-white' : 'text-[#5E7166]'}`}>
+                {tab}
               </Text>
             </TouchableOpacity>
           ))}
