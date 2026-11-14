@@ -36,9 +36,12 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     NativeAlarm.getCurrentlyRingingAlarm().then(info => {
       if (info) {
         setActiveInfo(info);
+      } else if (alarmId) {
+        // If service is not actively ringing (e.g. after snooze countdown), trigger it!
+        NativeAlarm.startAlarm(alarmId).catch(() => {});
       }
     });
-  }, []);
+  }, [alarmId]);
 
   const label = alarmFromStore?.label || activeInfo?.label || 'Wake up early';
   const missions = alarmFromStore?.missions || activeInfo?.missions || [];

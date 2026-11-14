@@ -10,7 +10,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   WALLPAPERS,
-  WALLPAPER_CATEGORIES,
   WallpaperItem,
 } from '@/data/wallpapers';
 import type { RootStackParamList } from '@/navigation/types';
@@ -167,8 +166,8 @@ export function WallpaperGalleryScreen() {
                   onPress={() => handleCardPress(w)}
                   className={`w-[48%] h-56 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
-                      ? 'border-[#FF385C] shadow-lg scale-102'
-                      : 'border-slate-200 bg-white shadow-xs active:scale-98'
+                      ? 'border-[#FF385C] shadow-md bg-rose-50/10'
+                      : 'border-slate-200 bg-white shadow-xs'
                   }`}
                 >
                   {/* Animated Looping GIF Image */}
@@ -176,10 +175,14 @@ export function WallpaperGalleryScreen() {
                     source={w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
+                    pointerEvents="none"
                   />
 
                   {/* Top Favorite / Selected indicator badge */}
-                  <View className="w-full flex-row justify-end p-2.5 z-10">
+                  <View
+                    className="w-full flex-row justify-end p-2.5 z-10"
+                    pointerEvents="none"
+                  >
                     {isSelected && (
                       <View className="h-6 w-6 rounded-full bg-[#FF385C] border border-white items-center justify-center shadow-md">
                         <Text className="text-white text-[10px] font-black">✓</Text>
@@ -188,7 +191,10 @@ export function WallpaperGalleryScreen() {
                   </View>
 
                   {/* Bottom Title Bar */}
-                  <View className="w-full py-2 px-2 bg-black/70 z-10 border-t border-white/10">
+                  <View
+                    className="w-full py-2 px-2 bg-black/70 z-10 border-t border-white/10"
+                    pointerEvents="none"
+                  >
                     <Text
                       className={`text-xs font-black text-center ${
                         isSelected ? 'text-[#FF385C]' : 'text-white'

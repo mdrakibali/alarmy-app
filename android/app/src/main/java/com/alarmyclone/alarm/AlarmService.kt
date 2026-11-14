@@ -224,9 +224,9 @@ class AlarmService : Service() {
                 setAudioAttributes(audioAttributes)
                 isLooping = true
                 val vol = alarm?.volume ?: 1.0f
-                setVolume(vol, vol)
                 prepare()
                 start()
+                startCrescendoVolume(this, vol)
             }
             Log.d(TAG, "Audio started playing successfully with URI: $soundUri")
         } catch (e: Exception) {
@@ -262,6 +262,9 @@ class AlarmService : Service() {
         super.onDestroy()
         isRinging = false
         currentAlarmId = null
+
+        volumeFadeRunnable?.let { volumeFadeHandler.removeCallbacks(it) }
+        volumeFadeRunnable = null
 
         try {
             mediaPlayer?.stop()

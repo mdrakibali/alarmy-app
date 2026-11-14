@@ -46,7 +46,8 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
       setSecondsLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          // 5 minutes are up! Ring again!
+          // 5 minutes are up! Start alarm sound and ring again!
+          NativeAlarm.startAlarm(alarmId).catch(() => {});
           navigation.replace('AlarmRinging', { id: alarmId });
           return 0;
         }
@@ -66,6 +67,7 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
 
   const handleSolveMissionNow = () => {
     clearSnooze(alarmId);
+    NativeAlarm.startAlarm(alarmId).catch(() => {});
     navigation.replace('AlarmRinging', { id: alarmId });
   };
 

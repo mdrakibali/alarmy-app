@@ -64,6 +64,18 @@ class AlarmModuleBridge {
     }
   }
 
+  async startAlarm(alarmId: string): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.startAlarm(alarmId);
+    } catch (e) {
+      console.warn('NativeAlarm startAlarm failed:', e);
+      return false;
+    }
+  }
+
   async stopAlarm(): Promise<boolean> {
     if (Platform.OS !== 'android' || !AlarmModule) {
       return false;

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Pressable, StatusBar, Text, View } from 'react-native';
+import {
+  Dimensions,
+  Image,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
@@ -93,12 +101,12 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   const handleFinish = () => {
     NativeAlarm.stopSoundPreview();
 
-    // Save alarm to store
+    // Save alarm to store with Daily repeat [0, 1, 2, 3, 4, 5, 6] by default
     addAlarm({
       hour,
       minute,
       label: 'My First Alarmy',
-      repeatDays: [1, 2, 3, 4, 5],
+      repeatDays: [0, 1, 2, 3, 4, 5, 6],
       enabled: true,
       soundId,
       volume: 1.0,
@@ -127,17 +135,25 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     BACKGROUND_ITEMS.find(b => b.id === wallpaper) ||
     WALLPAPERS[0];
 
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
+
   return (
-    <View className="flex-1 relative bg-slate-900">
+    <View className="flex-1 relative bg-black">
       <StatusBar barStyle="light-content" />
-      {/* 100% Edge-to-Edge Animated GIF Background (zero padding on root container) */}
+      {/* 100% Edge-to-Edge Animated GIF Background with physical screen dimensions */}
       <Image
         source={activeBg.source}
-        className="absolute inset-0 w-full h-full opacity-90"
+        style={[
+          StyleSheet.absoluteFill,
+          { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
+        ]}
         resizeMode="cover"
       />
       <View
-        className="absolute inset-0 bg-black/40"
+        style={[
+          StyleSheet.absoluteFill,
+          { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: 'rgba(0,0,0,0.4)' },
+        ]}
         pointerEvents="none"
       />
 

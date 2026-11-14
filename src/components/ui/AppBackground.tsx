@@ -1,6 +1,8 @@
 import React from 'react';
 import {
+  Dimensions,
   Image,
+  StyleSheet,
   View,
 } from 'react-native';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
@@ -49,21 +51,33 @@ export function AppBackground({
     ? { uri: activeId }
     : wallpaperItem?.source || bgItem?.source || WALLPAPERS[0].source;
 
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
+
   return (
-    <View className={`flex-1 relative bg-slate-50 ${className}`}>
+    <View className={`flex-1 relative bg-black ${className}`}>
       {/* Background Image Layer */}
       <Image
         source={imageSource}
-        style={{ opacity: brightness }}
-        className="absolute inset-0 w-full h-full"
+        style={[
+          StyleSheet.absoluteFill,
+          { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, opacity: brightness },
+        ]}
         resizeMode="cover"
+        pointerEvents="none"
       />
 
       {/* Scrim / Overlay for readability */}
       {overlayOpacity > 0 && (
         <View
-          style={{ opacity: overlayOpacity }}
-          className="absolute inset-0 bg-black"
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              width: SCREEN_WIDTH,
+              height: SCREEN_HEIGHT,
+              backgroundColor: 'rgba(0,0,0,1)',
+              opacity: overlayOpacity,
+            },
+          ]}
           pointerEvents="none"
         />
       )}

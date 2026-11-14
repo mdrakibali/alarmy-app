@@ -124,6 +124,23 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun startAlarm(alarmId: String, promise: Promise) {
+        try {
+            val serviceIntent = Intent(reactContext, AlarmService::class.java).apply {
+                putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                reactContext.startForegroundService(serviceIntent)
+            } else {
+                reactContext.startService(serviceIntent)
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("START_ALARM_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
     fun stopAlarm(promise: Promise) {
         try {
             AlarmService.stop(reactContext)

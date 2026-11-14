@@ -7,7 +7,6 @@ import {
   Switch,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -378,7 +377,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             keyboardShouldPersistTaps="handled"
             className="-mx-4 px-4 py-1"
           >
-            {WALLPAPERS.slice(0, 12).map(w => {
+            {WALLPAPERS.slice(0, 5).map(w => {
               const isSelected = (draft.wallpaper || alarmBackground) === w.id;
               return (
                 <Pressable
@@ -390,17 +389,21 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   }}
                   className={`w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
-                      ? 'border-[#FF385C] shadow-md scale-102'
-                      : 'border-slate-200 bg-slate-100 active:scale-98'
+                      ? 'border-[#FF385C] shadow-md bg-rose-50/10'
+                      : 'border-slate-200 bg-slate-100'
                   }`}
                 >
                   <Image
                     source={w.source}
                     className="absolute inset-0 w-full h-full"
                     resizeMode="cover"
+                    pointerEvents="none"
                   />
                   {/* Selected Badge */}
-                  <View className="w-full flex-row justify-end p-1.5 z-10">
+                  <View
+                    className="w-full flex-row justify-end p-1.5 z-10"
+                    pointerEvents="none"
+                  >
                     {isSelected && (
                       <View className="h-5 w-5 rounded-full bg-[#FF385C] items-center justify-center shadow-sm">
                         <Text className="text-white text-[9px] font-black">✓</Text>
@@ -408,7 +411,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     )}
                   </View>
                   {/* Title Bar */}
-                  <View className="w-full py-1.5 px-1 bg-black/60 z-10">
+                  <View
+                    className="w-full py-1.5 px-1 bg-black/60 z-10"
+                    pointerEvents="none"
+                  >
                     <Text
                       className={`text-[10px] font-bold text-center ${
                         isSelected ? 'text-[#FF385C]' : 'text-white'
@@ -434,7 +440,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           <View className="flex-row items-center justify-between rounded-2xl bg-slate-50 p-3 mb-3 border border-slate-100">
             <Pressable
               onPress={() => toggleSoundPreview()}
-              className={`h-9 w-9 rounded-full items-center justify-center mr-3 active:scale-95 ${
+              className={`h-9 w-9 rounded-full items-center justify-center mr-3 active:opacity-75 ${
                 isPlayingSound ? 'bg-[#FF385C]' : 'bg-[#38BDF8]'
               }`}
             >
@@ -668,80 +674,85 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         animationType="slide"
         onRequestClose={() => setShowMissionModal(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowMissionModal(false)}>
-          <View className="flex-1 bg-black/40 justify-end">
-            <TouchableWithoutFeedback>
-              <View
-                style={{ paddingBottom: Math.max(insets.bottom, 24) }}
-                className="bg-white rounded-t-3xl p-5 shadow-2xl max-h-[80%]"
+        <View className="flex-1 bg-black/45 justify-end">
+          {/* Backdrop Dismiss Area */}
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setShowMissionModal(false)}
+          />
+
+          {/* Bottom Sheet Card */}
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+            className="bg-white rounded-t-3xl p-5 shadow-2xl max-h-[80%] z-10"
+          >
+            {/* Header */}
+            <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
+              <View>
+                <Text className="text-lg font-extrabold text-slate-900">
+                  Choose Wake-up Mission
+                </Text>
+                <Text className="text-xs text-slate-400 mt-0.5">
+                  Select a task you must complete to turn off the alarm ({draft.missions.length}/5)
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setShowMissionModal(false)}
+                hitSlop={10}
+                className="h-8 w-8 rounded-full bg-slate-100 items-center justify-center active:bg-slate-200"
               >
-                {/* Header */}
-                <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
-                  <View>
-                    <Text className="text-lg font-extrabold text-slate-900">
-                      Choose Wake-up Mission
-                    </Text>
-                    <Text className="text-xs text-slate-400 mt-0.5">
-                      Select a task you must complete to turn off the alarm
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => setShowMissionModal(false)}
-                    className="p-1"
-                  >
-                    <Text className="text-base font-bold text-slate-400">✕</Text>
-                  </Pressable>
-                </View>
+                <Text className="text-base font-bold text-slate-500">✕</Text>
+              </Pressable>
+            </View>
 
-                {/* Mission List */}
-                <ScrollView className="mt-3" showsVerticalScrollIndicator={false}>
-                  {(Object.keys(MISSION_DETAILS) as MissionType[]).map(
-                    missionKey => {
-                      const item = MISSION_DETAILS[missionKey];
-                      const isAdded = draft.missions.includes(missionKey);
+            {/* Mission List */}
+            <ScrollView className="mt-3" showsVerticalScrollIndicator={false}>
+              {(Object.keys(MISSION_DETAILS) as MissionType[]).map(
+                missionKey => {
+                  const item = MISSION_DETAILS[missionKey];
+                  const count = draft.missions.filter(m => m === missionKey).length;
 
-                      return (
-                        <Pressable
-                          key={missionKey}
-                          onPress={() => addMission(missionKey)}
-                          className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
-                            isAdded
-                              ? 'bg-slate-50 border-slate-200'
-                              : 'bg-white border-slate-100 shadow-sm active:bg-[#E0F2FE]'
-                          }`}
-                        >
-                          <View className="flex-row items-center flex-1 pr-3">
-                            <Text className="text-3xl mr-3">{item.icon}</Text>
-                            <View className="flex-1">
-                              <View className="flex-row items-center mb-0.5">
-                                <Text className="text-base font-bold text-slate-900 mr-2">
-                                  {item.title}
-                                </Text>
-                                <View className="rounded bg-rose-50 px-1.5 py-0.5">
-                                  <Text className="text-[9px] font-black text-rose-500">
-                                    {item.badge}
-                                  </Text>
-                                </View>
-                              </View>
-                              <Text className="text-xs text-slate-500 font-medium leading-tight">
-                                {item.desc}
+                  return (
+                    <Pressable
+                      key={missionKey}
+                      hitSlop={6}
+                      onPress={() => addMission(missionKey)}
+                      className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
+                        count > 0
+                          ? 'bg-rose-50/40 border-rose-200'
+                          : 'bg-white border-slate-100 shadow-sm active:bg-[#E0F2FE]'
+                      }`}
+                    >
+                      <View className="flex-row items-center flex-1 pr-3">
+                        <Text className="text-3xl mr-3">{item.icon}</Text>
+                        <View className="flex-1">
+                          <View className="flex-row items-center mb-0.5">
+                            <Text className="text-base font-bold text-slate-900 mr-2">
+                              {item.title}
+                            </Text>
+                            <View className="rounded bg-rose-50 px-1.5 py-0.5">
+                              <Text className="text-[9px] font-black text-rose-500">
+                                {item.badge}
                               </Text>
                             </View>
                           </View>
-                          <View className="px-3.5 py-1.5 rounded-full bg-[#FF385C] shadow-xs">
-                            <Text className="text-white text-xs font-black">
-                              {isAdded ? '+ Add More' : '+ Add'}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      );
-                    },
-                  )}
-                </ScrollView>
-              </View>
-            </TouchableWithoutFeedback>
+                          <Text className="text-xs text-slate-500 font-medium leading-tight">
+                            {item.desc}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="px-3.5 py-1.5 rounded-full bg-[#FF385C] shadow-xs">
+                        <Text className="text-white text-xs font-black">
+                          {count > 0 ? `+ Add (${count})` : '+ Add'}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                },
+              )}
+            </ScrollView>
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </Modal>
 
       {/* Custom Delete Confirmation Modal */}

@@ -143,7 +143,7 @@ export function blankAlarm(): Omit<Alarm, 'id'> {
     hour: 7,
     minute: 0,
     label: 'Wake up early',
-    repeatDays: [1, 2, 3, 4, 5],
+    repeatDays: [0, 1, 2, 3, 4, 5, 6],
     enabled: true,
     soundId: 'alarm_rooster',
     volume: 1,

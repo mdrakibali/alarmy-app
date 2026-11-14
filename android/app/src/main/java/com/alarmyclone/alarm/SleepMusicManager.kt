@@ -56,8 +56,19 @@ object SleepMusicManager {
                 setAudioAttributes(audioAttributes)
                 isLooping = loop
                 setVolume(currentVolume, currentVolume)
-                prepare()
-                start()
+                setOnPreparedListener { mp ->
+                    try {
+                        mp.start()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error starting player after prepare", e)
+                    }
+                }
+                setOnErrorListener { mp, what, extra ->
+                    Log.e(TAG, "MediaPlayer error: $what, $extra")
+                    stop()
+                    true
+                }
+                prepareAsync()
             }
 
             isPlaying = true

@@ -4,7 +4,6 @@ import {
   Modal,
   Pressable,
   Text,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -114,7 +113,8 @@ export function WallpaperPreviewModal({
           {/* Close button */}
           <Pressable
             onPress={onClose}
-            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center backdrop-blur-md active:scale-95 border border-white/20"
+            hitSlop={10}
+            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center backdrop-blur-md active:opacity-70 border border-white/20"
           >
             <Text className="text-white text-base font-bold">✕</Text>
           </Pressable>
@@ -128,7 +128,8 @@ export function WallpaperPreviewModal({
           {/* Favorite button */}
           <Pressable
             onPress={() => toggleFavorite(wallpaper.id)}
-            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center backdrop-blur-md active:scale-95 border border-white/20"
+            hitSlop={10}
+            className="h-10 w-10 rounded-full bg-black/50 items-center justify-center backdrop-blur-md active:opacity-70 border border-white/20"
           >
             <Text className="text-xl">{isFav ? '❤️' : '🤍'}</Text>
           </Pressable>
@@ -194,77 +195,72 @@ export function WallpaperPreviewModal({
           </View>
         </View>
 
-        {/* Target Selection Bottom Sheet */}
-        <Modal
-          visible={showApplySheet}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setShowApplySheet(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setShowApplySheet(false)}>
-            <View className="flex-1 bg-black/60 justify-end">
-              <TouchableWithoutFeedback>
-                <View
-                  style={{ paddingBottom: insets.bottom + 16 }}
-                  className="bg-neutral-900 rounded-t-3xl p-6 border-t border-neutral-800"
-                >
-                  <View className="h-1 w-12 bg-neutral-700 rounded-full self-center mb-5" />
-                  <Text className="text-lg font-black text-white text-center mb-1">
-                    Apply Animated Wallpaper
-                  </Text>
-                  <Text className="text-xs text-neutral-400 text-center mb-5">
-                    Choose where to display "{wallpaper.name}"
-                  </Text>
+        {/* Target Selection Bottom Sheet (Non-nested overlay to avoid Android window focus deadlock) */}
+        {showApplySheet && (
+          <View className="absolute inset-0 bg-black/70 justify-end z-50">
+            <Pressable
+              className="absolute inset-0"
+              onPress={() => setShowApplySheet(false)}
+            />
+            <View
+              style={{ paddingBottom: insets.bottom + 16 }}
+              className="bg-neutral-900 rounded-t-3xl p-6 border-t border-neutral-800 z-10"
+            >
+              <View className="h-1 w-12 bg-neutral-700 rounded-full self-center mb-5" />
+              <Text className="text-lg font-black text-white text-center mb-1">
+                Apply Animated Wallpaper
+              </Text>
+              <Text className="text-xs text-neutral-400 text-center mb-5">
+                Choose where to display "{wallpaper.name}"
+              </Text>
 
-                  <Pressable
-                    onPress={() => handleApplyTo('all')}
-                    className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700 active:bg-neutral-700"
-                  >
-                    <Text className="text-sm font-extrabold text-white">
-                      📱 Apply to All (Global Default)
-                    </Text>
-                    <Text className="text-xs text-neutral-400 mt-0.5">
-                      Sets as background for Home, Alarm, and Ringing screens
-                    </Text>
-                  </Pressable>
+              <Pressable
+                onPress={() => handleApplyTo('all')}
+                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700 active:bg-neutral-700"
+              >
+                <Text className="text-sm font-extrabold text-white">
+                  📱 Apply to All (Global Default)
+                </Text>
+                <Text className="text-xs text-neutral-400 mt-0.5">
+                  Sets as background for Home, Alarm, and Ringing screens
+                </Text>
+              </Pressable>
 
-                  <Pressable
-                    onPress={() => handleApplyTo('alarm')}
-                    className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700 active:bg-neutral-700"
-                  >
-                    <Text className="text-sm font-extrabold text-white">
-                      ⏰ Apply to Alarm Screen
-                    </Text>
-                    <Text className="text-xs text-neutral-400 mt-0.5">
-                      Display when viewing or configuring alarms
-                    </Text>
-                  </Pressable>
+              <Pressable
+                onPress={() => handleApplyTo('alarm')}
+                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700 active:bg-neutral-700"
+              >
+                <Text className="text-sm font-extrabold text-white">
+                  ⏰ Apply to Alarm Screen
+                </Text>
+                <Text className="text-xs text-neutral-400 mt-0.5">
+                  Display when viewing or configuring alarms
+                </Text>
+              </Pressable>
 
-                  <Pressable
-                    onPress={() => handleApplyTo('ringing')}
-                    className="p-4 rounded-2xl bg-neutral-800 mb-4 border border-neutral-700 active:bg-neutral-700"
-                  >
-                    <Text className="text-sm font-extrabold text-white">
-                      🔔 Apply to Ringing Screen
-                    </Text>
-                    <Text className="text-xs text-neutral-400 mt-0.5">
-                      Shows full-screen looping GIF when morning alarm rings
-                    </Text>
-                  </Pressable>
+              <Pressable
+                onPress={() => handleApplyTo('ringing')}
+                className="p-4 rounded-2xl bg-neutral-800 mb-4 border border-neutral-700 active:bg-neutral-700"
+              >
+                <Text className="text-sm font-extrabold text-white">
+                  🔔 Apply to Ringing Screen
+                </Text>
+                <Text className="text-xs text-neutral-400 mt-0.5">
+                  Shows full-screen looping GIF when morning alarm rings
+                </Text>
+              </Pressable>
 
-                  <Pressable
-                    onPress={() => setShowApplySheet(false)}
-                    className="py-3.5 rounded-2xl bg-neutral-800 items-center active:bg-neutral-700"
-                  >
-                    <Text className="text-sm font-bold text-neutral-400">
-                      Cancel
-                    </Text>
-                  </Pressable>
-                </View>
-              </TouchableWithoutFeedback>
+              <Pressable
+                onPress={() => setShowApplySheet(false)}
+                className="py-3.5 rounded-2xl bg-neutral-800 items-center active:bg-neutral-700"
+              >
+                <Text className="text-sm font-bold text-neutral-400">
+                  Cancel
+                </Text>
+              </Pressable>
             </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+          </View>
+        )}
       </View>
     </Modal>
   );
