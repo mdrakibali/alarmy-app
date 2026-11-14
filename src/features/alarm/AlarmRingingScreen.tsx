@@ -79,6 +79,10 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
       navigation.navigate('ShakeMission', { alarmId: alarmId || activeInfo?.id });
       return;
     }
+    if (missions.includes('qr')) {
+      navigation.navigate('BarcodeMission', { alarmId: alarmId || activeInfo?.id });
+      return;
+    }
 
     // No mission: direct dismiss
     await NativeAlarm.stopAlarm();
@@ -90,6 +94,8 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     ? 'Solve Math to Dismiss 🧠'
     : missions.includes('shake')
     ? 'Shake Phone to Dismiss 📱'
+    : missions.includes('qr')
+    ? 'Scan Barcode to Dismiss 📷'
     : 'Complete Mission to Dismiss 🎯';
 
   return (

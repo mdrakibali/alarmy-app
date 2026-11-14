@@ -245,6 +245,42 @@ class AlarmModuleBridge {
     }
   }
 
+  async startShakeDetection(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.startShakeDetection();
+    } catch {
+      return false;
+    }
+  }
+
+  async stopShakeDetection(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      return await AlarmModule.stopShakeDetection();
+    } catch {
+      return false;
+    }
+  }
+
+  onShake(listener: () => void): () => void {
+    if (!this.emitter) {
+      return () => {};
+    }
+    this.startShakeDetection();
+    const sub = this.emitter.addListener('onShakeEvent', listener);
+    return () => {
+      try {
+        sub.remove();
+      } catch {}
+      this.stopShakeDetection();
+    };
+  }
+
   onAlarmDismissed(listener: () => void): EmitterSubscription | null {
     if (!this.emitter) {
       return null;

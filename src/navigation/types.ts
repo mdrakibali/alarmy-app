@@ -23,5 +23,6 @@ export type RootStackParamList = {
   AlarmRinging: { id?: string } | undefined;
   MathMission: { alarmId?: string } | undefined;
   ShakeMission: { alarmId?: string } | undefined;
+  BarcodeMission: { alarmId?: string } | undefined;
   WallpaperGallery: { onSelect?: (wallpaperId: string) => void } | undefined;
 };

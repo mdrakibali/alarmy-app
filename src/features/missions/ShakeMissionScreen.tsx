@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BackHandler, Pressable, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { BackHandler, Pressable, Text, Vibration, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
@@ -15,27 +15,39 @@ export function ShakeMissionScreen({ navigation }: Props) {
   const [shakesLeft, setShakesLeft] = useState(REQUIRED_SHAKES);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  useEffect(() => {
-    // Disable back button during mission
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
-    return () => sub.remove();
+  const completeMission = useCallback(async () => {
+    await NativeAlarm.stopAlarm();
+    setShowSuccessModal(true);
   }, []);
 
-  const handleShake = async () => {
+  const handleShake = useCallback(() => {
+    try {
+      Vibration.vibrate(50);
+    } catch {}
+
     setShakesLeft(prev => {
-      const next = prev - 1;
-      if (next <= 0) {
+      if (prev <= 1) {
         completeMission();
         return 0;
       }
-      return next;
+      return prev - 1;
     });
-  };
+  }, [completeMission]);
 
-  const completeMission = async () => {
-    await NativeAlarm.stopAlarm();
-    setShowSuccessModal(true);
-  };
+  useEffect(() => {
+    // Disable back button during mission
+    const backSub = BackHandler.addEventListener('hardwareBackPress', () => true);
+
+    // Listen to real physical phone shakes via Accelerometer sensor
+    const unsubscribeShake = NativeAlarm.onShake(() => {
+      handleShake();
+    });
+
+    return () => {
+      backSub.remove();
+      unsubscribeShake();
+    };
+  }, [handleShake]);
 
   const progress = ((REQUIRED_SHAKES - shakesLeft) / REQUIRED_SHAKES) * 100;
 

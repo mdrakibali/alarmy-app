@@ -11,6 +11,7 @@ import { AlarmListScreen } from '@/features/alarm/AlarmListScreen';
 import { AlarmRingingScreen } from '@/features/alarm/AlarmRingingScreen';
 import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
 import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
+import { BarcodeMissionScreen } from '@/features/missions/BarcodeMissionScreen';
 import { MorningScreen } from '@/features/morning/MorningScreen';
 import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
 import { SplashScreen } from '@/features/onboarding/SplashScreen';
@@ -162,6 +163,14 @@ export function RootNavigator() {
       <Stack.Screen
         name="ShakeMission"
         component={ShakeMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="BarcodeMission"
+        component={BarcodeMissionScreen}
         options={{
           headerShown: false,
           gestureEnabled: false,

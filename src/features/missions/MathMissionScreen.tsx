@@ -109,7 +109,8 @@ export function MathMissionScreen({ navigation }: Props) {
         setErrorMsg('');
       }
     } else {
-      setErrorMsg('Wrong! Try again ❌');
+      setErrorMsg('Wrong! New math problem generated ❌');
+      setCurrentProblem(generateProblem());
       setUserInput('');
       setSelectedOption(null);
     }

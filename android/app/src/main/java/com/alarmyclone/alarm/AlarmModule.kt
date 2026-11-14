@@ -21,6 +21,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
     private var previewPlayer: MediaPlayer? = null
+    private var shakeDetector: ShakeDetector? = null
 
     companion object {
         const val NAME = "AlarmModule"
@@ -356,6 +357,32 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(map)
         } catch (e: Exception) {
             promise.reject("SLEEP_STATUS_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun startShakeDetection(promise: Promise) {
+        try {
+            if (shakeDetector == null) {
+                shakeDetector = ShakeDetector(reactContext) {
+                    sendEvent("onShakeEvent", null)
+                }
+            }
+            val started = shakeDetector?.start() ?: false
+            promise.resolve(started)
+        } catch (e: Exception) {
+            promise.reject("SHAKE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun stopShakeDetection(promise: Promise) {
+        try {
+            shakeDetector?.stop()
+            shakeDetector = null
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("SHAKE_STOP_ERROR", e.message, e)
         }
     }
 
