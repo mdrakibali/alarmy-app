@@ -21,8 +21,9 @@ export type RootStackParamList = {
   };
   AlarmEdit: { id?: string } | undefined;
   AlarmRinging: { id?: string } | undefined;
-  MathMission: { alarmId?: string } | undefined;
-  ShakeMission: { alarmId?: string } | undefined;
-  BarcodeMission: { alarmId?: string } | undefined;
+  SnoozeCountdown: { alarmId: string; intervalMin: number; wallpaper?: string };
+  MathMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  ShakeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
   WallpaperGallery: { onSelect?: (wallpaperId: string) => void } | undefined;
 };

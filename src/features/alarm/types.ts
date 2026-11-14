@@ -24,4 +24,5 @@ export interface Alarm {
   snooze: { enabled: boolean; intervalMin: number; maxCount: number };
   missions: MissionType[];
   wallpaper?: string;
+  snoozedUntil?: number;
 }

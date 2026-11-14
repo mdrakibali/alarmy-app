@@ -7,6 +7,7 @@ import {
   Switch,
   Text,
   TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
@@ -104,7 +105,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   };
 
   const addMission = (mission: MissionType) => {
-    if (!draft.missions.includes(mission) && draft.missions.length < 5) {
+    if (draft.missions.length < 5) {
       patch({ missions: [...draft.missions, mission] });
     }
     setShowMissionModal(false);
@@ -374,36 +375,37 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           {/* Quick Horizontal Carousel of Wallpapers with Live Selection */}
           <ScrollView
             horizontal
-            nestedScrollEnabled={true}
             showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
             className="-mx-4 px-4 py-1"
           >
-            {WALLPAPERS.map(w => {
+            {WALLPAPERS.slice(0, 12).map(w => {
               const isSelected = (draft.wallpaper || alarmBackground) === w.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={w.id}
-                  hitSlop={8}
+                  activeOpacity={0.7}
                   onPress={() => {
                     patch({ wallpaper: w.id });
                     useThemeStore.getState().setBackground('alarm', w.id);
                   }}
-                  className={`mr-3 h-36 w-24 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
+                  className={`w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
                     isSelected
-                      ? 'border-[#FF385C] scale-105 shadow-md'
-                      : 'border-transparent bg-slate-100 active:scale-98'
+                      ? 'border-[#FF385C] shadow-md'
+                      : 'border-slate-200 bg-slate-100'
                   }`}
                 >
-                  <Image
-                    source={w.source}
-                    className="absolute inset-0 w-full h-full"
-                    resizeMode="cover"
-                    pointerEvents="none"
-                  />
+                  <View pointerEvents="none" className="absolute inset-0 w-full h-full">
+                    <Image
+                      source={w.source}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                    />
+                  </View>
                   {/* Selected Badge */}
                   <View
-                    className="w-full flex-row justify-end p-1.5 z-10"
                     pointerEvents="none"
+                    className="w-full flex-row justify-end p-1.5 z-10"
                   >
                     {isSelected && (
                       <View className="h-5 w-5 rounded-full bg-[#FF385C] items-center justify-center shadow-sm">
@@ -413,8 +415,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   </View>
                   {/* Title Bar */}
                   <View
-                    className="w-full py-1.5 px-1 bg-black/60 backdrop-blur-sm z-10"
                     pointerEvents="none"
+                    className="w-full py-1.5 px-1 bg-black/60 backdrop-blur-sm z-10"
                   >
                     <Text
                       className={`text-[10px] font-bold text-center ${
@@ -425,7 +427,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                       ♪ {w.name}
                     </Text>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </ScrollView>
@@ -735,17 +737,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                               </Text>
                             </View>
                           </View>
-                          <View
-                            className={`px-3 py-1.5 rounded-full ${
-                              isAdded ? 'bg-slate-200' : 'bg-[#FF385C]'
-                            }`}
-                          >
-                            <Text
-                              className={`text-xs font-bold ${
-                                isAdded ? 'text-slate-500' : 'text-white'
-                              }`}
-                            >
-                              {isAdded ? 'Added' : 'Select'}
+                          <View className="px-3.5 py-1.5 rounded-full bg-[#FF385C] shadow-xs">
+                            <Text className="text-white text-xs font-black">
+                              {isAdded ? '+ Add More' : '+ Add'}
                             </Text>
                           </View>
                         </Pressable>

@@ -25,6 +25,15 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     companion object {
         const val NAME = "AlarmModule"
+        private var instance: AlarmModule? = null
+
+        fun emitAlarmRinging(alarmId: String?) {
+            instance?.sendEvent("onAlarmRinging", alarmId)
+        }
+    }
+
+    init {
+        instance = this
     }
 
     override fun getName(): String = NAME
@@ -210,51 +219,69 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun previewSound(soundId: String, promise: Promise) {
-        try {
-            stopSoundPreviewInternal()
-            var soundUri: Uri? = null
+        Thread {
+            try {
+                stopSoundPreviewInternal()
+                var soundUri: Uri? = null
 
-            // 1. Try bundled raw sound resource
-            if (soundId.isNotEmpty()) {
-                val cleanId = soundId.lowercase().replace("-", "_")
-                val resId = reactContext.resources.getIdentifier(cleanId, "raw", reactContext.packageName)
-                if (resId != 0) {
-                    soundUri = Uri.parse("android.resource://${reactContext.packageName}/$resId")
+                // 1. Try bundled raw sound resource
+                if (soundId.isNotEmpty()) {
+                    val cleanId = soundId.lowercase().replace("-", "_")
+                    val resId = reactContext.resources.getIdentifier(cleanId, "raw", reactContext.packageName)
+                    if (resId != 0) {
+                        soundUri = Uri.parse("android.resource://${reactContext.packageName}/$resId")
+                    }
                 }
-            }
 
-            // 2. Fallback to system ringtones
-            if (soundUri == null) {
-                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            }
-            if (soundUri == null) {
-                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            }
-            if (soundUri == null) {
-                soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            }
-
-            previewPlayer = MediaPlayer().apply {
-                setDataSource(reactContext, soundUri!!)
-                val audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-                setAudioAttributes(audioAttributes)
-                isLooping = false
-                prepare()
-                start()
-                setOnCompletionListener {
-                    try {
-                        it.release()
-                    } catch (e: Exception) {}
-                    previewPlayer = null
+                // 2. Fallback to system ringtones
+                if (soundUri == null) {
+                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 }
+                if (soundUri == null) {
+                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                }
+                if (soundUri == null) {
+                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                }
+
+                val player = MediaPlayer().apply {
+                    setDataSource(reactContext, soundUri!!)
+                    val audioAttributes = AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                    setAudioAttributes(audioAttributes)
+                    isLooping = false
+                    setOnPreparedListener { mp ->
+                        try {
+                            mp.start()
+                        } catch (e: Exception) {}
+                    }
+                    setOnCompletionListener { mp ->
+                        try {
+                            mp.release()
+                        } catch (e: Exception) {}
+                        if (previewPlayer == mp) {
+                            previewPlayer = null
+                        }
+                    }
+                    setOnErrorListener { mp, _, _ ->
+                        try {
+                            mp.release()
+                        } catch (e: Exception) {}
+                        if (previewPlayer == mp) {
+                            previewPlayer = null
+                        }
+                        true
+                    }
+                    prepareAsync()
+                }
+                previewPlayer = player
+                promise.resolve(true)
+            } catch (e: Exception) {
+                promise.resolve(false)
             }
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("PREVIEW_ERROR", e.message, e)
-        }
+        }.start()
     }
 
     @ReactMethod
@@ -263,14 +290,20 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             stopSoundPreviewInternal()
             promise.resolve(true)
         } catch (e: Exception) {
-            promise.reject("STOP_PREVIEW_ERROR", e.message, e)
+            promise.resolve(false)
         }
     }
 
     private fun stopSoundPreviewInternal() {
         try {
-            previewPlayer?.stop()
-            previewPlayer?.release()
+            previewPlayer?.let { player ->
+                try {
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                } catch (e: Exception) {}
+                player.release()
+            }
         } catch (e: Exception) {}
         previewPlayer = null
     }

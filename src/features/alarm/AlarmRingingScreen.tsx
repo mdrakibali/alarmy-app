@@ -5,7 +5,6 @@ import { AppBackground } from '@/components/ui/AppBackground';
 import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAppInsets } from '@/utils/safeArea';
-import { useToast } from '@/components/ui/AppToast';
 import { useAlarmStore } from './alarmStore';
 import { formatTime } from './format';
 
@@ -13,7 +12,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AlarmRinging'>;
 
 export function AlarmRingingScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
-  const toast = useToast();
   const alarmId = route.params?.id;
   const alarmFromStore = useAlarmStore(s =>
     alarmId ? s.alarms.find(a => a.id === alarmId) : undefined,
@@ -54,34 +52,40 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     currentTime.getMinutes(),
   );
 
+  const snoozeAlarmInStore = useAlarmStore(s => s.snoozeAlarm);
+
   const handleSnooze = async () => {
     const id = alarmId || activeInfo?.id;
     if (id) {
+      snoozeAlarmInStore(id, snoozeInterval);
       await NativeAlarm.snoozeAlarm(id, snoozeInterval);
-      toast.showToast({
-        title: 'Alarm Snoozed! ⏰',
-        message: `Extended by ${snoozeInterval} minutes.`,
-        type: 'info',
-        icon: '💤',
+      navigation.replace('SnoozeCountdown', {
+        alarmId: id,
+        intervalMin: snoozeInterval,
+        wallpaper: alarmFromStore?.wallpaper,
       });
     } else {
       await NativeAlarm.stopAlarm();
+      navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
     }
-    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
 
   const handleDismissOrMission = async () => {
-    if (missions.includes('math')) {
-      navigation.navigate('MathMission', { alarmId: alarmId || activeInfo?.id });
-      return;
-    }
-    if (missions.includes('shake')) {
-      navigation.navigate('ShakeMission', { alarmId: alarmId || activeInfo?.id });
-      return;
-    }
-    if (missions.includes('qr')) {
-      navigation.navigate('BarcodeMission', { alarmId: alarmId || activeInfo?.id });
-      return;
+    const id = alarmId || activeInfo?.id;
+    if (missions.length > 0) {
+      const firstMission = missions[0];
+      if (firstMission === 'math') {
+        navigation.navigate('MathMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
+      if (firstMission === 'shake') {
+        navigation.navigate('ShakeMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
+      if (firstMission === 'qr') {
+        navigation.navigate('BarcodeMission', { alarmId: id, missionIndex: 0, missions });
+        return;
+      }
     }
 
     // No mission: direct dismiss

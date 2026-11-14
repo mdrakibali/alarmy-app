@@ -74,6 +74,14 @@ class AlarmService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        try {
+            startActivity(fullScreenIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start activity directly from service", e)
+        }
+
+        AlarmModule.emitAlarmRinging(alarmId)
+
         // Notification actions
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)

@@ -281,6 +281,15 @@ class AlarmModuleBridge {
     };
   }
 
+  onAlarmRinging(listener: (alarmId: string | null) => void): EmitterSubscription | null {
+    if (!this.emitter) {
+      return null;
+    }
+    return this.emitter.addListener('onAlarmRinging', (data: any) =>
+      listener(data as string | null),
+    );
+  }
+
   onAlarmDismissed(listener: () => void): EmitterSubscription | null {
     if (!this.emitter) {
       return null;

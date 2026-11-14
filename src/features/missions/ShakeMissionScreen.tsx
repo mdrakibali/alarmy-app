@@ -9,16 +9,50 @@ import { useAppInsets } from '@/utils/safeArea';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShakeMission'>;
 
-export function ShakeMissionScreen({ navigation }: Props) {
+export function ShakeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+
   const REQUIRED_SHAKES = 30;
   const [shakesLeft, setShakesLeft] = useState(REQUIRED_SHAKES);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const completeMission = useCallback(async () => {
+    const alarmId = route.params?.alarmId;
+    const missionIndex = route.params?.missionIndex ?? 0;
+    const allMissions = route.params?.missions ?? [];
+
+    const nextMissionIdx = missionIndex + 1;
+    if (nextMissionIdx < allMissions.length) {
+      const nextMissionKey = allMissions[nextMissionIdx];
+      if (nextMissionKey === 'math') {
+        navigation.replace('MathMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'qr') {
+        navigation.replace('BarcodeMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'shake') {
+        navigation.replace('ShakeMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+    }
+
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
-  }, []);
+  }, [navigation, route.params]);
 
   const handleShake = useCallback(() => {
     try {

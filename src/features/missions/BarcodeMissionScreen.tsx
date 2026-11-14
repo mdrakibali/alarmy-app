@@ -22,8 +22,12 @@ const DEMO_BARCODES = [
   { id: 'book', label: 'Desk Reading Book', code: '978013235088' },
 ];
 
-export function BarcodeMissionScreen({ navigation }: Props) {
+export function BarcodeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const alarmId = route.params?.alarmId;
+  const missionIndex = route.params?.missionIndex ?? 0;
+  const allMissions = route.params?.missions ?? [];
+
   const [selectedTarget, setSelectedTarget] = useState(DEMO_BARCODES[0]);
   const [flashlight, setFlashlight] = useState(false);
   const [manualInput, setManualInput] = useState('');
@@ -42,6 +46,36 @@ export function BarcodeMissionScreen({ navigation }: Props) {
     try {
       Vibration.vibrate([0, 100, 50, 100]);
     } catch {}
+
+    const nextMissionIdx = missionIndex + 1;
+    if (nextMissionIdx < allMissions.length) {
+      const nextMissionKey = allMissions[nextMissionIdx];
+      if (nextMissionKey === 'math') {
+        navigation.replace('MathMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'shake') {
+        navigation.replace('ShakeMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+      if (nextMissionKey === 'qr') {
+        navigation.replace('BarcodeMission', {
+          alarmId,
+          missionIndex: nextMissionIdx,
+          missions: allMissions,
+        });
+        return;
+      }
+    }
+
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
   };

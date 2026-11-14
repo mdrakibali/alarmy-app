@@ -202,7 +202,7 @@ function AlarmCard({
       </View>
 
       {/* Middle Row: Big Time and Mission Icon */}
-      <View className="my-2 flex-row items-baseline">
+      <View className="my-2 flex-row items-baseline flex-wrap">
         <Text
           className={`text-4xl font-black ${
             alarm.enabled ? 'text-slate-900' : 'text-slate-400'
@@ -217,6 +217,13 @@ function AlarmCard({
         >
           {period}
         </Text>
+        {alarm.snoozedUntil && alarm.snoozedUntil > Date.now() ? (
+          <View className="ml-2.5 px-2.5 py-1 rounded-full bg-amber-100 border border-amber-200 flex-row items-center">
+            <Text className="text-[11px] font-extrabold text-amber-800">
+              💤 Snoozed ({Math.max(1, Math.ceil((alarm.snoozedUntil - Date.now()) / 60000))}m left)
+            </Text>
+          </View>
+        ) : null}
         {hasMission && (
           <View className="ml-3 rounded-lg bg-slate-100 px-2 py-0.5">
             <Text className="text-xs">{missionIcon}</Text>

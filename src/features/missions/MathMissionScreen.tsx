@@ -58,8 +58,12 @@ function generateProblem(): MathProblem {
   return { num1: a, num2: b, operator: op, answer: ans, options };
 }
 
-export function MathMissionScreen({ navigation }: Props) {
+export function MathMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const alarmId = route.params?.alarmId;
+  const missionIndex = route.params?.missionIndex ?? 0;
+  const allMissions = route.params?.missions ?? [];
+
   const TOTAL_PROBLEMS = 3;
   const [problemIndex, setProblemIndex] = useState(0);
   const [currentProblem, setCurrentProblem] = useState<MathProblem>(() =>
@@ -98,7 +102,37 @@ export function MathMissionScreen({ navigation }: Props) {
     if (answerValue === currentProblem.answer) {
       const nextIndex = problemIndex + 1;
       if (nextIndex >= TOTAL_PROBLEMS) {
-        // Mission complete! Dismiss the alarm!
+        // Current mission is solved! Check if more missions exist in sequence
+        const nextMissionIdx = missionIndex + 1;
+        if (nextMissionIdx < allMissions.length) {
+          const nextMissionKey = allMissions[nextMissionIdx];
+          if (nextMissionKey === 'shake') {
+            navigation.replace('ShakeMission', {
+              alarmId,
+              missionIndex: nextMissionIdx,
+              missions: allMissions,
+            });
+            return;
+          }
+          if (nextMissionKey === 'qr') {
+            navigation.replace('BarcodeMission', {
+              alarmId,
+              missionIndex: nextMissionIdx,
+              missions: allMissions,
+            });
+            return;
+          }
+          if (nextMissionKey === 'math') {
+            navigation.replace('MathMission', {
+              alarmId,
+              missionIndex: nextMissionIdx,
+              missions: allMissions,
+            });
+            return;
+          }
+        }
+
+        // All missions complete! Dismiss the alarm!
         await NativeAlarm.stopAlarm();
         setShowSuccessModal(true);
       } else {

@@ -10,6 +10,8 @@ interface AlarmState {
   updateAlarm: (id: string, patch: Partial<Alarm>) => void;
   removeAlarm: (id: string) => void;
   toggleAlarm: (id: string) => void;
+  snoozeAlarm: (id: string, intervalMin: number) => void;
+  clearSnooze: (id: string) => void;
   rescheduleAll: () => void;
 }
 
@@ -65,6 +67,22 @@ export const useAlarmStore = create<AlarmState>()(
           });
           return { alarms: nextAlarms };
         });
+      },
+      snoozeAlarm: (id, intervalMin) => {
+        set(s => ({
+          alarms: s.alarms.map(a =>
+            a.id === id
+              ? { ...a, snoozedUntil: Date.now() + intervalMin * 60 * 1000 }
+              : a,
+          ),
+        }));
+      },
+      clearSnooze: id => {
+        set(s => ({
+          alarms: s.alarms.map(a =>
+            a.id === id ? { ...a, snoozedUntil: undefined } : a,
+          ),
+        }));
       },
       rescheduleAll: () => {
         const { alarms } = get();

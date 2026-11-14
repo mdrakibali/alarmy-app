@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AlarmEditScreen } from '@/features/alarm/AlarmEditScreen';
 import { AlarmListScreen } from '@/features/alarm/AlarmListScreen';
 import { AlarmRingingScreen } from '@/features/alarm/AlarmRingingScreen';
+import { SnoozeCountdownScreen } from '@/features/alarm/SnoozeCountdownScreen';
 import { MathMissionScreen } from '@/features/missions/MathMissionScreen';
 import { ShakeMissionScreen } from '@/features/missions/ShakeMissionScreen';
 import { BarcodeMissionScreen } from '@/features/missions/BarcodeMissionScreen';
@@ -154,6 +155,14 @@ export function RootNavigator() {
           headerShown: false,
           gestureEnabled: false,
           presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="SnoozeCountdown"
+        component={SnoozeCountdownScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
         }}
       />
       <Stack.Screen

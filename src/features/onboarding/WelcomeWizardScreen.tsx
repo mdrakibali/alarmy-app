@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   Image,
-  Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -69,12 +69,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     } catch {
       // ignore preview errors
     }
-    if (step === 1) {
-      setStep(2);
-    } else if (step === 2) {
-      setStep(3);
-    } else if (step === 3) {
-      setStep(4);
+    if (step < 4) {
+      setStep(prev => ((prev + 1) as 1 | 2 | 3 | 4));
     } else {
       // Go to Preview Screen!
       navigation.navigate('AlarmPreview', {
@@ -87,6 +83,12 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     }
   };
 
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(prev => ((prev - 1) as 1 | 2 | 3 | 4));
+    }
+  };
+
   return (
     <View className="flex-1 bg-[#F5F6F8]">
       {/* Header with Progress Bar */}
@@ -95,6 +97,15 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         className="px-6 pb-4 bg-white border-b border-slate-100 shadow-xs"
       >
         <View className="flex-row items-center justify-between mb-3">
+          {step > 1 ? (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleBack}
+              className="mr-3 py-1.5 px-3 rounded-full bg-slate-100"
+            >
+              <Text className="text-slate-700 font-extrabold text-xs">‹ Back</Text>
+            </TouchableOpacity>
+          ) : null}
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <View
@@ -118,7 +129,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       {/* Step Content */}
       <ScrollView
         className="flex-1"
-        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 16,
@@ -158,35 +169,40 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  nestedScrollEnabled={true}
+                  keyboardShouldPersistTaps="handled"
                 >
-                  {WALLPAPERS.filter(w => w.category === category).map(w => {
+                  {WALLPAPERS.filter(w => w.category === category).slice(0, 6).map(w => {
                     const isSelected = selectedWallpaper === w.id;
                     return (
-                      <Pressable
+                      <TouchableOpacity
                         key={w.id}
-                        hitSlop={8}
+                        activeOpacity={0.7}
                         onPress={() => {
                           setSelectedWallpaper(w.id);
                           useThemeStore.getState().setBackground('alarm', w.id);
                         }}
-                        className={`mr-3 h-48 w-32 rounded-3xl overflow-hidden justify-between items-center border-2 relative bg-slate-50 ${
+                        className={`w-32 h-48 mr-3 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
                           isSelected
                             ? 'border-[#FF385C] shadow-lg'
-                            : 'border-slate-200'
+                            : 'border-slate-200 bg-slate-100'
                         }`}
                       >
-                        <Image
-                          source={w.source}
-                          className="absolute inset-0 w-full h-full"
-                          resizeMode="cover"
+                        {/* Background Image inside non-interactive wrapper */}
+                        <View
                           pointerEvents="none"
-                        />
+                          className="absolute inset-0 w-full h-full"
+                        >
+                          <Image
+                            source={w.source}
+                            className="w-full h-full"
+                            resizeMode="cover"
+                          />
+                        </View>
 
                         {/* Top Selected Badge */}
                         <View
-                          className="w-full flex-row justify-end p-2.5 z-20"
                           pointerEvents="none"
+                          className="w-full flex-row justify-end p-2.5 z-20"
                         >
                           {isSelected ? (
                             <View className="h-7 w-7 rounded-full bg-[#FF385C] border-2 border-white items-center justify-center shadow-md">
@@ -202,15 +218,15 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                         {/* Selected Red Glow Overlay */}
                         {isSelected && (
                           <View
-                            className="absolute inset-0 border-4 border-[#FF385C] rounded-3xl bg-[#FF385C]/10"
                             pointerEvents="none"
+                            className="absolute inset-0 border-4 border-[#FF385C] rounded-3xl bg-[#FF385C]/15"
                           />
                         )}
 
                         {/* Bottom Title Bar */}
                         <View
-                          className="w-full items-center py-2 px-1.5 bg-black/70 backdrop-blur-sm z-20 border-t border-white/10"
                           pointerEvents="none"
+                          className="w-full items-center py-2 px-1.5 bg-black/75 z-20 border-t border-white/10"
                         >
                           <Text
                             className={`text-xs font-black ${
@@ -221,7 +237,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                             ♪ {w.title}
                           </Text>
                         </View>
-                      </Pressable>
+                      </TouchableOpacity>
                     );
                   })}
                 </ScrollView>
@@ -240,8 +256,9 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {ALARM_SOUND_ITEMS.slice(0, 12).map(s => {
               const isSelected = selectedSound === s.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={s.id}
+                  activeOpacity={0.7}
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
@@ -277,7 +294,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       <View className="h-2 w-2 rounded-full bg-white" />
                     )}
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -293,8 +310,9 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {MISSIONS.map(m => {
               const isSelected = selectedMission === m.id;
               return (
-                <Pressable
+                <TouchableOpacity
                   key={m.id}
+                  activeOpacity={0.7}
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
@@ -324,7 +342,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   <Text className="text-xs text-slate-500 font-medium leading-relaxed pl-10">
                     {m.desc}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -333,18 +351,18 @@ export function WelcomeWizardScreen({ navigation }: Props) {
 
       {/* Bottom Button with Safe Area */}
       <View
-        style={{ paddingBottom: Math.max(insets.bottom, 24) }}
-        className="bg-white border-t border-slate-100 shadow-sm px-5 pt-3 z-50"
+        style={{ paddingBottom: Math.max(insets.bottom + 12, 32) }}
+        className="bg-white border-t border-slate-100 shadow-md px-5 pt-3 z-50"
       >
-        <Pressable
+        <TouchableOpacity
+          activeOpacity={0.8}
           onPress={handleNext}
-          hitSlop={12}
-          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center active:opacity-90 shadow-md"
+          className="w-full bg-[#FF385C] py-4 rounded-2xl items-center shadow-md active:bg-[#E03150]"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Preview Alarm 🚀' : 'Next'}
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     </View>
   );

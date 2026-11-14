@@ -60,6 +60,13 @@ function App() {
     // Sync all enabled alarms to native scheduler
     rescheduleAll();
 
+    // Listen to real-time alarm trigger event from background service
+    const ringSub = NativeAlarm.onAlarmRinging(alarmId => {
+      if (navigationRef.current) {
+        navigationRef.current.navigate('AlarmRinging', { id: alarmId || undefined });
+      }
+    });
+
     // Listen to AppState changes to detect incoming alarm when app is brought to foreground
     const sub = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
@@ -68,6 +75,7 @@ function App() {
     });
 
     return () => {
+      ringSub?.remove();
       sub.remove();
     };
   }, [rescheduleAll]);
