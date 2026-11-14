@@ -5,7 +5,6 @@ import {
   type BottomTabBarProps,
 } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAppInsets } from '@/utils/safeArea';
 import { AlarmEditScreen } from '@/features/alarm/AlarmEditScreen';
 import { AlarmListScreen } from '@/features/alarm/AlarmListScreen';
 import { AlarmRingingScreen } from '@/features/alarm/AlarmRingingScreen';
@@ -30,12 +29,13 @@ function CustomBottomTabBar({
   state,
   descriptors,
   navigation,
+  insets,
 }: BottomTabBarProps) {
-  const insets = useAppInsets();
+  const bottomInset = insets?.bottom ?? 0;
 
   return (
     <View
-      style={{ paddingBottom: Math.max(insets.bottom + 4, 12) }}
+      style={{ paddingBottom: Math.max(bottomInset + 4, 12) }}
       className="flex-row bg-white border-t border-slate-100 pt-2.5 items-center justify-around shadow-sm"
     >
       {state.routes.map((route, index) => {
@@ -97,10 +97,14 @@ function CustomBottomTabBar({
   );
 }
 
+const renderTabBar = (props: BottomTabBarProps) => (
+  <CustomBottomTabBar {...props} />
+);
+
 function Tabs() {
   return (
     <Tab.Navigator
-      tabBar={CustomBottomTabBar}
+      tabBar={renderTabBar}
       screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Alarm" component={AlarmListScreen} />

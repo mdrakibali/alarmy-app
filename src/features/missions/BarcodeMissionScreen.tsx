@@ -257,3 +257,4 @@ export function BarcodeMissionScreen({ navigation }: Props) {
     </AppBackground>
   );
 }
+

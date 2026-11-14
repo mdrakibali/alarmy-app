@@ -72,3 +72,4 @@ class ShakeDetector(
         // No-op
     }
 }
+
