@@ -11,6 +11,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { storage } from '@/storage/mmkv';
 import { useAppInsets } from '@/utils/safeArea';
+import { AppBackground } from '@/components/ui/AppBackground';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
@@ -73,53 +74,57 @@ export function SplashScreen({ navigation }: Props) {
   }, [fadeAnim, scaleAnim, navigation]);
 
   return (
-    <View className="flex-1 bg-white items-center justify-center relative">
-      <StatusBar barStyle="dark-content" />
+    <AppBackground target="home">
+      <View className="flex-1 items-center justify-center relative bg-black/15">
+        <StatusBar barStyle="light-content" />
 
-      {/* Center Branding Block */}
-      <Animated.View
-        style={{
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        }}
-        className="items-center justify-center"
-      >
-        {/* Circular Logo Badge - Logo fits 100% inside with clean padding */}
-        <View className="w-48 h-48 rounded-full bg-slate-50 border border-slate-100 items-center justify-center shadow-md mb-6 relative overflow-hidden">
-          <View className="absolute inset-2 rounded-full bg-indigo-50/70" />
-          <Image
-            source={require('@/assets/images/logo.png')}
-            className="w-32 h-32"
-            resizeMode="contain"
-          />
-        </View>
+        {/* Center Branding Block */}
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          }}
+          className="items-center justify-center p-6 rounded-3xl bg-white/90 border border-white/40 shadow-2xl backdrop-blur-md"
+        >
+          {/* Circular Logo Badge */}
+          <View className="w-40 h-40 rounded-full bg-slate-50 border border-slate-100 items-center justify-center shadow-md mb-5 relative overflow-hidden">
+            <View className="absolute inset-2 rounded-full bg-emerald-50/70" />
+            <Image
+              source={require('@/assets/images/logo.png')}
+              className="w-28 h-28"
+              resizeMode="contain"
+            />
+          </View>
 
-        {/* App Title */}
-        <Text className="text-4xl font-black text-[#1A2E22] tracking-tight mb-1.5">
-          Alba
-        </Text>
-
-        {/* Tagline Badge */}
-        <View className="bg-[#EBF3ED] px-3.5 py-1 rounded-full border border-[#6B8F71]/30 mb-2.5">
-          <Text className="text-xs font-extrabold text-[#4E7D5B]">
-            Smart Wake-Up & Sleep ☀️
+          {/* App Title */}
+          <Text className="text-4xl font-black text-[#1A2E22] tracking-tight mb-1.5">
+            Alba
           </Text>
+
+          {/* Tagline Badge */}
+          <View className="bg-[#EBF3ED] px-3.5 py-1 rounded-full border border-[#6B8F71]/30 mb-2.5">
+            <Text className="text-xs font-extrabold text-[#4E7D5B]">
+              Smart Wake-Up & Sleep ☀️
+            </Text>
+          </View>
+
+          <Text className="text-xs font-semibold text-[#5E7166] tracking-wide text-center">
+            Unbeatable Morning Alarms • Gentle Routines
+          </Text>
+        </Animated.View>
+
+        {/* Bottom Footer */}
+        <View
+          style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+          className="absolute bottom-0 items-center w-full"
+        >
+          <View className="px-3 py-1 rounded-full bg-black/40">
+            <Text className="text-[11px] font-semibold text-white/90">
+              Version 1.0.0 • Light Edition
+            </Text>
+          </View>
         </View>
-
-        <Text className="text-xs font-semibold text-[#5E7166] tracking-wide">
-          Unbeatable Morning Alarms • Gentle Routines
-        </Text>
-      </Animated.View>
-
-      {/* Bottom Footer */}
-      <View
-        style={{ paddingBottom: Math.max(insets.bottom, 24) }}
-        className="absolute bottom-0 items-center w-full"
-      >
-        <Text className="text-xs font-semibold text-slate-400">
-          Version 1.0.0 • Light Edition
-        </Text>
       </View>
-    </View>
+    </AppBackground>
   );
 }

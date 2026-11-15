@@ -153,6 +153,18 @@ export function WallpaperGalleryScreen() {
     [navigation, pickForAlarm],
   );
 
+  const handlePickCustomPhoto = useCallback(async () => {
+    try {
+      const uri = await NativeAlarm.pickLocalImage();
+      if (uri) {
+        useThemeStore.getState().addCustomImage(uri);
+        navigation.navigate('WallpaperPreview', { wallpaperId: uri, pickForAlarm });
+      }
+    } catch (e) {
+      console.warn('Failed to pick photo', e);
+    }
+  }, [navigation, pickForAlarm]);
+
   const renderItem = useCallback(
     ({ item }: { item: { id: string; name: string; source: number | { uri: string }; badge?: string; custom?: boolean } }) => {
       return (
@@ -223,6 +235,22 @@ export function WallpaperGalleryScreen() {
         initialNumToRender={6}
         maxToRenderPerBatch={6}
         removeClippedSubviews
+        ListHeaderComponent={
+          selectedGroup === 'Custom' ? (
+            <View className="px-4 pt-3 pb-2">
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handlePickCustomPhoto}
+                className="w-full bg-[#6B8F71] py-3.5 rounded-2xl items-center shadow-sm flex-row justify-center"
+              >
+                <Text className="text-white text-sm font-black mr-2">📷</Text>
+                <Text className="text-white text-sm font-black">
+                  Upload Custom Photo from Device
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : undefined
+        }
         {...(items.length > 0
           ? { columnWrapperStyle: { justifyContent: 'space-between' as const, paddingHorizontal: 16 } }
           : {})}
@@ -231,12 +259,7 @@ export function WallpaperGalleryScreen() {
             <Text className="text-sm font-bold text-[#1A2E22]">Nothing in this category yet</Text>
             {selectedGroup === 'Custom' ? (
               <TouchableOpacity
-                onPress={async () => {
-                  const uri = await NativeAlarm.pickLocalImage();
-                  if (uri) {
-                    useThemeStore.getState().addCustomImage(uri);
-                  }
-                }}
+                onPress={handlePickCustomPhoto}
                 className="mt-4 bg-[#6B8F71] px-4 py-3 rounded-2xl"
               >
                 <Text className="text-white font-bold">Import a photo</Text>

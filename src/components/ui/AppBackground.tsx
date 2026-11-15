@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 
-const MutedLoopVideo = requireNativeComponent<{ src: string }>('MutedLoopVideo');
+const MutedLoopVideo = requireNativeComponent<{ src: string; style?: any }>('MutedLoopVideo');
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
@@ -134,11 +134,12 @@ export function AppBackground({
         pointerEvents="none"
       />
       {videoUri ? (
-        <MutedLoopVideo
-          src={videoUri}
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { opacity: brightness }]}
-        />
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <MutedLoopVideo
+            src={videoUri}
+            style={[StyleSheet.absoluteFill, { opacity: brightness }]}
+          />
+        </View>
       ) : null}
 
       {/* Scrim / Overlay for readability */}

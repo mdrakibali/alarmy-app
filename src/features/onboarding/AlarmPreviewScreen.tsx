@@ -13,6 +13,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
+import { findAlbaBackground } from '@/data/albaBackgrounds';
+import { findMotionMedia } from '@/data/motionMedia';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { formatTime } from '@/features/alarm/format';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -131,19 +133,35 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
 
-  const activeBg =
-    WALLPAPERS.find(w => w.id === wallpaper) ||
-    BACKGROUND_ITEMS.find(b => b.id === wallpaper) ||
-    WALLPAPERS[0];
+  const isCustomUri =
+    wallpaper?.startsWith('file://') ||
+    wallpaper?.startsWith('content://') ||
+    wallpaper?.startsWith('http');
+
+  const motionItem = findMotionMedia(wallpaper);
+  const albaItem = findAlbaBackground(wallpaper);
+  const wallpaperItem = WALLPAPERS.find(w => w.id === wallpaper);
+  const bgItem = BACKGROUND_ITEMS.find(b => b.id === wallpaper);
+  const thumb = wallpaperThumb(wallpaper);
+
+  const imageSource = isCustomUri
+    ? { uri: wallpaper }
+    : motionItem
+    ? motionItem.poster
+    : albaItem
+    ? albaItem.source
+    : thumb
+    ? thumb
+    : wallpaperItem?.source ?? bgItem?.source ?? WALLPAPERS[0].source;
 
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
 
   return (
     <View className="flex-1 relative bg-black">
       <StatusBar barStyle="light-content" />
-      {/* 100% Edge-to-Edge Animated GIF Background with physical screen dimensions */}
+      {/* 100% Edge-to-Edge Background with physical screen dimensions */}
       <Image
-        source={wallpaperThumb(wallpaper) ?? activeBg.source}
+        source={imageSource}
         style={[
           StyleSheet.absoluteFill,
           { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },

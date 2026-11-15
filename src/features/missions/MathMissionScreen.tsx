@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { BackHandler, Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
@@ -7,6 +7,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MathMission'>;
 
@@ -99,79 +100,22 @@ export function MathMissionScreen({ navigation, route }: Props) {
     setUserInput('');
   };
 
+  const isCompletedRef = useRef(false);
+
   const verifyAnswer = async (answerValue: number) => {
     if (answerValue === currentProblem.answer) {
       const nextIndex = problemIndex + 1;
       if (nextIndex >= TOTAL_PROBLEMS) {
-        // Current mission is solved! Check if more missions exist in sequence
-        const nextMissionIdx = missionIndex + 1;
-        if (nextMissionIdx < allMissions.length) {
-          const nextMissionKey = allMissions[nextMissionIdx];
-          if (nextMissionKey === 'shake') {
-            navigation.replace('ShakeMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'qr') {
-            navigation.replace('BarcodeMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'math') {
-            navigation.replace('MathMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'typing') {
-            navigation.replace('TypingMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'memory') {
-            navigation.replace('MemoryMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'step') {
-            navigation.replace('StepMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'photo') {
-            navigation.replace('PhotoMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-          if (nextMissionKey === 'squat') {
-            navigation.replace('SquatMission', {
-              alarmId,
-              missionIndex: nextMissionIdx,
-              missions: allMissions,
-            });
-            return;
-          }
-        }
+        if (isCompletedRef.current) return;
+        isCompletedRef.current = true;
+
+        const hasNext = proceedToNextMission(
+          navigation,
+          missionIndex,
+          allMissions,
+          alarmId,
+        );
+        if (hasNext) return;
 
         // All missions complete! Dismiss the alarm!
         const now = new Date();

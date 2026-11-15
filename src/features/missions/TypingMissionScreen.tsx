@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   KeyboardAvoidingView,
@@ -17,6 +17,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TypingMission'>;
 
@@ -37,6 +38,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
   );
   const [typedText, setTypedText] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const isCompletedRef = useRef(false);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
@@ -44,6 +46,9 @@ export function TypingMissionScreen({ navigation, route }: Props) {
   }, []);
 
   const completeMission = useCallback(async () => {
+    if (isCompletedRef.current) return;
+    isCompletedRef.current = true;
+
     try {
       Vibration.vibrate([0, 100, 50, 100]);
     } catch {}
@@ -52,74 +57,13 @@ export function TypingMissionScreen({ navigation, route }: Props) {
     const missionIndex = route.params?.missionIndex ?? 0;
     const allMissions = route.params?.missions ?? [];
 
-    const nextMissionIdx = missionIndex + 1;
-    if (nextMissionIdx < allMissions.length) {
-      const nextMissionKey = allMissions[nextMissionIdx];
-      if (nextMissionKey === 'math') {
-        navigation.replace('MathMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'shake') {
-        navigation.replace('ShakeMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'qr') {
-        navigation.replace('BarcodeMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'typing') {
-        navigation.replace('TypingMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'memory') {
-        navigation.replace('MemoryMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'step') {
-        navigation.replace('StepMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'photo') {
-        navigation.replace('PhotoMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-      if (nextMissionKey === 'squat') {
-        navigation.replace('SquatMission', {
-          alarmId,
-          missionIndex: nextMissionIdx,
-          missions: allMissions,
-        });
-        return;
-      }
-    }
+    const hasNext = proceedToNextMission(
+      navigation,
+      missionIndex,
+      allMissions,
+      alarmId,
+    );
+    if (hasNext) return;
 
     const now = new Date();
     const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;

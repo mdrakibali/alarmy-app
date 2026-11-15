@@ -146,22 +146,28 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   };
 
   const addMission = (mission: MissionType) => {
-    if (draft.missions.length < 5) {
-      patch({ missions: [...draft.missions, mission] });
-    }
+    setDraft(current => {
+      if (current.missions.length >= 5) return current;
+      return { ...current, missions: [...current.missions, mission] };
+    });
   };
 
   const removeMissionByKey = (mission: MissionType) => {
-    const idx = draft.missions.lastIndexOf(mission);
-    if (idx !== -1) {
-      const nextMissions = draft.missions.filter((_, i) => i !== idx);
-      patch({ missions: nextMissions });
-    }
+    setDraft(current => {
+      const idx = current.missions.lastIndexOf(mission);
+      if (idx === -1) return current;
+      return {
+        ...current,
+        missions: current.missions.filter((_, i) => i !== idx),
+      };
+    });
   };
 
   const removeMission = (index: number) => {
-    const nextMissions = draft.missions.filter((_, i) => i !== index);
-    patch({ missions: nextMissions });
+    setDraft(current => ({
+      ...current,
+      missions: current.missions.filter((_, i) => i !== index),
+    }));
   };
 
   const toggleSoundPreview = (soundId?: string, forcePlay = false) => {
@@ -375,7 +381,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               if (details) {
                 return (
                   <TouchableOpacity
-                    key={slotIndex}
+                    key={`slot-${slotIndex}-${missionKey}`}
                     activeOpacity={0.8}
                     onPress={() => removeMission(slotIndex)}
                     className="h-14 w-14 items-center justify-center rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD] relative shadow-sm"
@@ -399,7 +405,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
               return (
                 <TouchableOpacity
-                  key={slotIndex}
+                  key={`slot-${slotIndex}-empty`}
                   activeOpacity={0.8}
                   onPress={() => setShowMissionModal(true)}
                   className="h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-dashed border-slate-300"
