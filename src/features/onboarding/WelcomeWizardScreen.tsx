@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -12,8 +12,7 @@ import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import type { MissionType } from '../alarm/types';
-import { WALLPAPERS } from '@/data/wallpapers';
-import { wallpaperThumb } from '@/data/wallpaperThumbs';
+import { MOTION_MEDIA } from '@/data/motionMedia';
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
 import { useThemeStore } from '@/storage/themeStore';
 
@@ -58,20 +57,11 @@ const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[]
   },
 ];
 
-// Curated top 6 wallpapers for fast, 60fps rendering without memory overload
-const CURATED_WALLPAPER_IDS = [
-  'kpop_wonhee',
-  'anime_girl_lofi',
-  'aesthetic_neon_sunset',
-  'animals_happy_puppy',
-  'galaxy_aurora_borealis',
-  'kpop_illit_dance',
-];
-
 interface WallpaperCardProps {
   id: string;
   name: string;
-  source: any;
+  source: number;
+  badge: string;
   isSelected: boolean;
   onSelect: (id: string) => void;
 }
@@ -80,12 +70,12 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
   id,
   name,
   source,
+  badge,
   isSelected,
   onSelect,
 }: WallpaperCardProps) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <Pressable
       onPress={() => onSelect(id)}
       className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
         isSelected
@@ -93,15 +83,19 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
           : 'border-slate-200 bg-white shadow-xs'
       }`}
     >
-      {/* Animated GIF Background */}
       <Image
+        pointerEvents="none"
         source={source}
         className="absolute inset-0 w-full h-full"
+        resizeMethod="resize"
         resizeMode="cover"
       />
+      <View pointerEvents="none" className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70">
+        <Text className="text-[10px] font-black text-white">{badge}</Text>
+      </View>
 
       {/* Top Right Check Badge */}
-      <View className="w-full flex-row justify-end p-2.5 z-10">
+      <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
         {isSelected ? (
           <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center shadow-md">
             <Text className="text-white text-xs font-black">✓</Text>
@@ -114,7 +108,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
       </View>
 
       {/* Bottom Title Bar */}
-      <View className="w-full items-center py-2 px-1.5 bg-black/75 z-10 border-t border-white/10">
+      <View pointerEvents="none" className="w-full items-center py-2 px-1.5 bg-black/75 z-10 border-t border-white/10">
         <Text
           className={`text-xs font-black ${
             isSelected ? 'text-[#E2A938]' : 'text-white'
@@ -124,7 +118,7 @@ const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
           ♪ {name}
         </Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 
@@ -135,7 +129,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   // Wizard state
   const [selectedHour, setSelectedHour] = useState(7);
   const [selectedMinute, setSelectedMinute] = useState(0);
-  const [selectedWallpaper, setSelectedWallpaper] = useState('kpop_wonhee');
+  const [selectedWallpaper, setSelectedWallpaper] = useState(MOTION_MEDIA[0].id);
   const [selectedSound, setSelectedSound] = useState('alarm_gentle_morning');
   const [selectedMission, setSelectedMission] = useState<MissionType>('shake');
 
@@ -181,11 +175,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     }
   };
 
-  const curatedWallpapers = useMemo(() => {
-    return CURATED_WALLPAPER_IDS.map(
-      id => WALLPAPERS.find(w => w.id === id) || WALLPAPERS[0],
-    );
-  }, []);
+  const wallpaperChoices = useMemo(() => MOTION_MEDIA, []);
 
   return (
     <View className="flex-1 bg-[#F5F6F8]">
@@ -196,14 +186,13 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       >
         <View className="flex-row items-center justify-between mb-3">
           {step > 1 ? (
-            <TouchableOpacity
-              activeOpacity={0.7}
+            <Pressable
               onPress={handleBack}
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
               className="mr-3 py-1.5 px-3 rounded-full bg-slate-100"
             >
               <Text className="text-slate-700 font-extrabold text-xs">‹ Back</Text>
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -260,16 +249,17 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         {step === 2 && (
           <View className="py-2">
             <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
-              Tap any animated wallpaper to select your morning vibe
+              GIF and MP4 posters. The loop plays later, not in this grid.
             </Text>
 
             <View className="flex-row flex-wrap justify-between">
-              {curatedWallpapers.map(w => (
+              {wallpaperChoices.map(w => (
                 <MemoizedWallpaperCard
                   key={w.id}
                   id={w.id}
                   name={w.name}
-                  source={wallpaperThumb(w.id) ?? w.source}
+                  source={w.poster}
+                  badge={w.kind === 'gif' ? 'GIF' : 'MP4'}
                   isSelected={selectedWallpaper === w.id}
                   onSelect={handleWallpaperSelect}
                 />
@@ -288,9 +278,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {ALARM_SOUND_ITEMS.slice(0, 10).map(s => {
               const isSelected = selectedSound === s.id;
               return (
-                <TouchableOpacity
+                <Pressable
                   key={s.id}
-                  activeOpacity={0.8}
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
@@ -298,7 +287,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       : 'bg-white border-slate-100'
                   }`}
                 >
-                  <View className="flex-row items-center flex-1 pr-3">
+                  <View pointerEvents="none" className="flex-row items-center flex-1 pr-3">
                     <Text className="text-2xl mr-3">{s.icon}</Text>
                     <View className="flex-1">
                       <Text
@@ -314,8 +303,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     </View>
                   </View>
 
-                  {/* Radio circle */}
                   <View
+                    pointerEvents="none"
                     className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                       isSelected
                         ? 'border-[#4E7D5B] bg-[#4E7D5B]'
@@ -326,7 +315,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       <View className="h-2 w-2 rounded-full bg-white" />
                     )}
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
@@ -342,9 +331,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             {MISSIONS.map(m => {
               const isSelected = selectedMission === m.id;
               return (
-                <TouchableOpacity
+                <Pressable
                   key={m.id}
-                  activeOpacity={0.8}
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
@@ -352,7 +340,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       : 'bg-white border-slate-100'
                   }`}
                 >
-                  <View className="flex-row items-center justify-between mb-2">
+                  <View pointerEvents="none" className="flex-row items-center justify-between mb-2">
                     <View className="flex-row items-center">
                       <Text className="text-3xl mr-3">{m.icon}</Text>
                       <Text className="text-lg font-black text-slate-900">
@@ -371,10 +359,10 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                       )}
                     </View>
                   </View>
-                  <Text className="text-xs text-slate-500 font-medium leading-relaxed pl-10">
+                  <Text pointerEvents="none" className="text-xs text-slate-500 font-medium leading-relaxed pl-10">
                     {m.desc}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               );
             })}
           </View>
@@ -386,15 +374,14 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
         className="bg-white border-t border-slate-100 shadow-md px-5 pt-3 z-50"
       >
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <Pressable
           onPress={handleNext}
           className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Next: Required Permissions 🔐' : 'Next'}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );

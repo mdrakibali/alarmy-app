@@ -172,11 +172,12 @@ export function SettingsScreen() {
                   }`}
                 >
                   <Image
+                    pointerEvents="none"
                     source={wallpaperThumb(bg.id) ?? bg.source}
                     className="w-[70px] h-[110px]"
                     resizeMode="cover"
                   />
-                  <View className="w-full bg-slate-900/90 py-1 px-1 items-center">
+                  <View pointerEvents="none" className="w-full bg-slate-900/90 py-1 px-1 items-center">
                     <Text
                       className="text-[10px] font-bold text-white text-center"
                       numberOfLines={1}

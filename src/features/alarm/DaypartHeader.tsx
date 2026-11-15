@@ -37,8 +37,10 @@ export function DaypartHeader({
   const part = daypartFor(now);
   const theme = COPY[part];
   const drift = useRef(new Animated.Value(0)).current;
-
-  const [cloudShift, setCloudShift] = React.useState(0);
+  const cloudX = drift.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 18],
+  });
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -47,22 +49,18 @@ export function DaypartHeader({
           toValue: 1,
           duration: 7000,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
         Animated.timing(drift, {
           toValue: 0,
           duration: 7000,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
       ]),
     );
-    const sub = drift.addListener(({ value }) => setCloudShift(value * 18));
     loop.start();
-    return () => {
-      loop.stop();
-      drift.removeListener(sub);
-    };
+    return () => loop.stop();
   }, [drift]);
   const dateLabel = useMemo(
     () =>
@@ -95,14 +93,26 @@ export function DaypartHeader({
           ) : (
             <Circle cx={part === 'evening' ? 250 : 78} cy={part === 'evening' ? 78 : 52} r="18" fill={theme.accent} />
           )}
-          <G transform={`translate(${cloudShift} 0)`}>
-            <Cloud cx={120} cy={48} fill={part === 'night' ? '#24362C' : '#FFFFFF'} />
-            <Cloud cx={210} cy={70} fill={part === 'night' ? '#1C2C24' : '#F7F4EE'} />
-          </G>
           {part === 'morning' ? <Birds /> : null}
           <Path d="M0 118 C70 96 120 132 180 118 C240 104 290 138 360 112 V168 H0 Z" fill="#6B8F71" />
           <Path d="M0 136 C80 120 150 150 230 134 C290 124 330 146 360 138 V168 H0 Z" fill="#1A2E22" />
         </Svg>
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 168,
+            transform: [{ translateX: cloudX }],
+          }}
+        >
+          <Svg width="100%" height="100%" viewBox="0 0 360 168" preserveAspectRatio="xMidYMid slice">
+            <Cloud cx={120} cy={48} fill={part === 'night' ? '#24362C' : '#FFFFFF'} />
+            <Cloud cx={210} cy={70} fill={part === 'night' ? '#1C2C24' : '#F7F4EE'} />
+          </Svg>
+        </Animated.View>
       </View>
       <View className="px-4 pb-4 -mt-2">
         <Text className="text-2xl font-black text-[#1A2E22]">{theme.title}</Text>

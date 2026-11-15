@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
 
 export interface ToastOptions {
@@ -79,7 +79,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toast && (
+        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <Animated.View
+          pointerEvents="box-none"
           style={{
             top: insets.top + 8,
             opacity: fadeAnim,
@@ -112,6 +114,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <Text className="text-sm text-slate-400 font-bold p-1">✕</Text>
           </Pressable>
         </Animated.View>
+        </View>
       )}
     </ToastContext.Provider>
   );

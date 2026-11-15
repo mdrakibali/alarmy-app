@@ -40,34 +40,31 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
     if (wallpaper) addRecentlyViewed(wallpaper.id);
     if (motion) addRecentlyViewed(motion.id);
     return () => {
-      NativeAlarm.stopSoundPreview().catch(() => {});
+      try {
+        Promise.resolve(NativeAlarm.stopSoundPreview()).catch(() => {});
+      } catch {}
     };
   }, [wallpaper, motion, addRecentlyViewed]);
 
-  useEffect(() => {
-    if (motion?.kind !== 'gif') {
-      setGifUri(null);
-      return;
-    }
-    let live = true;
-    NativeAlarm.materializeBundledMedia(motion.asset).then(uri => {
-      if (live) setGifUri(uri);
-    });
-    return () => {
-      live = false;
-    };
-  }, [motion?.asset, motion?.kind]);
+  const playLoop = async () => {
+    if (!motion || motion.kind !== 'gif' || gifUri) return;
+    const uri = await NativeAlarm.materializeBundledMedia(motion.asset);
+    if (uri) setGifUri(uri);
+  };
 
-  const useForAlarm = () => {
+  const handleUseForAlarm = () => {
     queueWallpaperPick(wallpaperId);
     setBackground('alarm', wallpaperId);
+    setBackground('ringing', wallpaperId);
     toast.showToast({
       title: 'Wallpaper selected',
       message: `${name} will show when this alarm rings.`,
       type: 'success',
       icon: '🖼️',
     });
-    navigation.pop(2);
+    const index = navigation.getState()?.index ?? 0;
+    if (index >= 2) navigation.pop(2);
+    else if (navigation.canGoBack()) navigation.goBack();
   };
 
   const applyRinging = () => {
@@ -132,13 +129,17 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         ) : null}
         {motion?.kind === 'gif' ? (
-          <Text className="text-white/80 text-xs mt-2">This loop is silent. Your alarm sound stays the one you picked.</Text>
+          <TouchableOpacity onPress={playLoop} className="self-start mt-3 px-3 py-1.5 rounded-full bg-white/20">
+            <Text className="text-white text-xs font-bold">
+              {gifUri ? 'Loop is playing' : 'Play silent loop'}
+            </Text>
+          </TouchableOpacity>
         ) : null}
         {wallpaper?.soundId ? (
           <TouchableOpacity
             onPress={() => {
               if (playing) {
-                NativeAlarm.stopSoundPreview().catch(() => {});
+                Promise.resolve(NativeAlarm.stopSoundPreview()).catch(() => {});
                 setPlaying(false);
               } else {
                 setPlaying(true);
@@ -153,7 +154,7 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         ) : null}
         {pickForAlarm ? (
-          <TouchableOpacity onPress={useForAlarm} className="mt-4 bg-[#6B8F71] py-4 rounded-2xl items-center">
+          <TouchableOpacity onPress={handleUseForAlarm} className="mt-4 bg-[#6B8F71] py-4 rounded-2xl items-center">
             <Text className="text-white font-black">Use for this alarm</Text>
           </TouchableOpacity>
         ) : (

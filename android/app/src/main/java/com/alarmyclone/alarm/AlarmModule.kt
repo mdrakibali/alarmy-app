@@ -643,22 +643,24 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             promise.reject("BAD_PATH", "Unknown bundled media")
             return
         }
-        try {
-            val out = File(reactContext.cacheDir, "alba_" + assetPath.replace('/', '_'))
-            if (!out.exists() || out.length() == 0L) {
-                reactContext.assets.open(assetPath).use { input ->
-                    out.outputStream().use { output -> input.copyTo(output) }
+        Thread {
+            try {
+                val out = File(reactContext.cacheDir, "alba_" + assetPath.replace('/', '_'))
+                if (!out.exists() || out.length() == 0L) {
+                    reactContext.assets.open(assetPath).use { input ->
+                        out.outputStream().use { output -> input.copyTo(output) }
+                    }
                 }
+                if (out.length() < 32L) {
+                    out.delete()
+                    promise.reject("EMPTY", "Bundled file was empty")
+                    return@Thread
+                }
+                promise.resolve(Uri.fromFile(out).toString())
+            } catch (e: Exception) {
+                promise.reject("MEDIA", e.message, e)
             }
-            if (out.length() < 32L) {
-                out.delete()
-                promise.reject("EMPTY", "Bundled file was empty")
-                return
-            }
-            promise.resolve(Uri.fromFile(out).toString())
-        } catch (e: Exception) {
-            promise.reject("MEDIA", e.message, e)
-        }
+        }.start()
     }
 
     @ReactMethod

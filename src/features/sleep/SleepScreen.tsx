@@ -32,9 +32,9 @@ const TIMER_OPTIONS = [
 ];
 
 function AnimatedEqualizer({ color = '#4E7D5B' }: { color?: string }) {
-  const anim1 = useRef(new Animated.Value(4)).current;
-  const anim2 = useRef(new Animated.Value(12)).current;
-  const anim3 = useRef(new Animated.Value(7)).current;
+  const anim1 = useRef(new Animated.Value(0.4)).current;
+  const anim2 = useRef(new Animated.Value(0.9)).current;
+  const anim3 = useRef(new Animated.Value(0.55)).current;
 
   useEffect(() => {
     const loop = (anim: Animated.Value, to: number, dur: number) => {
@@ -43,20 +43,20 @@ function AnimatedEqualizer({ color = '#4E7D5B' }: { color?: string }) {
           Animated.timing(anim, {
             toValue: to,
             duration: dur,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(anim, {
-            toValue: 3,
+            toValue: 0.35,
             duration: dur,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]),
       );
     };
 
-    const a1 = loop(anim1, 14, 380);
-    const a2 = loop(anim2, 16, 280);
-    const a3 = loop(anim3, 12, 440);
+    const a1 = loop(anim1, 1, 380);
+    const a2 = loop(anim2, 0.75, 280);
+    const a3 = loop(anim3, 0.9, 440);
 
     a1.start();
     a2.start();
@@ -71,18 +71,17 @@ function AnimatedEqualizer({ color = '#4E7D5B' }: { color?: string }) {
 
   return (
     <View className="flex-row items-end h-3.5 w-3.5 justify-between px-0.5">
-      <Animated.View
-        style={{ height: anim1, backgroundColor: color }}
-        className="w-0.5 rounded-full"
-      />
-      <Animated.View
-        style={{ height: anim2, backgroundColor: color }}
-        className="w-0.5 rounded-full"
-      />
-      <Animated.View
-        style={{ height: anim3, backgroundColor: color }}
-        className="w-0.5 rounded-full"
-      />
+      {[anim1, anim2, anim3].map((anim, index) => (
+        <Animated.View
+          key={index}
+          style={{
+            height: 14,
+            backgroundColor: color,
+            transform: [{ scaleY: anim }],
+          }}
+          className="w-0.5 rounded-full"
+        />
+      ))}
     </View>
   );
 }
@@ -95,18 +94,29 @@ export function SleepScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState<number>(0.8);
   const [timerMinutes, setTimerMinutes] = useState<number>(30);
+  const lastActionAt = useRef(0);
 
-  // Poll native sleep player status periodically
   useEffect(() => {
+    let alive = true;
+    let busy = false;
     const interval = setInterval(async () => {
-      const status = await NativeAlarm.getSleepMusicStatus();
-      if (status) {
-        setIsPlaying(prev => (prev !== status.isPlaying ? status.isPlaying : prev));
-        setCurrentPlayingId(prev => (prev !== status.currentSoundId ? status.currentSoundId : prev));
+      if (busy || Date.now() - lastActionAt.current < 4000) return;
+      busy = true;
+      try {
+        const status = await NativeAlarm.getSleepMusicStatus();
+        if (alive && status) {
+          setIsPlaying(status.isPlaying);
+          setCurrentPlayingId(status.currentSoundId);
+        }
+      } catch {
+      } finally {
+        busy = false;
       }
     }, 1500);
-
-    return () => clearInterval(interval);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const [query, setQuery] = useState('');
@@ -125,19 +135,25 @@ export function SleepScreen() {
   );
 
   const togglePlay = (soundId: string) => {
+    lastActionAt.current = Date.now();
     if (currentPlayingId === soundId && isPlaying) {
-      NativeAlarm.stopSleepMusic().catch(() => {});
       setIsPlaying(false);
       setCurrentPlayingId(null);
+      Promise.resolve(NativeAlarm.stopSleepMusic()).catch(() => {});
     } else {
       setCurrentPlayingId(soundId);
       setIsPlaying(true);
-      NativeAlarm.playSleepMusic(
-        soundId,
-        volume,
-        true,
-        timerMinutes,
-      ).catch(() => {});
+      Promise.resolve(NativeAlarm.playSleepMusic(soundId, volume, true, timerMinutes))
+        .then(ok => {
+          if (!ok) {
+            setIsPlaying(false);
+            setCurrentPlayingId(null);
+          }
+        })
+        .catch(() => {
+          setIsPlaying(false);
+          setCurrentPlayingId(null);
+        });
     }
   };
 

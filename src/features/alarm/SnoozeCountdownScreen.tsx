@@ -82,6 +82,7 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
     <View className="flex-1 relative bg-slate-900">
       {/* Edge-to-Edge Animated Wallpaper */}
       <Image
+        pointerEvents="none"
         source={wallpaperThumb(activeWallpaperId) ?? activeBg.source}
         className="absolute inset-0 w-full h-full opacity-80"
         resizeMode="cover"

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  Modal,
   ScrollView,
   Switch,
   Text,
@@ -77,7 +78,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   // Stop preview on unmount
   useEffect(() => {
     return () => {
-      NativeAlarm.stopSoundPreview();
+      setRegisteringCode(false);
+      try {
+        Promise.resolve(NativeAlarm.stopSoundPreview()).catch(() => {});
+      } catch {}
     };
   }, []);
 
@@ -184,6 +188,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     const next = { ...draft, label, repeatDays };
     if (next.wallpaper) {
       useThemeStore.getState().setBackground('alarm', next.wallpaper);
+      useThemeStore.getState().setBackground('ringing', next.wallpaper);
     }
     if (existingId && existing) {
       updateAlarm(existingId, next);
@@ -466,12 +471,14 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   }`}
                 >
                   <Image
+                    pointerEvents="none"
                     source={w.source}
                     className="absolute inset-0 w-full h-full"
+                    resizeMethod="resize"
                     resizeMode="cover"
                   />
                   {/* Selected Badge */}
-                  <View className="w-full flex-row justify-end p-1.5 z-10">
+                  <View pointerEvents="none" className="w-full flex-row justify-end p-1.5 z-10">
                     {isSelected && (
                       <View className="h-5 w-5 rounded-full bg-[#4E7D5B] items-center justify-center shadow-sm">
                         <Text className="text-white text-[9px] font-black">✓</Text>
@@ -479,7 +486,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                     )}
                   </View>
                   {/* Title Bar */}
-                  <View className="w-full py-1.5 px-1 bg-black/60 z-10">
+                  <View pointerEvents="none" className="w-full py-1.5 px-1 bg-black/60 z-10">
                     <Text
                       className={`text-[10px] font-bold text-center ${
                         isSelected ? 'text-[#E2A938]' : 'text-white'
@@ -796,7 +803,6 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </View>
           )}
         </View>
-      </ScrollView>
 
       {/* Mission capture setup */}
       {draft.missions.includes('photo') ? (
@@ -891,11 +897,11 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           ) : null}
         </View>
       ) : null}
+      </ScrollView>
 
-      {/* Fixed Bottom Save Button with Safe Area Inset - Flex sibling so it never obscures content */}
       <View
         style={{ paddingBottom: Math.max(bottomInset, 52) }}
-        className="bg-white border-t border-slate-100 shadow-lg px-5 pt-3 z-50"
+        className="bg-white border-t border-slate-100 shadow-lg px-5 pt-3"
       >
         <TouchableOpacity
           activeOpacity={0.85}
@@ -908,8 +914,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </View>
 
-      {showMissionModal ? (
-        <View className="absolute inset-0 justify-end bg-black/50 z-40">
+      <Modal
+        visible={showMissionModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMissionModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
           <TouchableOpacity
             activeOpacity={1}
             className="flex-1"
@@ -1042,7 +1053,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </View>
           </View>
         </View>
-      ) : null}
+      </Modal>
 
       {/* Custom Delete Confirmation Modal */}
       <CustomConfirmModal

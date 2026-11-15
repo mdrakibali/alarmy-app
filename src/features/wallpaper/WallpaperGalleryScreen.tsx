@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
   Image,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -22,6 +23,8 @@ import { useAppInsets } from '@/utils/safeArea';
 type GroupId = AlbaGroup | 'Motion' | 'Video' | 'Custom' | 'Favorites';
 
 const GROUPS: GroupId[] = [
+  'Motion',
+  'Video',
   'Nature',
   'Mountains',
   'Flowers',
@@ -29,8 +32,6 @@ const GROUPS: GroupId[] = [
   'Abstract',
   'Motivational',
   'Night',
-  'Motion',
-  'Video',
   'Custom',
   'Favorites',
 ];
@@ -51,28 +52,33 @@ const Card = React.memo(function WallpaperCard({
   onPress: (id: string) => void;
 }) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <Pressable
       onPress={() => onPress(id)}
       style={{ width: '48%', height: 224, marginBottom: 16 }}
       className={`rounded-3xl overflow-hidden border-2 ${
         selected ? 'border-[#6B8F71]' : 'border-slate-200'
       }`}
     >
-      <Image source={source} className="absolute inset-0 w-full h-full" resizeMode="cover" />
+      <Image
+        pointerEvents="none"
+        source={source}
+        resizeMethod="resize"
+        resizeMode="cover"
+        className="absolute inset-0 w-full h-full"
+      />
       {badge ? (
-        <View className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70">
+        <View pointerEvents="none" className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70">
           <Text className="text-[10px] font-black text-white">{badge}</Text>
         </View>
       ) : null}
-      <View className="flex-1 justify-end">
+      <View pointerEvents="none" className="flex-1 justify-end">
         <View className="w-full py-2 px-2 bg-black/70">
           <Text className="text-xs font-black text-white text-center" numberOfLines={1}>
             {name}
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 
@@ -85,7 +91,7 @@ export function WallpaperGalleryScreen() {
   const currentAlarmBg = useThemeStore(s => s.alarmBackground);
   const favorites = useThemeStore(s => s.favorites);
   const customImages = useThemeStore(s => s.customImages);
-  const [selectedGroup, setSelectedGroup] = React.useState<GroupId>('Nature');
+  const [selectedGroup, setSelectedGroup] = React.useState<GroupId>('Motion');
   const [query, setQuery] = React.useState('');
 
   const items = useMemo(() => {
@@ -134,9 +140,15 @@ export function WallpaperGalleryScreen() {
     }));
   }, [selectedGroup, favorites, customImages, query]);
 
+  const opening = React.useRef(false);
   const onPress = useCallback(
     (id: string) => {
+      if (opening.current) return;
+      opening.current = true;
       navigation.navigate('WallpaperPreview', { wallpaperId: id, pickForAlarm });
+      setTimeout(() => {
+        opening.current = false;
+      }, 700);
     },
     [navigation, pickForAlarm],
   );

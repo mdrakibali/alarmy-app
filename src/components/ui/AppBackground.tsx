@@ -2,9 +2,12 @@ import React from 'react';
 import {
   Dimensions,
   Image,
+  requireNativeComponent,
   StyleSheet,
   View,
 } from 'react-native';
+
+const MutedLoopVideo = requireNativeComponent<{ src: string }>('MutedLoopVideo');
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
@@ -54,19 +57,54 @@ export function AppBackground({
   const alba = findAlbaBackground(activeId);
   const motion = findMotionMedia(activeId);
   const [gifUri, setGifUri] = React.useState<string | null>(null);
+  const [videoUri, setVideoUri] = React.useState<string | null>(null);
+  const fileVideo =
+    Boolean(activeId) &&
+    (activeId!.startsWith('file://') || activeId!.startsWith('content://')) &&
+    /\.(mp4|m4v|webm)(\?|$)/i.test(activeId!);
   React.useEffect(() => {
     if (target !== 'ringing' || motion?.kind !== 'gif') {
       setGifUri(null);
       return;
     }
     let live = true;
-    NativeAlarm.materializeBundledMedia(motion.asset).then(uri => {
-      if (live) setGifUri(uri);
-    });
+    NativeAlarm.materializeBundledMedia(motion.asset)
+      .then(uri => {
+        if (live) setGifUri(uri);
+      })
+      .catch(() => {
+        if (live) setGifUri(null);
+      });
     return () => {
       live = false;
     };
   }, [target, motion?.asset, motion?.kind]);
+  React.useEffect(() => {
+    const shouldPlay = target === 'ringing' && (motion?.kind === 'video' || fileVideo);
+    if (!shouldPlay) {
+      setVideoUri(null);
+      return;
+    }
+    let live = true;
+    if (fileVideo && activeId) {
+      setVideoUri(activeId);
+      return () => {
+        live = false;
+      };
+    }
+    if (motion?.kind === 'video') {
+      NativeAlarm.materializeBundledMedia(motion.asset)
+        .then(uri => {
+          if (live) setVideoUri(uri);
+        })
+        .catch(() => {
+          if (live) setVideoUri(null);
+        });
+    }
+    return () => {
+      live = false;
+    };
+  }, [target, motion?.asset, motion?.kind, fileVideo, activeId]);
   const animated = target === 'ringing' && !alba && !motion;
   const still = wallpaperThumb(activeId);
   const imageSource = isCustomUri
@@ -95,6 +133,13 @@ export function AppBackground({
         resizeMode="cover"
         pointerEvents="none"
       />
+      {videoUri ? (
+        <MutedLoopVideo
+          src={videoUri}
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { opacity: brightness }]}
+        />
+      ) : null}
 
       {/* Scrim / Overlay for readability */}
       {overlayOpacity > 0 && (

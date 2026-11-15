@@ -11,6 +11,7 @@ import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { useThemeStore } from '@/storage/themeStore';
 import { useAlarmStore } from './alarmStore';
 import { formatTime } from './format';
 
@@ -22,6 +23,9 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   const alarmFromStore = useAlarmStore(s =>
     alarmId ? s.alarms.find(a => a.id === alarmId) : undefined,
   );
+  const themeAlarm = useThemeStore(s => s.alarmBackground);
+  const themeRinging = useThemeStore(s => s.ringingBackground);
+  const wallpaperId = alarmFromStore?.wallpaper || themeAlarm || themeRinging;
 
   const [activeInfo, setActiveInfo] = useState<RingingAlarmInfo | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -169,7 +173,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     : 'Complete Mission to Dismiss 🎯';
 
   return (
-    <AppBackground target="ringing" backgroundId={alarmFromStore?.wallpaper}>
+    <AppBackground target="ringing" backgroundId={wallpaperId}>
       <View
         style={{
           paddingTop: insets.top + 16,
@@ -184,18 +188,18 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
               ALARM RINGING ⏰
             </Text>
           </View>
-          <Text className="text-3xl font-black text-slate-900 text-center">
+          <Text className="text-3xl font-black text-white text-center">
             {label}
           </Text>
         </View>
 
         {/* Middle section: Big circular clock */}
         <View className="items-center justify-center my-8">
-          <View className="h-68 w-68 rounded-full border-4 border-white items-center justify-center bg-white shadow-2xl">
-            <Text className="text-6xl font-black text-slate-900 tracking-tight">
+          <View className="h-56 w-56 rounded-full border-4 border-white/70 items-center justify-center bg-black/35">
+            <Text className="text-6xl font-black text-white tracking-tight">
               {time}
             </Text>
-            <Text className="text-xl font-bold text-[#4E7D5B] mt-1">
+            <Text className="text-xl font-bold text-white mt-1">
               {period}
             </Text>
           </View>

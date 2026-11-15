@@ -73,7 +73,12 @@ class CameraMissionActivity : ComponentActivity() {
             val preview = Preview.Builder().build().also {
                 it.surfaceProvider = previewView.surfaceProvider
             }
-            val selector = CameraSelector.DEFAULT_BACK_CAMERA
+            val front = CameraSelector.DEFAULT_FRONT_CAMERA
+            val selector = if (mode == MODE_SQUAT && runCatching { provider.hasCamera(front) }.getOrDefault(false)) {
+                front
+            } else {
+                CameraSelector.DEFAULT_BACK_CAMERA
+            }
             provider.unbindAll()
             when (mode) {
                 MODE_BARCODE -> bindBarcode(provider, preview, selector, label)

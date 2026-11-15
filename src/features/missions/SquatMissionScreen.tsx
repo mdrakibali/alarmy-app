@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   Pressable,
@@ -100,9 +100,15 @@ export function SquatMissionScreen({ navigation, route }: Props) {
       return;
     }
     setPoseBlocked(true);
-  }, [completeMission]);
+  }, [completeMission, target]);
 
   const progressPct = Math.min(100, Math.round((squatsDone / target) * 100));
+  const startPoseRef = useRef(startPose);
+  startPoseRef.current = startPose;
+
+  useEffect(() => {
+    startPoseRef.current();
+  }, []);
 
   return (
     <AppBackground target="mission">
@@ -124,7 +130,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
             Complete {target} Squats
           </Text>
           <Text className="text-xs text-[#5E7166] font-semibold mt-1 text-center">
-            Hold your phone to your chest and squat down & up
+            The front camera opens on its own. Face it and squat.
           </Text>
         </View>
 
@@ -158,7 +164,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
             className="w-full bg-[#6B8F71] py-4 rounded-2xl items-center shadow-md mb-3"
           >
             <Text className="text-white text-base font-black tracking-wide">
-              Open camera and count squats
+              {poseBlocked ? 'Open front camera again' : 'Front camera is opening'}
             </Text>
           </Pressable>
           <Text className="text-xs font-bold text-[#5E7166] text-center">
@@ -173,7 +179,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
       <CustomConfirmModal
         visible={showSuccessModal}
         title="Workout Complete! ⚡"
-        message={`10 squats finished! Your blood is pumping and sleep inertia is gone. Good morning!`}
+        message={`${target} squats finished. Good morning.`}
         confirmText="Start My Day ☀️"
         icon="🏋️"
         onConfirm={() => {

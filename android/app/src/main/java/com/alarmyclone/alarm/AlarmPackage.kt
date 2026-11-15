@@ -13,7 +13,8 @@ class AlarmPackage : ReactPackage {
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<View, ReactShadowNode<*>>> {
-        return emptyList()
+        @Suppress("UNCHECKED_CAST")
+        return listOf(MutedLoopVideoManager() as ViewManager<View, ReactShadowNode<*>>)
     }
 }
 
