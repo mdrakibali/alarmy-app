@@ -45,7 +45,7 @@ object AlarmScheduler {
         }
         val prepared = alarm.copy(
             triggerTimeMs = triggerTimeMs,
-            snoozeUsed = if (explicitTriggerTimeMs != null) alarm.snoozeUsed else 0,
+            snoozeUsed = if (explicitTriggerTimeMs != null || keepSnoozeInstant) alarm.snoozeUsed else 0,
         )
         val stored = AlarmStorage.saveAlarm(context, prepared)
 

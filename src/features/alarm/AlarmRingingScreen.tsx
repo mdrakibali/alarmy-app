@@ -70,12 +70,13 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   const handleSnooze = async () => {
     const id = alarmId || activeInfo?.id;
     if (id) {
+      const ok = await NativeAlarm.snoozeAlarm(id, snoozeInterval);
+      if (!ok) return;
       snoozeAlarmInStore(id, snoozeInterval);
-      await NativeAlarm.snoozeAlarm(id, snoozeInterval);
       navigation.replace('SnoozeCountdown', {
         alarmId: id,
         intervalMin: snoozeInterval,
-        wallpaper: alarmFromStore?.wallpaper,
+        wallpaper: wallpaperId,
       });
     } else {
       await NativeAlarm.stopAlarm();
