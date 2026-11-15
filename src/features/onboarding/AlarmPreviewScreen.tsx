@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   Image,
+  Modal,
   StatusBar,
   StyleSheet,
   Text,
@@ -16,7 +17,7 @@ import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { findAlbaBackground } from '@/data/albaBackgrounds';
 import { findMotionMedia } from '@/data/motionMedia';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
-import { formatTime } from '@/features/alarm/format';
+import { formatAlarmyDate, formatTime } from '@/features/alarm/format';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { storage } from '@/storage/mmkv';
@@ -69,8 +70,11 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   const [shakeCount, setShakeCount] = useState(8); // mini preview count
   const [barcodeScanned, setBarcodeScanned] = useState(false);
   const [showActivatedModal, setShowActivatedModal] = useState(false);
+  const [showMissionModal, setShowMissionModal] = useState(false);
+  const [snoozeToast, setSnoozeToast] = useState(false);
 
   const { time, period } = formatTime(hour, minute);
+  const formattedDate = formatAlarmyDate(new Date());
 
   useEffect(() => {
     // Start audio preview simulation
@@ -84,20 +88,55 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   useEffect(() => {
     if (mission === 'shake') {
       const unsub = NativeAlarm.onShake(() => {
-        setShakeCount(prev => Math.max(0, prev - 1));
+        setShakeCount(prev => {
+          const next = Math.max(0, prev - 1);
+          if (next === 0) {
+            setTimeout(() => {
+              setShowMissionModal(false);
+              handleFinish();
+            }, 600);
+          }
+          return next;
+        });
       });
       return () => unsub();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mission]);
 
   const handleSelectMathOption = (selected: number) => {
     if (selected === mathProblem.answer) {
       setMathSolved(true);
       setWrongAttempt(false);
+      setTimeout(() => {
+        setShowMissionModal(false);
+        handleFinish();
+      }, 600);
     } else {
       setWrongAttempt(true);
       // Generate brand new problem on incorrect answer as requested
       setMathProblem(generatePreviewProblem());
+    }
+  };
+
+  const handleTestBarcode = () => {
+    setBarcodeScanned(true);
+    setTimeout(() => {
+      setShowMissionModal(false);
+      handleFinish();
+    }, 600);
+  };
+
+  const handleSnoozePress = () => {
+    setSnoozeToast(true);
+    setTimeout(() => setSnoozeToast(false), 2500);
+  };
+
+  const handleStartMissionPress = () => {
+    if (mission) {
+      setShowMissionModal(true);
+    } else {
+      handleFinish();
     }
   };
 
@@ -176,154 +215,241 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
         pointerEvents="none"
       />
 
-      {/* Screen Foreground Content with Safe Padding */}
+      {/* Screen Foreground Content formatted exactly like Alarmy Lock Screen (Image 2) */}
       <View
         className="flex-1 justify-between px-6"
         style={{
-          paddingTop: Math.max(insets.top, 16),
-          paddingBottom: Math.max(insets.bottom, 16),
+          paddingTop: Math.max(insets.top, 24) + 12,
+          paddingBottom: Math.max(insets.bottom, 20) + 12,
         }}
       >
-        {/* Top Banner */}
+        {/* Top Header: Date, Huge Alarmy Clock, and Emoji Label Pill (Image 2 format) */}
         <View className="items-center mt-2">
-          <View className="bg-black/40 px-4 py-1.5 rounded-full mb-2 border border-white/10">
-            <Text className="text-white text-xs font-bold tracking-widest uppercase">
-              LIVE ALARM PREVIEW 🔔
+          {/* Top Date: e.g. November 15 Sun */}
+          <Text
+            style={styles.dateShadow}
+            className="text-white text-base font-bold tracking-wide text-center"
+          >
+            {formattedDate}
+          </Text>
+
+          {/* Huge Alarmy Clock */}
+          <Text
+            style={styles.clockShadow}
+            className="text-white text-[94px] font-black tracking-tight text-center leading-none mt-1 mb-2"
+          >
+            {time}
+          </Text>
+
+          {/* Dark Label Badge Pill */}
+          <View className="bg-black/60 px-4 py-1.5 rounded-full flex-row items-center border border-white/10 shadow-md">
+            <Text className="text-white font-extrabold text-sm tracking-wide">
+              🐥 Wake up early
             </Text>
           </View>
-          <Text className="text-white text-sm font-semibold opacity-90 text-center">
-            This is exactly how Alarmy will wake you up!
-          </Text>
-        </View>
 
-        {/* Center Simulated Clock */}
-        <View className="items-center justify-center my-4">
-          <View className="h-64 w-64 rounded-full bg-white/20 border-4 border-white/40 items-center justify-center p-8 shadow-2xl backdrop-blur-md">
-            <Text className="text-6xl font-black text-white tracking-tight">
-              {time}
-            </Text>
-            <Text className="text-2xl font-bold text-white mt-1">{period}</Text>
-            <Text className="text-xs font-bold text-white/80 mt-2 bg-black/30 px-3 py-1 rounded-full">
-              🔊 Sound Playing...
+          {/* Discreet Preview Playing indicator */}
+          <View className="bg-black/35 px-3 py-1 rounded-full border border-white/10 flex-row items-center mt-3">
+            <Text className="text-white/80 text-xs font-semibold">
+              🔊 Preview sound playing...
             </Text>
           </View>
         </View>
 
-        {/* Mission Tryout Section */}
-        <View className="w-full bg-black/50 rounded-3xl p-5 border border-white/15 backdrop-blur-md">
-          <Text className="text-white font-extrabold text-base mb-1 text-center">
-            Test Your Wake-up Mission
-          </Text>
-          <Text className="text-white/70 text-xs mb-3 text-center">
-            Try the mission now to understand how it stops the alarm
-          </Text>
-
-          {/* Math Mission: 4 MCQ Options with new problem on wrong answer */}
-          {mission === 'math' && (
-            <View className="items-center mb-2">
-              <Text className="text-3xl font-black text-white mb-2 tracking-wider">
-                {mathProblem.question}
+        {/* Center: Open Wallpaper View with optional Snooze Toast */}
+        <View className="flex-1 justify-center items-center">
+          {snoozeToast && (
+            <View className="bg-black/80 border border-white/20 px-5 py-2.5 rounded-2xl shadow-xl">
+              <Text className="text-white text-xs font-bold text-center">
+                💤 Snooze will grant 5 extra minutes of rest when ringing!
               </Text>
-
-              {wrongAttempt && !mathSolved && (
-                <View className="bg-rose-500/90 px-3 py-1 rounded-full mb-2">
-                  <Text className="text-white text-xs font-bold">
-                    ❌ Wrong! Here is a new math problem:
-                  </Text>
-                </View>
-              )}
-
-              {mathSolved ? (
-                <View className="bg-emerald-500 px-5 py-2.5 rounded-xl items-center my-1">
-                  <Text className="text-white font-black text-sm">
-                    ✓ Correct! Alarm Unlocked
-                  </Text>
-                </View>
-              ) : (
-                <View className="w-full flex-row flex-wrap justify-between mt-1">
-                  {mathProblem.options.map((opt, i) => (
-                    <TouchableOpacity
-                      key={`${opt}-${i}`}
-                      activeOpacity={0.8}
-                      onPress={() => handleSelectMathOption(opt)}
-                      className="w-[48%] bg-white/20 border border-white/30 py-3 rounded-xl mb-2 items-center shadow-sm"
-                    >
-                      <Text className="text-white font-black text-lg">
-                        {opt}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
             </View>
           )}
+        </View>
 
-          {/* Shake Mission: Real hardware accelerometer + tap fallback */}
-          {mission === 'shake' && (
-            <View className="items-center mb-2">
-              {shakeCount <= 0 ? (
-                <View className="bg-emerald-500 px-5 py-2.5 rounded-xl items-center my-1">
-                  <Text className="text-white font-black text-sm">
-                    ✓ Shake Complete! Alarm Unlocked
-                  </Text>
-                </View>
-              ) : (
-                <View className="items-center w-full">
-                  <Text className="text-white/80 text-xs font-semibold mb-2 text-center">
-                    📱 Shake phone physically or tap button below:
-                  </Text>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => setShakeCount(prev => Math.max(0, prev - 1))}
-                    className="bg-white/25 border border-white/40 px-6 py-3 rounded-xl items-center w-full"
-                  >
-                    <Text className="text-white font-black text-base">
-                      Shake / Tap ({shakeCount} left) 📱
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+        {/* Bottom Section: Floating Snooze Pill & Coral Action Button */}
+        <View className="w-full items-center">
+          {/* Snooze Button: ❸ Snooze floating white pill */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleSnoozePress}
+            className="bg-white px-7 py-2.5 rounded-full flex-row items-center justify-center shadow-2xl mb-4"
+          >
+            <View className="w-5 h-5 rounded-full bg-black items-center justify-center mr-2">
+              <Text className="text-white text-[11px] font-black">3</Text>
             </View>
-          )}
+            <Text className="text-slate-900 font-black text-base tracking-wide">
+              Snooze
+            </Text>
+          </TouchableOpacity>
 
-          {/* Barcode / QR Mission */}
-          {mission === 'qr' && (
-            <View className="items-center mb-2">
-              <Text className="text-white/85 text-xs mb-2 text-center">
-                Scan your registered barcode (e.g. bathroom toothpaste) to turn off
-              </Text>
-              {barcodeScanned ? (
-                <View className="bg-emerald-500 px-5 py-2.5 rounded-xl items-center my-1">
-                  <Text className="text-white font-black text-sm">
-                    ✓ Barcode Verified! Alarm Unlocked
-                  </Text>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => setBarcodeScanned(true)}
-                  className="bg-white/25 border border-white/40 px-6 py-3 rounded-xl items-center w-full"
-                >
-                  <Text className="text-white font-black text-sm">
-                    📷 Tap to Test Scan Barcode
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          {/* Final Button */}
+          {/* Primary Action Button: Alarmy signature Coral Red (#FF2D55) */}
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={handleFinish}
-            className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-lg mt-3"
+            onPress={handleStartMissionPress}
+            className="w-full bg-[#FF2D55] py-4.5 rounded-3xl items-center justify-center shadow-2xl"
           >
-            <Text className="text-white text-base font-black tracking-wide">
-              Done - Activate Alba ✨
+            <Text className="text-white text-xl font-black tracking-wider">
+              {mission ? 'Start Mission' : 'Dismiss'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Direct Activation link */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleFinish}
+            className="mt-3 py-1"
+          >
+            <Text className="text-white/80 text-xs font-bold underline">
+              Activate Alarm Directly ✨
             </Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Interactive Mission Test Modal */}
+      <Modal
+        visible={showMissionModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMissionModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/60 px-4 pb-8">
+          <View className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200">
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="text-lg font-black text-slate-900">
+                Test Wake-up Mission 🎯
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowMissionModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
+              >
+                <Text className="text-slate-600 font-bold">✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text className="text-xs text-slate-500 mb-4 font-semibold">
+              Complete the test or tap Activate below to finish setup.
+            </Text>
+
+            {/* Math Mission MCQ */}
+            {mission === 'math' && (
+              <View className="items-center mb-3">
+                <Text className="text-2xl font-black text-slate-900 mb-3 tracking-wider">
+                  {mathProblem.question}
+                </Text>
+
+                {wrongAttempt && !mathSolved && (
+                  <View className="bg-rose-100 border border-rose-300 px-3 py-1 rounded-full mb-3">
+                    <Text className="text-rose-600 text-xs font-bold">
+                      ❌ Incorrect! New problem generated:
+                    </Text>
+                  </View>
+                )}
+
+                {mathSolved ? (
+                  <View className="bg-emerald-500 px-5 py-2.5 rounded-xl items-center my-1">
+                    <Text className="text-white font-black text-sm">
+                      ✓ Correct! Unlocking Alarm...
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="w-full flex-row flex-wrap justify-between">
+                    {mathProblem.options.map((opt, i) => (
+                      <TouchableOpacity
+                        key={`${opt}-${i}`}
+                        activeOpacity={0.8}
+                        onPress={() => handleSelectMathOption(opt)}
+                        className="w-[48%] bg-slate-100 border border-slate-300 py-3 rounded-xl mb-2.5 items-center"
+                      >
+                        <Text className="text-slate-900 font-black text-lg">
+                          {opt}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Shake Mission */}
+            {mission === 'shake' && (
+              <View className="items-center mb-3">
+                {shakeCount <= 0 ? (
+                  <View className="bg-emerald-500 px-5 py-2.5 rounded-xl items-center my-1">
+                    <Text className="text-white font-black text-sm">
+                      ✓ Shake Complete! Unlocking Alarm...
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="items-center w-full">
+                    <Text className="text-slate-600 text-xs font-semibold mb-2 text-center">
+                      📱 Shake your phone physically or tap below:
+                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        const next = Math.max(0, shakeCount - 1);
+                        setShakeCount(next);
+                        if (next === 0) {
+                          setTimeout(() => {
+                            setShowMissionModal(false);
+                            handleFinish();
+                          }, 600);
+                        }
+                      }}
+                      className="bg-emerald-600 px-6 py-3.5 rounded-xl items-center w-full"
+                    >
+                      <Text className="text-white font-black text-base">
+                        Tap / Shake ({shakeCount} left) 📱
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Barcode Mission */}
+            {mission === 'qr' && (
+              <View className="items-center mb-3">
+                <Text className="text-slate-600 text-xs mb-2 text-center">
+                  Scan your registered barcode in the morning to stop the alarm.
+                </Text>
+                {barcodeScanned ? (
+                  <View className="bg-emerald-500 px-5 py-2.5 rounded-xl items-center my-1">
+                    <Text className="text-white font-black text-sm">
+                      ✓ Barcode Verified!
+                    </Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleTestBarcode}
+                    className="bg-blue-600 px-6 py-3.5 rounded-xl items-center w-full"
+                  >
+                    <Text className="text-white font-black text-sm">
+                      📷 Simulate Scan Barcode
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Bottom Actions inside modal */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => {
+                setShowMissionModal(false);
+                handleFinish();
+              }}
+              className="w-full bg-[#FF2D55] py-4 rounded-2xl items-center shadow-md mt-2"
+            >
+              <Text className="text-white text-base font-black tracking-wide">
+                Done - Activate Alba ✨
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Activated Modal */}
       <CustomConfirmModal
@@ -338,4 +464,17 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  dateShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  clockShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 10,
+  },
+});
 

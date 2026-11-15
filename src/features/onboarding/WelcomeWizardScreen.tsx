@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  FlatList,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useAppInsets } from '@/utils/safeArea';
@@ -12,7 +15,7 @@ import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import type { MissionType } from '../alarm/types';
-import { MOTION_MEDIA } from '@/data/motionMedia';
+import { MOTION_MEDIA, type MotionItem } from '@/data/motionMedia';
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
 import { useThemeStore } from '@/storage/themeStore';
 
@@ -59,68 +62,55 @@ const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[]
 
 interface WallpaperCardProps {
   id: string;
-  name: string;
   source: number;
-  badge: string;
   isSelected: boolean;
   onSelect: (id: string) => void;
 }
 
-const MemoizedWallpaperCard = React.memo(function WallpaperCardComponent({
-  id,
-  name,
-  source,
-  badge,
-  isSelected,
-  onSelect,
-}: WallpaperCardProps) {
-  return (
-    <Pressable
-      onPress={() => onSelect(id)}
-      className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
-        isSelected
-          ? 'border-[#4E7D5B] shadow-md bg-[#EBF3ED]/30'
-          : 'border-slate-200 bg-white shadow-xs'
-      }`}
-    >
-      <Image
-        pointerEvents="none"
-        source={source}
-        className="absolute inset-0 w-full h-full"
-        resizeMethod="resize"
-        resizeMode="cover"
-      />
-      <View pointerEvents="none" className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70">
-        <Text className="text-[10px] font-black text-white">{badge}</Text>
-      </View>
+const WallpaperCard = React.memo(
+  function WallpaperCardComponent({
+    id,
+    source,
+    isSelected,
+    onSelect,
+  }: WallpaperCardProps) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => onSelect(id)}
+        className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
+          isSelected
+            ? 'border-[#4E7D5B] bg-[#EBF3ED]/30'
+            : 'border-slate-200 bg-white'
+        }`}
+      >
+        <Image
+          pointerEvents="none"
+          source={source}
+          resizeMethod="resize"
+          resizeMode="cover"
+          className="absolute inset-0 w-full h-full"
+        />
 
-      {/* Top Right Check Badge */}
-      <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
-        {isSelected ? (
-          <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center shadow-md">
-            <Text className="text-white text-xs font-black">✓</Text>
-          </View>
-        ) : (
-          <View className="h-6 w-6 rounded-full bg-black/40 border border-white/60 items-center justify-center">
-            <Text className="text-white/60 text-[10px]">○</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Bottom Title Bar */}
-      <View pointerEvents="none" className="w-full items-center py-2 px-1.5 bg-black/75 z-10 border-t border-white/10">
-        <Text
-          className={`text-xs font-black ${
-            isSelected ? 'text-[#E2A938]' : 'text-white'
-          }`}
-          numberOfLines={1}
-        >
-          ♪ {name}
-        </Text>
-      </View>
-    </Pressable>
-  );
-});
+        {/* Top Right Check Badge */}
+        <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
+          {isSelected ? (
+            <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center shadow-md">
+              <Text className="text-white text-xs font-black">✓</Text>
+            </View>
+          ) : (
+            <View className="h-6 w-6 rounded-full bg-black/40 border border-white/60 items-center justify-center">
+              <Text className="text-white/60 text-[10px]">○</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  },
+  // Custom comparator: ONLY re-render the 2 cards whose isSelected actually changed!
+  // The other cards are skipped completely, preventing re-render storms & freezes.
+  (prev, next) => prev.isSelected === next.isSelected && prev.id === next.id,
+);
 
 export function WelcomeWizardScreen({ navigation }: Props) {
   const insets = useAppInsets();
@@ -144,9 +134,9 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     setSelectedSound(soundId);
     NativeAlarm.previewSound(soundId).catch(() => {});
   };
-
+  
   const handleWallpaperSelect = useCallback((id: string) => {
-    setSelectedWallpaper(id);
+    setSelectedWallpaper(prev => (prev === id ? prev : id));
   }, []);
 
   const handleNext = () => {
@@ -214,59 +204,67 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         </Text>
       </View>
 
-      {/* Step Content */}
-      <ScrollView
-        className="flex-1"
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 16,
-          paddingBottom: 24,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* STEP 1: TIME PICKER */}
-        {step === 1 && (
-          <View className="items-center justify-center py-2">
-            <Text className="text-slate-500 text-sm font-medium mb-3 text-center">
-              Scroll or tap to choose when you want to wake up
-            </Text>
-
-            <View className="bg-white border border-slate-100 rounded-3xl p-4 w-full items-center shadow-sm">
-              <WheelTimePicker
-                hour={selectedHour}
-                minute={selectedMinute}
-                onChange={(h, m) => {
-                  setSelectedHour(h);
-                  setSelectedMinute(m);
-                }}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* STEP 2: WALLPAPERS (Memoized 60fps Grid with Zero Transform Locks) */}
-        {step === 2 && (
-          <View className="py-2">
+      {/* Step Content: Step 2 uses FlatList for high performance & virtualization */}
+      {step === 2 ? (
+        <FlatList<MotionItem>
+          data={wallpaperChoices}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: 24,
+          }}
+          ListHeaderComponent={
             <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
-              GIF and MP4 posters. The loop plays later, not in this grid.
+              GIF and MP4 posters. Tap any wallpaper to choose.
             </Text>
+          }
+          renderItem={({ item }: { item: MotionItem }) => (
+            <WallpaperCard
+              id={item.id}
+              source={item.poster}
+              isSelected={selectedWallpaper === item.id}
+              onSelect={handleWallpaperSelect}
+            />
+          )}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={3}
+          removeClippedSubviews={Platform.OS === 'android'}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <ScrollView
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: 24,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* STEP 1: TIME PICKER */}
+          {step === 1 && (
+            <View className="items-center justify-center py-2">
+              <Text className="text-slate-500 text-sm font-medium mb-3 text-center">
+                Scroll or tap to choose when you want to wake up
+              </Text>
 
-            <View className="flex-row flex-wrap justify-between">
-              {wallpaperChoices.map(w => (
-                <MemoizedWallpaperCard
-                  key={w.id}
-                  id={w.id}
-                  name={w.name}
-                  source={w.poster}
-                  badge={w.kind === 'gif' ? 'GIF' : 'MP4'}
-                  isSelected={selectedWallpaper === w.id}
-                  onSelect={handleWallpaperSelect}
+              <View className="bg-white border border-slate-100 rounded-3xl p-4 w-full items-center shadow-sm">
+                <WheelTimePicker
+                  hour={selectedHour}
+                  minute={selectedMinute}
+                  onChange={(h, m) => {
+                    setSelectedHour(h);
+                    setSelectedMinute(m);
+                  }}
                 />
-              ))}
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
         {/* STEP 3: SOUNDS */}
         {step === 3 && (
@@ -368,6 +366,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
           </View>
         )}
       </ScrollView>
+      )}
 
       {/* Bottom Button with Safe Area */}
       <View

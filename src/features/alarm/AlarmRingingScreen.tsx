@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   BackHandler,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -13,7 +14,7 @@ import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAlarmStore } from './alarmStore';
-import { formatTime } from './format';
+import { formatAlarmyClock, formatAlarmyDate, formatTime } from './format';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AlarmRinging'>;
 
@@ -159,80 +160,97 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   };
 
   const hasMission = missions.length > 0;
-  const missionButtonText = missions.includes('math')
-    ? 'Solve Math to Dismiss 🧠'
-    : missions.includes('shake')
-    ? 'Shake Phone to Dismiss 📱'
-    : missions.includes('qr')
-    ? 'Scan Barcode to Dismiss 📷'
-    : missions.includes('photo')
-    ? 'Take Photo to Dismiss 📸'
-    : missions.includes('squat')
-    ? 'Perform Squats to Dismiss 🏋️'
-    : missions.includes('typing')
-    ? 'Type Affirmation to Dismiss ⌨️'
-    : 'Complete Mission to Dismiss 🎯';
+  const snoozeMaxCount = alarmFromStore?.snooze.maxCount ?? 3;
+  const formattedDate = formatAlarmyDate(currentTime);
+  const formattedClock = formatAlarmyClock(currentTime);
+
+  const displayLabel = label || 'Wake up early';
+  const hasEmoji = /\p{Extended_Pictographic}/u.test(displayLabel);
+  const labelWithEmoji = hasEmoji ? displayLabel : `🐥 ${displayLabel}`;
 
   return (
     <AppBackground target="ringing" backgroundId={wallpaperId}>
       <View
         style={{
-          paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 16,
+          paddingTop: Math.max(insets.top, 24) + 12,
+          paddingBottom: Math.max(insets.bottom, 20) + 12,
         }}
-        className="flex-1 items-center justify-between px-6"
+        className="flex-1 justify-between px-6"
       >
-        {/* Top section: Alarm Label & Status */}
-        <View className="items-center mt-6">
-          <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-4 py-1.5 rounded-full mb-3">
-            <Text className="text-[#4E7D5B] font-extrabold tracking-wider uppercase text-xs">
-              ALARM RINGING ⏰
-            </Text>
-          </View>
-          <Text className="text-3xl font-black text-white text-center">
-            {label}
-          </Text>
-        </View>
-
-        {/* Middle section: Big circular clock */}
-        <View className="items-center justify-center my-8">
-          <View className="h-56 w-56 rounded-full border-4 border-white/70 items-center justify-center bg-black/35">
-            <Text className="text-6xl font-black text-white tracking-tight">
-              {time}
-            </Text>
-            <Text className="text-xl font-bold text-white mt-1">
-              {period}
-            </Text>
-          </View>
-        </View>
-
-        {/* Bottom section: Actions */}
-        <View className="w-full">
-          {/* Main Action (Dismiss or Mission) */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={handleDismissOrMission}
-            className="w-full bg-[#4E7D5B] py-5 rounded-2xl items-center shadow-md mb-3"
+        {/* Top Header: Date, Huge Alarmy Clock, and Emoji Label Pill (Image 2 format) */}
+        <View className="items-center mt-2">
+          {/* Top Date */}
+          <Text
+            style={styles.dateShadow}
+            className="text-white text-base font-bold tracking-wide text-center"
           >
-            <Text className="text-white text-lg font-black tracking-wide">
-              {hasMission ? missionButtonText : 'Dismiss Alarm'}
-            </Text>
-          </TouchableOpacity>
+            {formattedDate}
+          </Text>
 
-          {/* Snooze Button */}
+          {/* Huge Alarmy Clock */}
+          <Text
+            style={styles.clockShadow}
+            className="text-white text-[94px] font-black tracking-tight text-center leading-none mt-1 mb-2"
+          >
+            {formattedClock}
+          </Text>
+
+          {/* Dark Label Badge Pill */}
+          <View className="bg-black/60 px-4 py-1.5 rounded-full flex-row items-center border border-white/10 shadow-md">
+            <Text className="text-white font-extrabold text-sm tracking-wide">
+              {labelWithEmoji}
+            </Text>
+          </View>
+        </View>
+
+        {/* Center Wallpaper View (Clean, immersive) */}
+        <View className="flex-1" />
+
+        {/* Bottom Section: Floating Snooze Pill & Coral Action Button */}
+        <View className="w-full items-center">
+          {/* Snooze Button: ❸ Snooze floating white pill */}
           {snoozeEnabled && (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleSnooze}
-              className="w-full bg-white border border-slate-200 py-4 rounded-2xl items-center shadow-xs"
+              className="bg-white px-7 py-2.5 rounded-full flex-row items-center justify-center shadow-2xl mb-4"
             >
-              <Text className="text-slate-700 text-base font-bold">
-                Snooze ({snoozeInterval} min)
+              <View className="w-5 h-5 rounded-full bg-black items-center justify-center mr-2">
+                <Text className="text-white text-[11px] font-black">
+                  {snoozeMaxCount}
+                </Text>
+              </View>
+              <Text className="text-slate-900 font-black text-base tracking-wide">
+                Snooze
               </Text>
             </TouchableOpacity>
           )}
+
+          {/* Primary Action Button: Alarmy signature Coral Red (#FF2D55) */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleDismissOrMission}
+            className="w-full bg-[#FF2D55] py-4.5 rounded-3xl items-center justify-center shadow-2xl"
+          >
+            <Text className="text-white text-xl font-black tracking-wider">
+              {hasMission ? 'Start Mission' : 'Dismiss'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </AppBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  dateShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  clockShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 10,
+  },
+});

@@ -199,11 +199,11 @@ export function WheelTimePicker({
       {/* Center highlight rounded pill across all columns (iOS / Alarmy Style) */}
       <View
         pointerEvents="none"
-        className="absolute top-[88px] left-4 right-4 h-[44px] rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-xs"
+        className="absolute top-[88px] left-4 right-4 h-[50px] rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-xs"
       />
 
       {/* Hours Column */}
-      <View className="h-[220px] w-20">
+      <View className="w-20">
         <ScrollView
           ref={hourScrollRef}
           nestedScrollEnabled={true}
@@ -242,12 +242,12 @@ export function WheelTimePicker({
       </View>
 
       {/* Colon Separator */}
-      <View className="h-[44px] w-8 items-center justify-center z-10">
+      <View className=" w-8 items-center justify-center z-10">
         <Text className="text-2xl font-black text-slate-700">:</Text>
       </View>
 
       {/* Minutes Column */}
-      <View className="h-[220px] w-20">
+      <View className="w-20">
         <ScrollView
           ref={minScrollRef}
           nestedScrollEnabled={true}

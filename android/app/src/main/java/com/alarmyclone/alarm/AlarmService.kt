@@ -23,6 +23,7 @@ import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.alarmyclone.MainActivity
+import com.alarmyclone.R
 
 class AlarmService : Service() {
     companion object {
@@ -85,11 +86,11 @@ class AlarmService : Service() {
 
         AlarmModule.emitAlarmRinging(alarmId)
 
-        // Notification actions
+        // Ringing notification matching Alarmy format (Image 3)
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle(label)
-            .setContentText("Alarm is ringing!")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("Alarmy")
+            .setContentText("Tap to dismiss ⏰ ⏰ ⏰ ⏰")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -97,51 +98,6 @@ class AlarmService : Service() {
             .setAutoCancel(false)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .setContentIntent(fullScreenPendingIntent)
-
-        // Snooze button in notification
-        if (alarm?.snoozeEnabled == true) {
-            val snoozeIntent = Intent(this, AlarmActionReceiver::class.java).apply {
-                action = AlarmActionReceiver.ACTION_SNOOZE
-                putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-            }
-            val snoozePendingIntent = PendingIntent.getBroadcast(
-                this,
-                1002,
-                snoozeIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            notificationBuilder.addAction(
-                android.R.drawable.ic_menu_recent_history,
-                "Snooze (${alarm.snoozeIntervalMin}m)",
-                snoozePendingIntent
-            )
-        }
-
-        // Dismiss action if no missions
-        if (alarm == null || alarm.missions.isEmpty()) {
-            val dismissIntent = Intent(this, AlarmActionReceiver::class.java).apply {
-                action = AlarmActionReceiver.ACTION_DISMISS
-                putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-            }
-            val dismissPendingIntent = PendingIntent.getBroadcast(
-                this,
-                1003,
-                dismissIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            notificationBuilder.addAction(
-                android.R.drawable.ic_menu_close_clear_cancel,
-                "Dismiss",
-                dismissPendingIntent
-            )
-        } else {
-            // Dismiss requires completing mission, opening app
-            notificationBuilder.addAction(
-                android.R.drawable.ic_media_play,
-                "Solve Mission to Dismiss",
-                fullScreenPendingIntent
-            )
-        }
 
         val notification = notificationBuilder.build()
         try {

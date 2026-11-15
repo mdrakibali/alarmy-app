@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
+import com.facebook.react.ReactApplication
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
@@ -16,6 +17,21 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     turnScreenOnAndShowWhenLocked()
+    disableShakeDevMenu()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    disableShakeDevMenu()
+  }
+
+  private fun disableShakeDevMenu() {
+    try {
+      (application as? ReactApplication)?.reactHost?.devSupportManager?.let { devSupportManager ->
+        devSupportManager.shakeGestureEnabled = false
+      }
+    } catch (_: Throwable) {
+    }
   }
 
   override fun onNewIntent(intent: Intent) {

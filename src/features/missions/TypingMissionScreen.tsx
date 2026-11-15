@@ -28,6 +28,40 @@ const MOTIVATIONAL_PHRASES = [
   'Today will be a productive, peaceful, and successful day.',
 ];
 
+/**
+ * Normalizes text for relaxed, error-tolerant typing matching:
+ * - Strips double/single quotes (both straight " and curly “ ” ‘ ’)
+ * - Removes common punctuation (. , ! ? ; :)
+ * - Collapses repeated whitespace
+ * - Converts to lowercase
+ */
+export function normalizeTyping(str: string): string {
+  return str
+    .replace(/[“”"']/g, '')
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+export function checkTypingMatch(input: string, target: string): boolean {
+  const cleanInput = input.trim();
+  const cleanTarget = target.trim();
+  if (!cleanInput) return false;
+  // Exact match
+  if (cleanInput === cleanTarget) return true;
+  // Case-insensitive match
+  if (cleanInput.toLowerCase() === cleanTarget.toLowerCase()) return true;
+  // Quote-stripped match (if user typed leading/trailing quotation marks)
+  const strippedInput = cleanInput.replace(/^[“"']+|[”"']+$/g, '').trim();
+  const strippedTarget = cleanTarget.replace(/^[“"']+|[”"']+$/g, '').trim();
+  if (strippedInput.toLowerCase() === strippedTarget.toLowerCase()) return true;
+  // Punctuation and whitespace tolerant normalized match
+  if (normalizeTyping(cleanInput) === normalizeTyping(cleanTarget)) return true;
+  if (normalizeTyping(strippedInput) === normalizeTyping(strippedTarget)) return true;
+  return false;
+}
+
 export function TypingMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const [targetPhrase] = useState(
@@ -82,12 +116,16 @@ export function TypingMissionScreen({ navigation, route }: Props) {
 
   const handleChangeText = (text: string) => {
     setTypedText(text);
-    if (text.trim() === targetPhrase.trim()) {
+    if (checkTypingMatch(text, targetPhrase)) {
       completeMission();
     }
   };
 
-  const isMatched = typedText.trim() === targetPhrase.trim();
+  const isMatched = checkTypingMatch(typedText, targetPhrase);
+  const progressPercent = Math.min(
+    100,
+    Math.round((typedText.trim().length / targetPhrase.trim().length) * 100),
+  );
 
   return (
     <AppBackground target="mission">
@@ -121,14 +159,38 @@ export function TypingMissionScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          {/* Target Phrase Display Card */}
+          {/* Target Phrase Display Card (Clean text without deceptive quotes) */}
           <View className="bg-white/95 rounded-3xl p-5 border border-slate-200 shadow-md my-4">
             <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
               Target Affirmation
             </Text>
             <Text className="text-lg font-black text-slate-800 leading-relaxed">
-              "{targetPhrase}"
+              {targetPhrase}
             </Text>
+
+            {/* Live Progress Bar & Helper Tip */}
+            <View className="mt-4 pt-3 border-t border-slate-100">
+              <View className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <View
+                  style={{ width: `${progressPercent}%` }}
+                  className={`h-full ${
+                    isMatched ? 'bg-emerald-500' : 'bg-[#4E7D5B]'
+                  }`}
+                />
+              </View>
+              <View className="flex-row justify-between items-center mt-2">
+                <Text className="text-[11px] font-semibold text-slate-400">
+                  💡 Tip: Quotes (") & punctuation are optional
+                </Text>
+                <Text
+                  className={`text-[11px] font-bold ${
+                    isMatched ? 'text-emerald-600' : 'text-slate-500'
+                  }`}
+                >
+                  {isMatched ? '✓ 100% Matched!' : `${progressPercent}%`}
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* User Input Area */}
@@ -136,7 +198,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
             <TextInput
               value={typedText}
               onChangeText={handleChangeText}
-              placeholder="Type exact phrase here..."
+              placeholder="Type affirmation here..."
               placeholderTextColor="#94A3B8"
               multiline
               autoFocus
@@ -154,12 +216,14 @@ export function TypingMissionScreen({ navigation, route }: Props) {
                 }
               }}
               disabled={!isMatched}
-              className={`w-full py-4 rounded-2xl items-center shadow-md ${
-                isMatched ? 'bg-[#4E7D5B]' : 'bg-slate-300'
+              className={`w-full py-4.5 rounded-2xl items-center shadow-md ${
+                isMatched ? 'bg-emerald-600' : 'bg-slate-300'
               }`}
             >
               <Text className="text-white font-black text-base">
-                {isMatched ? 'Affirmation Complete! ✨' : 'Type to Match Phrase'}
+                {isMatched
+                  ? 'Affirmation Matched! Tap to Dismiss ✨'
+                  : 'Type to Match Phrase'}
               </Text>
             </TouchableOpacity>
           </View>

@@ -512,6 +512,10 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun startShakeDetection(promise: Promise) {
         try {
+            val app = reactContext.applicationContext as? com.facebook.react.ReactApplication
+            app?.reactHost?.devSupportManager?.shakeGestureEnabled = false
+        } catch (_: Throwable) {}
+        try {
             if (shakeDetector == null) {
                 shakeDetector = ShakeDetector(reactContext) {
                     sendEvent("onShakeEvent", null)
