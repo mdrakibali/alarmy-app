@@ -22,11 +22,12 @@ interface WheelTimePickerProps {
   onChange: (hour: number, minute: number) => void;
 }
 
-export function WheelTimePicker({
-  hour,
-  minute,
-  onChange,
-}: WheelTimePickerProps) {
+export const WheelTimePicker = React.memo(
+  function WheelTimePickerComponent({
+    hour,
+    minute,
+    onChange,
+  }: WheelTimePickerProps) {
   const initialHour12 = hour % 12 === 0 ? 12 : hour % 12;
   const initialIsPM = hour >= 12;
 
@@ -326,4 +327,6 @@ export function WheelTimePicker({
       </View>
     </View>
   );
-}
+},
+  (prev, next) => prev.hour === next.hour && prev.minute === next.minute
+);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   ScrollView,
@@ -10,7 +10,8 @@ import {
 import { Screen } from '@/components/ui/Screen';
 import {
   SLEEP_MUSIC_ITEMS,
-  SleepMusicCategory,
+  type SleepMusicCategory,
+  type SleepMusicItem,
 } from '@/data/sleepMusic';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { useAppInsets } from '@/utils/safeArea';
@@ -86,6 +87,94 @@ function AnimatedEqualizer({ color = '#4E7D5B' }: { color?: string }) {
   );
 }
 
+interface SleepSoundCardProps {
+  sound: SleepMusicItem;
+  isPlaying: boolean;
+  onToggle: (id: string) => void;
+}
+
+const SleepSoundCard = React.memo(
+  function SleepSoundCardComponent({ sound, isPlaying, onToggle }: SleepSoundCardProps) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => onToggle(sound.id)}
+        style={{
+          borderColor: isPlaying ? '#4E7D5B' : '#F1F5F9',
+          borderWidth: 1.5,
+          backgroundColor: isPlaying ? '#EBF3ED' : '#FFFFFF',
+        }}
+        className="flex-row items-center justify-between p-4 rounded-2xl mb-2.5"
+      >
+        <View className="flex-row items-center flex-1 pr-3">
+          <View className="relative mr-3">
+            <View
+              className={`h-12 w-12 rounded-2xl items-center justify-center border ${
+                isPlaying
+                  ? 'bg-white border-[#4E7D5B]'
+                  : 'bg-slate-100 border-transparent'
+              }`}
+            >
+              <Text className="text-2xl">{sound.icon}</Text>
+            </View>
+            {isPlaying && (
+              <View className="absolute -bottom-1 -right-1 bg-[#4E7D5B] rounded-full h-5 w-5 items-center justify-center border-2 border-white">
+                <Text className="text-[10px]">🔊</Text>
+              </View>
+            )}
+          </View>
+          <View className="flex-1">
+            <View className="flex-row items-center mb-0.5">
+              <Text
+                className={`text-sm font-extrabold ${
+                  isPlaying ? 'text-[#4E7D5B]' : 'text-slate-900'
+                }`}
+              >
+                {sound.title}
+              </Text>
+              {isPlaying ? (
+                <View className="ml-2 rounded-full bg-[#4E7D5B] px-2 py-0.5 flex-row items-center">
+                  <AnimatedEqualizer color="#FFFFFF" />
+                  <Text className="text-[9px] font-black text-white ml-1 tracking-wider uppercase">
+                    PLAYING
+                  </Text>
+                </View>
+              ) : (
+                <View className="ml-2 rounded bg-slate-100 px-1.5 py-0.5">
+                  <Text className="text-[9px] font-bold text-slate-500">
+                    {sound.category}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text
+              className="text-xs text-slate-500 font-medium leading-tight"
+              numberOfLines={1}
+            >
+              {sound.description}
+            </Text>
+          </View>
+        </View>
+
+        {/* Direct Play / Stop Button on the Card */}
+        <View
+          className={`px-3.5 py-2 rounded-xl flex-row items-center ${
+            isPlaying ? 'bg-rose-500' : 'bg-[#4E7D5B]'
+          }`}
+        >
+          <Text className="text-white text-xs font-black mr-1">
+            {isPlaying ? '■' : '▶'}
+          </Text>
+          <Text className="text-white text-xs font-black">
+            {isPlaying ? 'Stop' : 'Play'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  },
+  (prev, next) => prev.isPlaying === next.isPlaying && prev.sound.id === next.sound.id,
+);
+
 export function SleepScreen() {
   const insets = useAppInsets();
   const [selectedCategory, setSelectedCategory] =
@@ -96,6 +185,11 @@ export function SleepScreen() {
   const [timerMinutes, setTimerMinutes] = useState<number>(30);
   const lastActionAt = useRef(0);
 
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
+  const currentPlayingIdRef = useRef(currentPlayingId);
+  currentPlayingIdRef.current = currentPlayingId;
+
   useEffect(() => {
     let alive = true;
     let busy = false;
@@ -105,14 +199,18 @@ export function SleepScreen() {
       try {
         const status = await NativeAlarm.getSleepMusicStatus();
         if (alive && status) {
-          setIsPlaying(status.isPlaying);
-          setCurrentPlayingId(status.currentSoundId);
+          if (status.isPlaying !== isPlayingRef.current) {
+            setIsPlaying(status.isPlaying);
+          }
+          if (status.currentSoundId !== currentPlayingIdRef.current) {
+            setCurrentPlayingId(status.currentSoundId);
+          }
         }
       } catch {
       } finally {
         busy = false;
       }
-    }, 1500);
+    }, 2000);
     return () => {
       alive = false;
       clearInterval(interval);
@@ -134,7 +232,7 @@ export function SleepScreen() {
     [currentPlayingId],
   );
 
-  const togglePlay = (soundId: string) => {
+  const togglePlay = useCallback((soundId: string) => {
     lastActionAt.current = Date.now();
     if (currentPlayingId === soundId && isPlaying) {
       setIsPlaying(false);
@@ -155,7 +253,7 @@ export function SleepScreen() {
           setCurrentPlayingId(null);
         });
     }
-  };
+  }, [currentPlayingId, isPlaying, volume, timerMinutes]);
 
   const handleVolumeChange = (vol: number) => {
     setVolume(vol);
@@ -302,87 +400,14 @@ export function SleepScreen() {
               </Text>
             </View>
 
-            {filteredItems.map(sound => {
-              const isThisPlaying = currentPlayingId === sound.id && isPlaying;
-              return (
-                <TouchableOpacity
-                  key={sound.id}
-                  activeOpacity={0.8}
-                  onPress={() => togglePlay(sound.id)}
-                  className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
-                    isThisPlaying
-                      ? 'bg-[#EBF3ED] border-[#4E7D5B] shadow-sm'
-                      : 'bg-white border-slate-100 shadow-xs'
-                  }`}
-                >
-                  <View className="flex-row items-center flex-1 pr-3">
-                    <View className="relative mr-3">
-                      <View
-                        className={`h-12 w-12 rounded-2xl items-center justify-center border ${
-                          isThisPlaying
-                            ? 'bg-white border-[#4E7D5B]'
-                            : 'bg-slate-100 border-transparent'
-                        }`}
-                      >
-                        <Text className="text-2xl">{sound.icon}</Text>
-                      </View>
-                      {isThisPlaying && (
-                        <View className="absolute -bottom-1 -right-1 bg-[#4E7D5B] rounded-full h-5 w-5 items-center justify-center border-2 border-white shadow-xs">
-                          <Text className="text-[10px]">🔊</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex-row items-center mb-0.5">
-                        <Text
-                          className={`text-sm font-extrabold ${
-                            isThisPlaying ? 'text-[#4E7D5B]' : 'text-slate-900'
-                          }`}
-                        >
-                          {sound.title}
-                        </Text>
-                        {isThisPlaying ? (
-                          <View className="ml-2 rounded-full bg-[#4E7D5B] px-2 py-0.5 flex-row items-center shadow-xs">
-                            <AnimatedEqualizer color="#FFFFFF" />
-                            <Text className="text-[9px] font-black text-white ml-1 tracking-wider uppercase">
-                              PLAYING
-                            </Text>
-                          </View>
-                        ) : (
-                          <View className="ml-2 rounded bg-slate-100 px-1.5 py-0.5">
-                            <Text className="text-[9px] font-bold text-slate-500">
-                              {sound.category}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text
-                        className="text-xs text-slate-500 font-medium leading-tight"
-                        numberOfLines={1}
-                      >
-                        {sound.description}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Direct Play / Stop Button on the Card */}
-                  <View
-                    className={`px-3.5 py-2 rounded-xl flex-row items-center shadow-xs ${
-                      isThisPlaying
-                        ? 'bg-rose-500'
-                        : 'bg-[#4E7D5B]'
-                    }`}
-                  >
-                    <Text className="text-white text-xs font-black mr-1">
-                      {isThisPlaying ? '■' : '▶'}
-                    </Text>
-                    <Text className="text-white text-xs font-black">
-                      {isThisPlaying ? 'Stop' : 'Play'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            {filteredItems.map(sound => (
+              <SleepSoundCard
+                key={sound.id}
+                sound={sound}
+                isPlaying={currentPlayingId === sound.id && isPlaying}
+                onToggle={togglePlay}
+              />
+            ))}
           </View>
 
           {/* Bedtime Checklist */}

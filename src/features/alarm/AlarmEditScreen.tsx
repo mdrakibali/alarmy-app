@@ -40,6 +40,248 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AlarmEdit'>;
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+const QUICK_BASE_WALLPAPERS = [
+  ...ALBA_BACKGROUNDS.slice(0, 4).map(w => ({ id: w.id, name: w.name, source: w.source })),
+  ...MOTION_MEDIA.slice(0, 8).map(w => ({ id: w.id, name: w.name, source: w.poster })),
+];
+
+interface QuickWallpaperCardProps {
+  id: string;
+  name: string;
+  source: any;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+const QuickWallpaperCard = React.memo(
+  function QuickWallpaperCardComponent({
+    id,
+    name,
+    source,
+    isSelected,
+    onSelect,
+  }: QuickWallpaperCardProps) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        onPress={() => onSelect(id)}
+        style={{
+          borderColor: isSelected ? '#4E7D5B' : '#E2E8F0',
+          borderWidth: 2,
+        }}
+        className="w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative bg-slate-100"
+      >
+        <Image
+          pointerEvents="none"
+          source={source}
+          fadeDuration={0}
+          resizeMethod="resize"
+          resizeMode="cover"
+          className="absolute inset-0 w-full h-full"
+        />
+        {/* Selected Badge */}
+        <View pointerEvents="none" className="w-full flex-row justify-end p-1.5 z-10">
+          {isSelected && (
+            <View className="h-5 w-5 rounded-full bg-[#4E7D5B] items-center justify-center">
+              <Text className="text-white text-[9px] font-black">✓</Text>
+            </View>
+          )}
+        </View>
+        {/* Title Bar */}
+        <View pointerEvents="none" className="w-full py-1.5 px-1 bg-black/60 z-10">
+          <Text
+            className={`text-[10px] font-bold text-center ${
+              isSelected ? 'text-[#E2A938]' : 'text-white'
+            }`}
+            numberOfLines={1}
+          >
+            ♪ {name}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  },
+  (prev, next) => prev.isSelected === next.isSelected && prev.id === next.id,
+);
+
+interface MissionPickerModalProps {
+  visible: boolean;
+  initialMissions: MissionType[];
+  insetsBottom: number;
+  onClose: () => void;
+  onSave: (missions: MissionType[]) => void;
+}
+
+const MissionPickerModal = React.memo(function MissionPickerModalComponent({
+  visible,
+  initialMissions,
+  insetsBottom,
+  onClose,
+  onSave,
+}: MissionPickerModalProps) {
+  const [localMissions, setLocalMissions] = useState<MissionType[]>(initialMissions);
+
+  useEffect(() => {
+    if (visible) {
+      setLocalMissions(initialMissions);
+    }
+  }, [visible, initialMissions]);
+
+  const addLocalMission = (m: MissionType) => {
+    setLocalMissions(curr => (curr.length < 5 ? [...curr, m] : curr));
+  };
+
+  const removeLocalMission = (m: MissionType) => {
+    setLocalMissions(curr => {
+      const idx = curr.lastIndexOf(m);
+      if (idx === -1) return curr;
+      return curr.filter((_, i) => i !== idx);
+    });
+  };
+
+  const handleDone = () => {
+    onSave(localMissions);
+    onClose();
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View className="flex-1 justify-end bg-black/50">
+        <TouchableOpacity
+          activeOpacity={1}
+          className="flex-1"
+          onPress={onClose}
+        />
+        <View
+          style={{
+            maxHeight: '78%',
+            paddingBottom: Math.max(insetsBottom, 16),
+          }}
+          className="bg-white rounded-t-3xl p-5"
+        >
+          {/* Header */}
+          <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
+            <View className="flex-1 pr-2">
+              <Text className="text-lg font-extrabold text-slate-900">
+                Choose Wake-up Mission
+              </Text>
+              <Text className="text-xs text-slate-400 mt-0.5">
+                Select up to 5 missions ({localMissions.length}/5 selected)
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onClose}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              className="h-9 w-9 rounded-full bg-slate-100 items-center justify-center"
+            >
+              <Text className="text-base font-bold text-slate-500">✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Mission List */}
+          <ScrollView
+            style={{ maxHeight: 420 }}
+            className="mt-3"
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+          >
+            {(Object.keys(MISSION_DETAILS) as MissionType[]).map(missionKey => {
+              const item = MISSION_DETAILS[missionKey];
+              const count = localMissions.filter(m => m === missionKey).length;
+              const canAddMore = localMissions.length < 5;
+
+              return (
+                <View
+                  key={missionKey}
+                  style={{
+                    backgroundColor: count > 0 ? '#EBF3ED' : '#FFFFFF',
+                    borderColor: count > 0 ? '#6B8F71' : '#F1F5F9',
+                    borderWidth: 1.5,
+                  }}
+                  className="flex-row items-center justify-between p-4 rounded-2xl mb-2.5"
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      if (canAddMore) addLocalMission(missionKey);
+                    }}
+                    className="flex-row items-center flex-1 pr-2"
+                  >
+                    <Text className="text-3xl mr-3">{item.icon}</Text>
+                    <View className="flex-1">
+                      <View className="flex-row items-center mb-0.5">
+                        <Text className="text-base font-bold text-slate-900 mr-2">
+                          {item.title}
+                        </Text>
+                        <View className="rounded px-1.5 py-0.5 bg-rose-50">
+                          <Text className="text-[9px] font-black text-rose-500">
+                            {item.badge}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text className="text-xs text-slate-500 font-medium leading-tight">
+                        {item.desc}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <View className="flex-row items-center">
+                    {count > 0 && (
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => removeLocalMission(missionKey)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-2"
+                      >
+                        <Text className="text-slate-700 font-black text-sm">−</Text>
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        if (canAddMore) addLocalMission(missionKey);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      disabled={!canAddMore}
+                      className={`px-3.5 py-1.5 rounded-full ${
+                        canAddMore ? 'bg-[#4E7D5B]' : 'bg-slate-300'
+                      }`}
+                    >
+                      <Text className="text-white text-xs font-black">
+                        {count > 0 ? `+ Add (${count})` : '+ Add'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          {/* Fixed Bottom Action Bar */}
+          <View className="pt-3 border-t border-slate-100">
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleDone}
+              className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center"
+            >
+              <Text className="text-white text-base font-black tracking-wide">
+                Done ({localMissions.length}/5 Missions Added) ✓
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+});
+
 export function AlarmEditScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const toast = useToast();
@@ -111,6 +353,28 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
   const patch = (next: Partial<Omit<Alarm, 'id'>>) =>
     setDraft(current => ({ ...current, ...next }));
+
+  const currentSelectedWallpaper = draft.wallpaper || alarmBackground;
+  const isCustomWallpaper =
+    currentSelectedWallpaper?.startsWith('file://') ||
+    currentSelectedWallpaper?.startsWith('content://');
+  const carouselWallpapers = useMemo(() => {
+    if (isCustomWallpaper) {
+      return [
+        {
+          id: currentSelectedWallpaper,
+          name: 'Custom photo',
+          source: { uri: currentSelectedWallpaper },
+        },
+        ...QUICK_BASE_WALLPAPERS,
+      ];
+    }
+    return QUICK_BASE_WALLPAPERS;
+  }, [isCustomWallpaper, currentSelectedWallpaper]);
+
+  const handleSelectWallpaper = React.useCallback((id: string) => {
+    setDraft(current => ({ ...current, wallpaper: id }));
+  }, []);
 
   // Live countdown text
   const countdownText = useMemo(() => {
@@ -457,54 +721,16 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             keyboardShouldPersistTaps="handled"
             className="-mx-4 px-4 py-1"
           >
-            {[
-              ...ALBA_BACKGROUNDS.slice(0, 4).map(w => ({ id: w.id, name: w.name, source: w.source as number })),
-              ...MOTION_MEDIA.slice(0, 8).map(w => ({ id: w.id, name: w.name, source: w.poster })),
-            ].map(w => {
-              const isSelected = (draft.wallpaper || alarmBackground) === w.id;
-              return (
-                <TouchableOpacity
-                  key={w.id}
-                  activeOpacity={0.85}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  onPress={() => {
-                    patch({ wallpaper: w.id });
-                  }}
-                  className={`w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative border-2 ${
-                    isSelected
-                      ? 'border-[#4E7D5B] shadow-md bg-[#EBF3ED]/40'
-                      : 'border-slate-200 bg-slate-100'
-                  }`}
-                >
-                  <Image
-                    pointerEvents="none"
-                    source={w.source}
-                    className="absolute inset-0 w-full h-full"
-                    resizeMethod="resize"
-                    resizeMode="cover"
-                  />
-                  {/* Selected Badge */}
-                  <View pointerEvents="none" className="w-full flex-row justify-end p-1.5 z-10">
-                    {isSelected && (
-                      <View className="h-5 w-5 rounded-full bg-[#4E7D5B] items-center justify-center shadow-sm">
-                        <Text className="text-white text-[9px] font-black">✓</Text>
-                      </View>
-                    )}
-                  </View>
-                  {/* Title Bar */}
-                  <View pointerEvents="none" className="w-full py-1.5 px-1 bg-black/60 z-10">
-                    <Text
-                      className={`text-[10px] font-bold text-center ${
-                        isSelected ? 'text-[#E2A938]' : 'text-white'
-                      }`}
-                      numberOfLines={1}
-                    >
-                      ♪ {w.name}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            {carouselWallpapers.map(w => (
+              <QuickWallpaperCard
+                key={w.id}
+                id={w.id}
+                name={w.name}
+                source={w.source}
+                isSelected={currentSelectedWallpaper === w.id}
+                onSelect={handleSelectWallpaper}
+              />
+            ))}
           </ScrollView>
         </View>
 
@@ -920,146 +1146,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </View>
 
-      <Modal
+      <MissionPickerModal
         visible={showMissionModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowMissionModal(false)}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <TouchableOpacity
-            activeOpacity={1}
-            className="flex-1"
-            onPress={() => setShowMissionModal(false)}
-          />
-          <View
-            style={{
-              maxHeight: '78%',
-              paddingBottom: Math.max(insets.bottom, 16),
-            }}
-            className="bg-white rounded-t-3xl p-5"
-          >
-            {/* Header */}
-            <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
-              <View className="flex-1 pr-2">
-                <Text className="text-lg font-extrabold text-slate-900">
-                  Choose Wake-up Mission
-                </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
-                  Select up to 5 missions ({draft.missions.length}/5 selected)
-                </Text>
-              </View>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setShowMissionModal(false)}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                className="h-9 w-9 rounded-full bg-slate-100 items-center justify-center"
-              >
-                <Text className="text-base font-bold text-slate-500">✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Mission List with style={{ flex: 1 }} so bottom button is never pushed off screen */}
-            <ScrollView
-              style={{ maxHeight: 420 }}
-              className="mt-3"
-              showsVerticalScrollIndicator={true}
-              keyboardShouldPersistTaps="handled"
-            >
-              {(Object.keys(MISSION_DETAILS) as MissionType[]).map(
-                missionKey => {
-                  const item = MISSION_DETAILS[missionKey];
-                  const count = draft.missions.filter(m => m === missionKey).length;
-                  const canAddMore = draft.missions.length < 5;
-
-                  return (
-                    <View
-                      key={missionKey}
-                      className={`flex-row items-center justify-between p-4 rounded-2xl mb-2.5 border ${
-                        count > 0
-                          ? 'bg-[#EBF3ED] border-[#6B8F71]/30'
-                          : 'bg-white border-slate-100 shadow-sm'
-                      }`}
-                    >
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => {
-                          if (canAddMore) {
-                            addMission(missionKey);
-                          }
-                        }}
-                        className="flex-row items-center flex-1 pr-2"
-                      >
-                        <Text className="text-3xl mr-3">{item.icon}</Text>
-                        <View className="flex-1">
-                          <View className="flex-row items-center mb-0.5">
-                            <Text className="text-base font-bold text-slate-900 mr-2">
-                              {item.title}
-                            </Text>
-                            <View className="rounded px-1.5 py-0.5 bg-rose-50">
-                              <Text className="text-[9px] font-black text-rose-500">
-                                {item.badge}
-                              </Text>
-                            </View>
-                          </View>
-                          <Text className="text-xs text-slate-500 font-medium leading-tight">
-                            {item.desc}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      <View className="flex-row items-center">
-                        {count > 0 && (
-                          <TouchableOpacity
-                            activeOpacity={0.7}
-                            onPress={() => removeMissionByKey(missionKey)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-2"
-                          >
-                            <Text className="text-slate-700 font-black text-sm">−</Text>
-                          </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          onPress={() => {
-                            if (canAddMore) {
-                              addMission(missionKey);
-                            }
-                          }}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          disabled={!canAddMore}
-                          className={`px-3.5 py-1.5 rounded-full shadow-xs ${
-                            canAddMore
-                              ? 'bg-[#4E7D5B]'
-                              : 'bg-slate-300'
-                          }`}
-                        >
-                          <Text className="text-white text-xs font-black">
-                            {count > 0 ? `+ Add (${count})` : '+ Add'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                },
-              )}
-            </ScrollView>
-
-            {/* ✅ Fixed Bottom Action Bar — সবসময় স্পষ্ট দৃশ্যমান */}
-            <View className="pt-3 border-t border-slate-100">
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => setShowMissionModal(false)}
-                className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
-              >
-                <Text className="text-white text-base font-black tracking-wide">
-                  Done ({draft.missions.length}/5 Missions Added) ✓
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        initialMissions={draft.missions}
+        insetsBottom={insets.bottom}
+        onClose={() => setShowMissionModal(false)}
+        onSave={missions => patch({ missions })}
+      />
 
       {/* Custom Delete Confirmation Modal */}
       <CustomConfirmModal

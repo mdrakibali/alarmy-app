@@ -7,11 +7,13 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import java.util.concurrent.Executors
 
 object SleepMusicManager {
     private const val TAG = "SleepMusicManager"
 
     private var mediaPlayer: MediaPlayer? = null
+    private val audioExecutor = Executors.newSingleThreadExecutor()
     private var handler = Handler(Looper.getMainLooper())
     private var timerRunnable: Runnable? = null
     private var fadeRunnable: Runnable? = null
@@ -118,11 +120,17 @@ object SleepMusicManager {
             clearTimer()
             clearFade()
 
-            mediaPlayer?.let {
-                try {
-                    it.reset()
-                } catch (e: Exception) {}
-                it.release()
+            val playerToRelease = mediaPlayer
+            mediaPlayer = null
+            if (playerToRelease != null) {
+                audioExecutor.execute {
+                    try {
+                        playerToRelease.reset()
+                    } catch (_: Exception) {}
+                    try {
+                        playerToRelease.release()
+                    } catch (_: Exception) {}
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping sleep music", e)

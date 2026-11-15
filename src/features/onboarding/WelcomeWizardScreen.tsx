@@ -78,15 +78,16 @@ const WallpaperCard = React.memo(
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => onSelect(id)}
-        className={`w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative border-2 ${
-          isSelected
-            ? 'border-[#4E7D5B] bg-[#EBF3ED]/30'
-            : 'border-slate-200 bg-white'
-        }`}
+        style={{
+          borderColor: isSelected ? '#4E7D5B' : '#E2E8F0',
+          borderWidth: 2,
+        }}
+        className="w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative bg-white"
       >
         <Image
           pointerEvents="none"
           source={source}
+          fadeDuration={0}
           resizeMethod="resize"
           resizeMode="cover"
           className="absolute inset-0 w-full h-full"
@@ -95,7 +96,7 @@ const WallpaperCard = React.memo(
         {/* Top Right Check Badge */}
         <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
           {isSelected ? (
-            <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center shadow-md">
+            <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center">
               <Text className="text-white text-xs font-black">✓</Text>
             </View>
           ) : (
@@ -107,8 +108,6 @@ const WallpaperCard = React.memo(
       </TouchableOpacity>
     );
   },
-  // Custom comparator: ONLY re-render the 2 cards whose isSelected actually changed!
-  // The other cards are skipped completely, preventing re-render storms & freezes.
   (prev, next) => prev.isSelected === next.isSelected && prev.id === next.id,
 );
 
@@ -167,6 +166,18 @@ export function WelcomeWizardScreen({ navigation }: Props) {
 
   const wallpaperChoices = useMemo(() => MOTION_MEDIA, []);
 
+  const renderWallpaperItem = useCallback(
+    ({ item }: { item: MotionItem }) => (
+      <WallpaperCard
+        id={item.id}
+        source={item.poster}
+        isSelected={selectedWallpaper === item.id}
+        onSelect={handleWallpaperSelect}
+      />
+    ),
+    [selectedWallpaper, handleWallpaperSelect],
+  );
+
   return (
     <View className="flex-1 bg-[#F5F6F8]">
       {/* Header with Progress Bar */}
@@ -208,6 +219,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       {step === 2 ? (
         <FlatList<MotionItem>
           data={wallpaperChoices}
+          extraData={selectedWallpaper}
           keyExtractor={item => item.id}
           numColumns={2}
           columnWrapperStyle={{ justifyContent: 'space-between' }}
@@ -216,19 +228,17 @@ export function WelcomeWizardScreen({ navigation }: Props) {
             paddingTop: 16,
             paddingBottom: 24,
           }}
+          getItemLayout={(_, index) => ({
+            length: 224,
+            offset: 224 * Math.floor(index / 2),
+            index,
+          })}
           ListHeaderComponent={
             <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
               GIF and MP4 posters. Tap any wallpaper to choose.
             </Text>
           }
-          renderItem={({ item }: { item: MotionItem }) => (
-            <WallpaperCard
-              id={item.id}
-              source={item.poster}
-              isSelected={selectedWallpaper === item.id}
-              onSelect={handleWallpaperSelect}
-            />
-          )}
+          renderItem={renderWallpaperItem}
           initialNumToRender={6}
           maxToRenderPerBatch={6}
           windowSize={3}

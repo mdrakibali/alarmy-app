@@ -27,6 +27,12 @@ class MainActivity : ReactActivity() {
 
   private fun disableShakeDevMenu() {
     try {
+      (application as? ReactApplication)?.reactNativeHost?.reactInstanceManager?.devSupportManager?.let { dsm ->
+        dsm.shakeGestureEnabled = false
+      }
+    } catch (_: Throwable) {
+    }
+    try {
       (application as? ReactApplication)?.reactHost?.devSupportManager?.let { devSupportManager ->
         devSupportManager.shakeGestureEnabled = false
       }

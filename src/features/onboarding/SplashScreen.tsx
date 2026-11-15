@@ -11,6 +11,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { storage } from '@/storage/mmkv';
 import { useAppInsets } from '@/utils/safeArea';
+import { AppBackground } from '@/components/ui/AppBackground';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
@@ -73,7 +74,8 @@ export function SplashScreen({ navigation }: Props) {
   }, [fadeAnim, scaleAnim, navigation]);
 
   return (
-     <View className="flex-1 items-center justify-center relative bg-black/15">
+    <AppBackground target="alarm">
+      <View className="flex-1 items-center justify-center relative bg-black/20">
         <StatusBar barStyle="light-content" />
 
         {/* Center Branding Block */}
@@ -123,5 +125,6 @@ export function SplashScreen({ navigation }: Props) {
           </View>
         </View>
       </View>
+    </AppBackground>
   );
 }
