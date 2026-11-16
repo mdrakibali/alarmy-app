@@ -190,3 +190,4 @@ To strictly comply with software redistribution ethics and third-party terms of 
    - Zapsplat's standard free tier explicitly prohibits bundling audio files directly inside standalone mobile application APKs without an institutional developer subscription. Excluded to avoid licensing violations.
 3. **Commercial Copyrighted Music:**
    - No copyrighted radio music, commercial pop songs, or proprietary ringtones were bundled. Instead, native support for user-owned MP3/audio file import (`pickLocalAudio` & `pickLocalVideo`) was provided so users can safely use their own personal library.
+
