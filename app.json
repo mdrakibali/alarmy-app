@@ -1,4 +1,9 @@
 {
   "name": "Alba",
-  "displayName": "Alba"
+  "displayName": "Alba",
+  "extra": {
+    "eas": {
+      "projectId": "1b95fec6-673a-49fd-8b45-3df009d04ab2"
+    }
+  }
 }

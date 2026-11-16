@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.media.AudioManager
@@ -27,8 +28,11 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCaseGroup
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.camera.view.transform.CoordinateTransform
+import androidx.camera.view.transform.ImageProxyTransformFactory
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
@@ -38,7 +42,9 @@ import com.google.mlkit.vision.pose.PoseLandmark
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
 import java.io.File
 import java.util.concurrent.Executors
+import kotlin.math.abs
 import kotlin.math.acos
+import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
@@ -65,7 +71,10 @@ class CameraMissionActivity : ComponentActivity() {
     }
 
     private fun startCamera() {
-        val previewView = PreviewView(this)
+        val previewView = PreviewView(this).apply {
+            scaleType = PreviewView.ScaleType.FILL_CENTER
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        }
         val overlayView = PoseGraphicOverlay(this)
         val label = TextView(this).apply {
             text = "Camera"
@@ -105,7 +114,7 @@ class CameraMissionActivity : ComponentActivity() {
             provider.unbindAll()
             when (mode) {
                 MODE_BARCODE -> bindBarcode(provider, preview, selector, label)
-                MODE_SQUAT -> bindSquat(provider, preview, selector, label, overlayView)
+                MODE_SQUAT -> bindSquat(provider, preview, selector, label, overlayView, previewView)
                 else -> bindPhoto(provider, preview, selector, label)
             }
         }, ContextCompat.getMainExecutor(this))
@@ -220,6 +229,7 @@ class CameraMissionActivity : ComponentActivity() {
         selector: CameraSelector,
         label: TextView,
         overlay: PoseGraphicOverlay,
+        previewView: PreviewView,
     ) {
         label.visibility = View.GONE
         val isFront = (selector == CameraSelector.DEFAULT_FRONT_CAMERA)
@@ -233,6 +243,10 @@ class CameraMissionActivity : ComponentActivity() {
             .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
+        val transformFactory = ImageProxyTransformFactory().apply {
+            isUsingRotationDegrees = true
+            isUsingCropRect = false
+        }
         var phase = "Standing"
         var missing = 0
         analysis.setAnalyzer(cameraExecutor) { imageProxy ->
@@ -243,6 +257,19 @@ class CameraMissionActivity : ComponentActivity() {
             }
             val rotationDegrees = imageProxy.imageInfo.rotationDegrees
             val image = InputImage.fromMediaImage(media, rotationDegrees)
+
+            // Extract exact coordinate transformation matrix mapping MLKit image coordinates to PreviewView screen coordinates
+            val matrix = runCatching {
+                val sourceTransform = transformFactory.getOutputTransform(imageProxy)
+                val targetTransform = previewView.outputTransform
+                if (sourceTransform != null && targetTransform != null) {
+                    val ct = CoordinateTransform(sourceTransform, targetTransform)
+                    val m = Matrix()
+                    ct.transform(m)
+                    m
+                } else null
+            }.getOrNull()
+
             detector.process(image)
                 .addOnSuccessListener { pose ->
                     val leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
@@ -295,7 +322,8 @@ class CameraMissionActivity : ComponentActivity() {
                             target = target,
                             kneeAngle = null,
                             isUserDetected = isUserDetected,
-                            isSquatSuccess = false
+                            isSquatSuccess = false,
+                            matrix = matrix,
                         )
                         return@addOnSuccessListener
                     }
@@ -344,7 +372,8 @@ class CameraMissionActivity : ComponentActivity() {
                         target = target,
                         kneeAngle = knee,
                         isUserDetected = isUserDetected,
-                        isSquatSuccess = isSquatSuccess
+                        isSquatSuccess = isSquatSuccess,
+                        matrix = matrix,
                     )
 
                     if (squatReps >= target) {
@@ -359,7 +388,17 @@ class CameraMissionActivity : ComponentActivity() {
                 }
                 .addOnCompleteListener { imageProxy.close() }
         }
-        provider.bindToLifecycle(this, selector, preview, analysis)
+        val viewPort = previewView.viewPort
+        if (viewPort != null) {
+            val useCaseGroup = UseCaseGroup.Builder()
+                .setViewPort(viewPort)
+                .addUseCase(preview)
+                .addUseCase(analysis)
+                .build()
+            provider.bindToLifecycle(this, selector, useCaseGroup)
+        } else {
+            provider.bindToLifecycle(this, selector, preview, analysis)
+        }
     }
 
     private fun kneeAngle(hip: PoseLandmark?, knee: PoseLandmark?, ankle: PoseLandmark?): Double? {
@@ -522,6 +561,8 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         isAntiAlias = true
     }
 
+    private var transformMatrix: Matrix? = null
+
     fun updatePose(
         pose: Pose?,
         imgWidth: Int,
@@ -533,6 +574,7 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         kneeAngle: Double?,
         isUserDetected: Boolean = false,
         isSquatSuccess: Boolean = false,
+        matrix: Matrix? = null,
     ) {
         synchronized(lock) {
             currentPose = pose
@@ -545,6 +587,7 @@ class PoseGraphicOverlay(context: Context) : View(context) {
             kneeAngleDeg = kneeAngle
             userDetected = isUserDetected
             squatSuccess = isSquatSuccess
+            transformMatrix = matrix
         }
         postInvalidate()
     }
@@ -561,6 +604,7 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         val angle: Double?
         val isDetected: Boolean
         val isSuccess: Boolean
+        val currentMatrix: Matrix?
 
         synchronized(lock) {
             pose = currentPose
@@ -573,6 +617,7 @@ class PoseGraphicOverlay(context: Context) : View(context) {
             angle = kneeAngleDeg
             isDetected = userDetected
             isSuccess = squatSuccess
+            currentMatrix = transformMatrix
         }
 
         val isSquatActive = isSuccess || phase == "Good Squat ✓"
@@ -638,33 +683,32 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         val scale = max(viewW / imgW, viewH / imgH)
         val offsetX = (viewW - imgW * scale) / 2f
         val offsetY = (viewH - imgH * scale) / 2f
+        val pts = FloatArray(2)
 
-        fun transformX(x: Float): Float {
-            return if (isFront) {
-                viewW - (x * scale + offsetX)
-            } else {
-                x * scale + offsetX
+        fun transformPoint(x: Float, y: Float): Pair<Float, Float> {
+            if (currentMatrix != null) {
+                pts[0] = x
+                pts[1] = y
+                currentMatrix.mapPoints(pts)
+                return Pair(pts[0], pts[1])
             }
-        }
-
-        fun transformY(y: Float): Float {
-            return y * scale + offsetY
+            val mappedX = x * scale + offsetX
+            val finalX = if (isFront) viewW - mappedX else mappedX
+            val finalY = y * scale + offsetY
+            return Pair(finalX, finalY)
         }
 
         fun drawLineBetween(lm1: PoseLandmark?, lm2: PoseLandmark?) {
             if (lm1 == null || lm2 == null) return
             if (lm1.inFrameLikelihood < 0.35f || lm2.inFrameLikelihood < 0.35f) return
-            val x1 = transformX(lm1.position.x)
-            val y1 = transformY(lm1.position.y)
-            val x2 = transformX(lm2.position.x)
-            val y2 = transformY(lm2.position.y)
+            val (x1, y1) = transformPoint(lm1.position.x, lm1.position.y)
+            val (x2, y2) = transformPoint(lm2.position.x, lm2.position.y)
             canvas.drawLine(x1, y1, x2, y2, linePaint)
         }
 
         fun drawJointDot(lm: PoseLandmark?) {
             if (lm == null || lm.inFrameLikelihood < 0.35f) return
-            val x = transformX(lm.position.x)
-            val y = transformY(lm.position.y)
+            val (x, y) = transformPoint(lm.position.x, lm.position.y)
             canvas.drawCircle(x, y, 14f, dotPaint)
             canvas.drawCircle(x, y, 14f, dotBorderPaint)
         }
@@ -751,8 +795,7 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         if (angle != null) {
             val kneeLm = if ((leftKnee?.inFrameLikelihood ?: 0f) > (rightKnee?.inFrameLikelihood ?: 0f)) leftKnee else rightKnee
             if (kneeLm != null && kneeLm.inFrameLikelihood > 0.4f) {
-                val kx = transformX(kneeLm.position.x)
-                val ky = transformY(kneeLm.position.y)
+                val (kx, ky) = transformPoint(kneeLm.position.x, kneeLm.position.y)
                 canvas.drawText("${angle.toInt()}°", kx + 24f, ky - 10f, anglePaint)
             }
         }
