@@ -518,9 +518,20 @@ class AlarmModuleBridge {
   }
 
   async openCameraMission(options: {
-    mode: 'photo' | 'barcode' | 'squat';
+    mode: 'photo' | 'barcode' | 'squat' | 'register_barcode' | 'register_photo';
     target?: number;
-  }): Promise<{ path?: string; value?: string; count?: number; completed?: boolean } | null> {
+    barcodeValue?: string;
+    barcodeName?: string;
+    referencePath?: string;
+    matchThreshold?: number;
+  }): Promise<{
+    path?: string;
+    value?: string;
+    format?: string;
+    count?: number;
+    score?: number;
+    completed?: boolean;
+  } | null> {
     if (Platform.OS !== 'android' || !AlarmModule) {
       return null;
     }

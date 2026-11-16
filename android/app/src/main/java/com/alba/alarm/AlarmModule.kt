@@ -715,6 +715,18 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             if (options.hasKey("target")) {
                 putExtra(CameraMissionActivity.EXTRA_TARGET, options.getInt("target"))
             }
+            if (options.hasKey("barcodeValue")) {
+                putExtra(CameraMissionActivity.EXTRA_BARCODE_VALUE, options.getString("barcodeValue"))
+            }
+            if (options.hasKey("barcodeName")) {
+                putExtra(CameraMissionActivity.EXTRA_BARCODE_NAME, options.getString("barcodeName"))
+            }
+            if (options.hasKey("referencePath")) {
+                putExtra(CameraMissionActivity.EXTRA_REFERENCE_PATH, options.getString("referencePath"))
+            }
+            if (options.hasKey("matchThreshold")) {
+                putExtra(CameraMissionActivity.EXTRA_MATCH_THRESHOLD, options.getInt("matchThreshold"))
+            }
         }
         try {
             activity.startActivityForResult(intent, CAMERA_REQUEST)
@@ -1034,7 +1046,9 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
         val map = Arguments.createMap()
         data.getStringExtra(CameraMissionActivity.EXTRA_PATH)?.let { map.putString("path", it) }
         data.getStringExtra(CameraMissionActivity.EXTRA_VALUE)?.let { map.putString("value", it) }
+        data.getStringExtra(CameraMissionActivity.EXTRA_FORMAT)?.let { map.putString("format", it) }
         map.putInt("count", data.getIntExtra(CameraMissionActivity.EXTRA_COUNT, 0))
+        map.putInt("score", data.getIntExtra(CameraMissionActivity.EXTRA_SCORE, 0))
         map.putBoolean("completed", data.getBooleanExtra(CameraMissionActivity.EXTRA_COMPLETED, false))
         promise.resolve(map)
     }

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BackHandler,
+  Image,
   Pressable,
   Text,
   Vibration,
@@ -17,13 +18,6 @@ import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PhotoMission'>;
 
-const TARGET_OBJECTS = [
-  { id: 'sink', title: 'Bathroom Sink & Mirror', icon: '🪥', location: 'Bathroom' },
-  { id: 'coffee', title: 'Coffee Maker / Kettle', icon: '☕', location: 'Kitchen' },
-  { id: 'desk', title: 'Study Desk Lamp', icon: '💡', location: 'Office' },
-  { id: 'window', title: 'Window Daylight View', icon: '🪟', location: 'Living Room' },
-];
-
 export function PhotoMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const logAlarmDismissed = useReportStore(s => s.logAlarmDismissed);
@@ -33,13 +27,13 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
   const missionsParam = route.params?.missions;
   const allMissions = useMemo(() => missionsParam ?? [], [missionsParam]);
   const referencePath = route.params?.referencePath;
-  const matchThreshold = route.params?.matchThreshold ?? 72;
+  const matchThreshold = route.params?.matchThreshold ?? 68;
 
-  const [selectedTarget, setSelectedTarget] = useState(TARGET_OBJECTS[0]);
-  const [flashlight, setFlashlight] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [matchPercentage, setMatchPercentage] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [captureError, setCaptureError] = useState('');
+  const [attemptCount, setAttemptCount] = useState(0);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
@@ -80,40 +74,37 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed, referencePath, matchThreshold]);
 
-  const [captureError, setCaptureError] = useState('');
-
-  const handleCapture = async () => {
-    if (isCapturing) return;
+  const handleCapture = useCallback(async () => {
+    if (isCapturing || isCompletedRef.current) return;
     setIsCapturing(true);
     setCaptureError('');
-    const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
-    if (!shot?.path) {
+    try {
+      const shot = await NativeAlarm.openCameraMission({
+        mode: 'photo',
+        referencePath,
+        matchThreshold,
+      });
       setIsCapturing(false);
-      setCaptureError('Camera closed. The mission is still open.');
-      return;
-    }
-    const reference = route.params?.referencePath;
-    if (!reference) {
-      // Emergency safety failsafe: if reference photo was missing/deleted, accept capture so user is never trapped
+
+      if (shot?.completed) {
+        setMatchPercentage(shot.score ?? 100);
+        completeMission();
+        return;
+      }
+      setAttemptCount(prev => prev + 1);
+      setCaptureError('Camera closed. Tap below to capture again.');
+    } catch {
       setIsCapturing(false);
-      completeMission();
-      return;
+      setCaptureError('Camera could not open. Please try again.');
     }
-    const compared = await NativeAlarm.comparePhotos(
-      reference,
-      shot.path,
-      route.params?.matchThreshold ?? 72,
-    );
-    if (!compared?.pass) {
-      setMatchPercentage(compared?.score ?? 0);
-      setIsCapturing(false);
-      setCaptureError(`Match ${compared?.score ?? 0}%. Try the same place again.`);
-      return;
-    }
-    setMatchPercentage(compared.score);
-    setIsCapturing(false);
-    completeMission();
-  };
+  }, [completeMission, isCapturing, matchThreshold, referencePath]);
+
+  const handleCaptureRef = useRef(handleCapture);
+  handleCaptureRef.current = handleCapture;
+
+  useEffect(() => {
+    handleCaptureRef.current();
+  }, []);
 
   return (
     <AppBackground target="mission">
@@ -131,116 +122,92 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
               Photo Wake-up Mission 📸
             </Text>
           </View>
-          <Text className="text-navy font-extrabold text-xl mt-1 text-center">
-            Take a Photo of Your Target
+          <Text className="text-navy font-extrabold text-2xl mt-1 text-center">
+            Photograph Your Target Object
           </Text>
-          <Text className="text-subtext text-xs text-center mt-0.5">
-            Walk to your {selectedTarget.location.toLowerCase()} and frame the target object
+          <Text className="text-subtext text-xs text-center mt-1">
+            Walk to your registered item and frame it in the camera
           </Text>
         </View>
 
-        {/* Target Objective Indicator */}
-        <View className="w-full bg-white/95 rounded-2xl p-4 border border-slate-200 shadow-sm mt-2">
-          <Text className="text-subtext font-bold text-[10px] uppercase tracking-wider">
-            Registered Target Object
-          </Text>
-          <View className="flex-row items-center justify-between mt-1">
-            <View className="flex-row items-center">
-              <Text className="text-2xl mr-2.5">{selectedTarget.icon}</Text>
-              <View>
-                <Text className="text-navy font-black text-base">
-                  {selectedTarget.title}
-                </Text>
-                <Text className="text-subtext text-xs font-medium">
-                  Location: {selectedTarget.location}
-                </Text>
-              </View>
-            </View>
-            <View className="bg-ice px-2.5 py-1 rounded-lg border border-primary/25">
-              <Text className="text-primary font-bold text-xs">Registered</Text>
-            </View>
+        {/* Reference Target Card */}
+        <View className="w-full bg-white/95 rounded-3xl p-5 border border-slate-200 shadow-sm my-3 flex-row items-center justify-between">
+          <View className="flex-1 mr-3">
+            <Text className="text-subtext font-bold text-[10px] uppercase tracking-wider">
+              Registered Reference
+            </Text>
+            <Text className="text-navy font-black text-lg mt-0.5">
+              Target Object
+            </Text>
+            <Text className="text-subtext text-xs mt-1">
+              {referencePath ? 'Reference photo is loaded' : 'No reference photo set'}
+            </Text>
           </View>
-        </View>
-
-        {/* Camera Viewfinder Simulation */}
-        <View className="w-full aspect-[4/3] bg-slate-900 rounded-3xl overflow-hidden relative border-2 border-slate-700 shadow-2xl items-center justify-center my-3">
-          {/* Shutter Flash Animation */}
-          {isCapturing && (
-            <View className="absolute inset-0 bg-white/40 z-30" pointerEvents="none" />
+          {referencePath ? (
+            <View className="h-16 w-16 rounded-2xl overflow-hidden border-2 border-primary shadow-xs">
+              <Image
+                source={{ uri: `file://${referencePath}` }}
+                className="h-full w-full"
+                resizeMode="cover"
+              />
+            </View>
+          ) : (
+            <View className="h-16 w-16 rounded-2xl bg-slate-100 items-center justify-center border border-slate-200">
+              <Text className="text-2xl">📸</Text>
+            </View>
           )}
-
-          {/* Viewfinder Target Reticle */}
-          <View className="w-60 h-44 border-2 border-dashed border-primary rounded-2xl items-center justify-center relative bg-black/35">
-            {/* Target silhouette preview */}
-            <Text className="text-5xl opacity-40 mb-2">{selectedTarget.icon}</Text>
-            <Text className="text-primary font-mono text-[11px] font-bold">
-              [ FRAME {selectedTarget.title.toUpperCase()} ]
-            </Text>
-
-            {matchPercentage !== null && (
-              <View className="mt-3 items-center">
-                <Text className="text-white text-3xl font-black">{matchPercentage}%</Text>
-              </View>
-            )}
-            {captureError ? (
-              <Text className="text-white text-center text-sm mt-3 px-4">{captureError}</Text>
-            ) : null}
-          </View>
-
-          {/* Flashlight toggle */}
-          <Pressable
-            onPress={() => setFlashlight(prev => !prev)}
-            className={`absolute top-4 right-4 px-3 py-1.5 rounded-full flex-row items-center border ${
-              flashlight
-                ? 'bg-amber-400 border-amber-300'
-                : 'bg-black/50 border-white/20'
-            }`}
-          >
-            <Text className="text-xs mr-1">🔦</Text>
-            <Text
-              className={`text-[11px] font-bold ${
-                flashlight ? 'text-slate-900' : 'text-white'
-              }`}
-            >
-              {flashlight ? 'Flash ON' : 'Flash'}
-            </Text>
-          </Pressable>
-
-          {/* Status text */}
-          <View className="absolute bottom-3 bg-black/60 px-4 py-1.5 rounded-full">
-            <Text className="text-white text-xs font-semibold">
-              {isCapturing
-                ? '🔍 Analyzing photo similarity...'
-                : 'Point camera at target object & capture'}
-            </Text>
-          </View>
         </View>
 
-        {/* Action Controls */}
-        <View className="w-full items-center">
+        {/* Interactive Camera Card */}
+        <View className="w-full bg-slate-900 rounded-3xl p-6 items-center justify-center my-3 border border-slate-800 shadow-xl">
+          <Text className="text-5xl mb-2">📷</Text>
+          <Text className="text-white font-extrabold text-lg text-center mb-1">
+            Real-time Photo Matcher
+          </Text>
+          <Text className="text-slate-400 text-xs text-center mb-5 px-4">
+            The camera includes a picture-in-picture target preview and instant illumination-tolerant verification.
+          </Text>
+
           <Pressable
             onPress={handleCapture}
             disabled={isCapturing}
-            className="w-full bg-primary py-4 rounded-2xl items-center active:bg-primary-dark shadow-md mb-2"
+            className="w-full bg-primary py-4 rounded-2xl items-center active:bg-primary-dark shadow-md"
           >
-            <Text className="text-white font-extrabold text-base tracking-wide">
-              {isCapturing ? 'Analyzing Photo Match...' : 'Capture Photo 📸'}
+            <Text className="text-white font-black text-sm uppercase tracking-wider">
+              {isCapturing ? 'Camera Active...' : '📸 Open Camera'}
             </Text>
           </Pressable>
 
-          {/* Target Switcher */}
+          {captureError ? (
+            <View className="mt-3 bg-rose-500/20 border border-rose-500/40 p-3 rounded-2xl w-full">
+              <Text className="text-rose-300 font-bold text-xs text-center">
+                {captureError}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Emergency failsafe bypass if user is stuck */}
+          {attemptCount >= 3 ? (
+            <Pressable
+              onPress={completeMission}
+              className="mt-4 bg-amber-500/20 border border-amber-500/40 px-4 py-2 rounded-xl"
+            >
+              <Text className="text-amber-300 font-bold text-xs">
+                Emergency: Dismiss Alarm ⚠️
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* Bottom Actions */}
+        <View className="w-full items-center mb-2">
           <Pressable
-            onPress={() => {
-              const nextIdx =
-                (TARGET_OBJECTS.findIndex(t => t.id === selectedTarget.id) + 1) %
-                TARGET_OBJECTS.length;
-              setSelectedTarget(TARGET_OBJECTS[nextIdx]);
-              setMatchPercentage(null);
-            }}
-            className="py-1"
+            onPress={handleCapture}
+            disabled={isCapturing}
+            className="w-full bg-primary py-4 rounded-2xl items-center mb-2 active:bg-primary-dark shadow-md"
           >
-            <Text className="text-primary font-bold text-xs underline">
-              Switch Target Object ({selectedTarget.title}) 🔄
+            <Text className="text-white font-extrabold text-base tracking-wide">
+              📸 Open Camera to Capture Photo
             </Text>
           </Pressable>
         </View>
@@ -250,9 +217,9 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
       <CustomConfirmModal
         visible={showSuccessModal}
         title="Out of Bed! 🌟"
-        message={`Verified photo of "${selectedTarget.title}". You successfully walked out of bed and woke up!`}
+        message="Photo verified! You successfully walked out of bed and woke up!"
         icon="📸"
-        confirmText="Start My Day"
+        confirmText="Start My Day ☀️"
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
@@ -266,4 +233,3 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
     </AppBackground>
   );
 }
-

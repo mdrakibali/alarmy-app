@@ -18,12 +18,6 @@ import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarcodeMission'>;
 
-const DEMO_BARCODES = [
-  { id: 'toothpaste', label: 'Bathroom Toothpaste', code: '890103038294' },
-  { id: 'coffee', label: 'Kitchen Coffee Beans', code: '761303582419' },
-  { id: 'book', label: 'Desk Reading Book', code: '978013235088' },
-];
-
 export function BarcodeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const alarmId = route.params?.alarmId;
@@ -31,21 +25,19 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
   const missionsParam = route.params?.missions;
   const allMissions = useMemo(() => missionsParam ?? [], [missionsParam]);
 
-  const [selectedTarget, setSelectedTarget] = useState(DEMO_BARCODES[0]);
+  const registeredCode = route.params?.registeredCode?.trim() ?? '';
   const [manualInput, setManualInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const accepted = useRef(false);
+  const [isScanning, setIsScanning] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
-    // Disable back button during mission
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
   }, []);
 
   const isCompletedRef = useRef(false);
-  const registeredCode = route.params?.registeredCode?.trim() ?? '';
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
@@ -79,52 +71,44 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   }, [alarmId, allMissions, missionIndex, navigation, route.params]);
 
-  const acceptValue = useCallback((value: string, fromText: boolean) => {
-    if (accepted.current) return;
-    if (!registeredCode) {
-      accepted.current = true;
-      completeMission();
-      return;
-    }
-    const trimmed = value.trim();
-    const matched = fromText ? trimmed.includes(registeredCode) : trimmed === registeredCode;
-    if (!matched) {
-      setErrorMsg(`Scanned: ${trimmed}\nExpected: ${registeredCode}\nCode does not match registered item. Try again!`);
-      return;
-    }
-    accepted.current = true;
-    completeMission();
-  }, [completeMission, registeredCode]);
-
   const startRealCameraScan = useCallback(async () => {
+    if (isScanning || isCompletedRef.current) return;
+    setIsScanning(true);
     setErrorMsg('');
     try {
-      const res = await NativeAlarm.openCameraMission({ mode: 'barcode' });
-      if (res?.value) {
-        acceptValue(res.value, false);
+      const res = await NativeAlarm.openCameraMission({
+        mode: 'barcode',
+        barcodeValue: registeredCode,
+        barcodeName: 'Registered Barcode / QR',
+      });
+      setIsScanning(false);
+      if (res?.completed) {
+        completeMission();
       } else {
-        setErrorMsg('Camera closed without detecting code. Tap below to scan again.');
+        setErrorMsg('Camera closed. Tap below to scan again.');
       }
     } catch {
+      setIsScanning(false);
       setErrorMsg('Could not open camera scanner. Please try again.');
     }
-  }, [acceptValue]);
+  }, [completeMission, isScanning, registeredCode]);
+
+  const startScanRef = useRef(startRealCameraScan);
+  startScanRef.current = startRealCameraScan;
 
   useEffect(() => {
-    startRealCameraScan();
-  }, [startRealCameraScan]);
+    startScanRef.current();
+  }, []);
 
   const handleVerifyManualCode = () => {
     if (!registeredCode) {
-      accepted.current = true;
       completeMission();
       return;
     }
     if (manualInput.trim() === registeredCode) {
-      accepted.current = true;
       completeMission();
     } else {
-      setErrorMsg(`Entered code does not match registered code: ${registeredCode}`);
+      setErrorMsg(`Code does not match registered item: ${registeredCode}`);
     }
   };
 
@@ -132,65 +116,68 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     <AppBackground target="mission">
       <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: insets.bottom + 12,
+          paddingTop: Math.max(insets.top, 16),
+          paddingBottom: Math.max(insets.bottom, 16),
         }}
         className="flex-1 px-5 justify-between items-center"
       >
         {/* Top Header */}
-        <View className="items-center w-full">
+        <View className="items-center w-full mt-2">
           <View className="px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 mb-1">
             <Text className="text-emerald-700 font-extrabold text-[11px] uppercase tracking-wider">
-              QR / Barcode Wake-up Mission
+              QR / Barcode Wake-up Mission 📷
             </Text>
           </View>
-          <Text className="text-slate-800 font-extrabold text-lg mt-1 text-center">
-            Leave Bed & Scan Barcode
+          <Text className="text-slate-900 font-extrabold text-2xl mt-1 text-center">
+            Scan Your Registered Item
           </Text>
-          <Text className="text-slate-500 text-xs text-center mt-0.5">
+          <Text className="text-slate-500 text-xs text-center mt-1">
             Walk to your bathroom or kitchen to turn off this alarm
           </Text>
         </View>
 
-        {/* Target Barcode Indicator */}
-        <View className="w-full bg-white/95 rounded-2xl p-4 border border-slate-200 shadow-sm mt-3">
+        {/* Target Item Card */}
+        <View className="w-full bg-white/95 rounded-3xl p-5 border border-slate-200 shadow-sm my-3">
           <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-            Target Barcode
+            Target Item
           </Text>
-          <View className="flex-row items-center justify-between mt-1">
+          <View className="flex-row items-center justify-between mt-2">
             <View>
-              <Text className="text-slate-900 font-black text-base">
-                {selectedTarget.label}
+              <Text className="text-slate-900 font-black text-lg">
+                Registered Code
               </Text>
-              <Text className="text-slate-500 font-mono text-xs mt-0.5">
-                Code: {registeredCode || 'Not registered'}
+              <Text className="text-slate-500 font-mono text-xs mt-1">
+                {registeredCode ? `Code: ${registeredCode}` : 'Any barcode / QR code'}
               </Text>
             </View>
-            <View className="bg-emerald-100 px-2.5 py-1 rounded-lg">
-              <Text className="text-emerald-800 font-bold text-xs">Registered</Text>
+            <View className="bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200">
+              <Text className="text-emerald-800 font-bold text-xs">Registered ✓</Text>
             </View>
           </View>
         </View>
 
-        {/* Real Camera Action Trigger */}
-        <View className="w-full bg-slate-900 rounded-3xl p-6 items-center justify-center my-3 border border-slate-700 shadow-md">
-          <Text className="text-4xl mb-2">📸</Text>
-          <Text className="text-white font-extrabold text-base text-center mb-1">
-            Real-time Barcode & QR Scanner
+        {/* Interactive Center Box */}
+        <View className="w-full bg-slate-900 rounded-3xl p-6 items-center justify-center my-3 border border-slate-800 shadow-xl">
+          <Text className="text-5xl mb-2">📸</Text>
+          <Text className="text-white font-extrabold text-lg text-center mb-1">
+            Live Barcode & QR Scanner
           </Text>
-          <Text className="text-slate-400 text-xs text-center mb-4">
-            Point your camera at the registered package to dismiss
+          <Text className="text-slate-400 text-xs text-center mb-5 px-4">
+            Point camera at the barcode. The camera stays open with real-time verification.
           </Text>
+
           <Pressable
             onPress={startRealCameraScan}
-            className="w-full bg-emerald-600 py-3.5 rounded-2xl items-center active:bg-emerald-700 shadow-sm"
+            disabled={isScanning}
+            className="w-full bg-emerald-600 py-4 rounded-2xl items-center active:bg-emerald-700 shadow-md"
           >
             <Text className="text-white font-black text-sm uppercase tracking-wider">
-              📷 Open Camera Scanner
+              {isScanning ? 'Scanner Active...' : '📷 Open Camera Scanner'}
             </Text>
           </Pressable>
+
           {errorMsg ? (
-            <View className="mt-3 bg-rose-500/20 border border-rose-500/40 p-2.5 rounded-xl w-full">
+            <View className="mt-3 bg-rose-500/20 border border-rose-500/40 p-3 rounded-2xl w-full">
               <Text className="text-rose-300 font-bold text-xs text-center">
                 {errorMsg}
               </Text>
@@ -211,7 +198,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
                   setManualInput(t);
                   setErrorMsg('');
                 }}
-                placeholder={selectedTarget.code}
+                placeholder={registeredCode || 'Enter barcode digits'}
                 placeholderTextColor="#94A3B8"
                 keyboardType="numeric"
                 className="flex-1 bg-slate-100 rounded-xl px-3 py-2 text-slate-900 font-mono text-sm"
@@ -223,16 +210,11 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
                 <Text className="text-white font-bold text-xs">Verify</Text>
               </Pressable>
             </View>
-            {errorMsg ? (
-              <Text className="text-rose-500 font-bold text-xs mt-1">
-                {errorMsg}
-              </Text>
-            ) : null}
           </View>
         )}
 
-        {/* Action Controls */}
-        <View className="w-full items-center">
+        {/* Bottom Actions */}
+        <View className="w-full items-center mb-2">
           <Pressable
             onPress={startRealCameraScan}
             className="w-full bg-primary py-4 rounded-2xl items-center mb-2 active:bg-primary-dark shadow-md"
@@ -242,31 +224,14 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
             </Text>
           </Pressable>
 
-          <View className="flex-row items-center justify-between w-full px-1">
-            <Pressable
-              onPress={() => setShowManualInput(prev => !prev)}
-              className="py-1"
-            >
-              <Text className="text-slate-500 font-bold text-xs underline">
-                {showManualInput ? 'Hide manual input' : 'Enter barcode manually ⌨️'}
-              </Text>
-            </Pressable>
-
-            {/* Quick target switcher for testing */}
-            <Pressable
-              onPress={() => {
-                const nextIdx =
-                  (DEMO_BARCODES.findIndex(b => b.id === selectedTarget.id) + 1) %
-                  DEMO_BARCODES.length;
-                setSelectedTarget(DEMO_BARCODES[nextIdx]);
-              }}
-              className="py-1"
-            >
-              <Text className="text-emerald-700 font-bold text-xs">
-                Switch Target 🔄
-              </Text>
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => setShowManualInput(prev => !prev)}
+            className="py-1"
+          >
+            <Text className="text-slate-500 font-bold text-xs underline">
+              {showManualInput ? 'Hide manual input' : 'Enter barcode manually ⌨️'}
+            </Text>
+          </Pressable>
         </View>
       </View>
 
@@ -274,9 +239,9 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
       <CustomConfirmModal
         visible={showSuccessModal}
         title="Out of Bed! 🎉"
-        message={`Verified "${selectedTarget.label}" barcode! You successfully walked out of bed and woke up!`}
+        message="Barcode verified! You successfully walked out of bed and woke up!"
         icon="🪥"
-        confirmText="Start My Day"
+        confirmText="Start My Day ☀️"
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
@@ -290,4 +255,3 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     </AppBackground>
   );
 }
-

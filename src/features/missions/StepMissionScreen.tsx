@@ -20,7 +20,7 @@ import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StepMission'>;
 
-const DEFAULT_STEPS = 5;
+const DEFAULT_STEPS = 10;
 
 export function StepMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
@@ -28,6 +28,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
   const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
   const [stepsWalked, setStepsWalked] = useState(() => Math.min(target - 1, Math.max(0, savedSubProgress)));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [sensorMissing, setSensorMissing] = useState(false);
 
   const isCompletedRef = useRef(false);
 
@@ -38,7 +39,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
     useActiveMissionStore.getState().updateSubProgress(target);
 
     try {
-      Vibration.vibrate([0, 120, 60, 120]);
+      Vibration.vibrate([0, 150, 80, 200]);
     } catch {}
 
     const alarmId = route.params?.alarmId;
@@ -71,7 +72,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
   const handleManualStepFallback = () => {
     try {
-      Vibration.vibrate(50);
+      Vibration.vibrate(40);
     } catch {}
     setStepsWalked(prev => {
       const next = prev + 1;
@@ -92,6 +93,9 @@ export function StepMissionScreen({ navigation, route }: Props) {
   }, []);
 
   const addStep = useCallback((count: number) => {
+    try {
+      Vibration.vibrate(45);
+    } catch {}
     setStepsWalked(prev => {
       const next = Math.max(prev, count);
       useActiveMissionStore.getState().updateSubProgress(next);
@@ -102,8 +106,6 @@ export function StepMissionScreen({ navigation, route }: Props) {
     }
   }, [completeMission, target]);
 
-  const [sensorMissing, setSensorMissing] = useState(false);
-
   useEffect(() => {
     let stopped = false;
     const start = async () => {
@@ -112,8 +114,8 @@ export function StepMissionScreen({ navigation, route }: Props) {
           PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION,
         );
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          if (!stopped) setSensorMissing(true);
-          return;
+          // If denied, fallback accelerometer in StepCounter still operates
+          console.log('ACTIVITY_RECOGNITION denied, using accelerometer fallback');
         }
       }
       const ok = await NativeAlarm.startStepCounter();
@@ -130,6 +132,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
     };
   }, [addStep]);
 
+  const stepsLeft = Math.max(0, target - stepsWalked);
   const progressPct = Math.min(100, Math.round((stepsWalked / target) * 100));
 
   return (
@@ -149,17 +152,17 @@ export function StepMissionScreen({ navigation, route }: Props) {
             </Text>
           </View>
           <Text className="text-2xl font-black text-slate-900 text-center">
-            Walk {target} Steps Out of Bed
+            Carry Your Phone and Walk
           </Text>
           <Text className="text-xs text-slate-500 font-semibold mt-1">
-            Physical movement breaks sleep inertia immediately
+            Keep your phone in hand or pocket and walk naturally
           </Text>
         </View>
 
-        {/* Center Progress Circle */}
+        {/* Center Progress Box (ktAlarm-style prominent countdown) */}
         <View className="items-center justify-center my-6">
           <View
-            className={`h-56 w-56 rounded-full border-8 ${
+            className={`h-64 w-64 rounded-full border-8 ${
               stepsWalked >= target
                 ? 'border-emerald-500 bg-emerald-50/90'
                 : stepsWalked > 0
@@ -168,14 +171,14 @@ export function StepMissionScreen({ navigation, route }: Props) {
             } items-center justify-center shadow-xl`}
           >
             <Text
-              className={`text-5xl font-black ${
+              className={`text-6xl font-black ${
                 stepsWalked >= target ? 'text-emerald-600' : 'text-slate-900'
               }`}
             >
-              {stepsWalked}
+              {stepsLeft}
             </Text>
-            <Text className="text-sm font-bold text-slate-400 mt-1">
-              / {target} Steps
+            <Text className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">
+              {stepsLeft === 1 ? 'Step Left' : 'Steps Left'}
             </Text>
             <View
               className={`mt-3 px-3 py-1 rounded-full ${
@@ -187,17 +190,25 @@ export function StepMissionScreen({ navigation, route }: Props) {
                   stepsWalked >= target ? 'text-emerald-700' : 'text-primary'
                 }`}
               >
-                {stepsWalked >= target ? 'DONE ✓' : `${progressPct}% Walked`}
+                {stepsWalked >= target ? 'DONE ✓' : `${stepsWalked}/${target} (${progressPct}%)`}
               </Text>
             </View>
           </View>
+
+          {/* Progress Track Bar */}
+          <View className="w-64 bg-slate-200 h-2.5 rounded-full mt-6 overflow-hidden">
+            <View
+              className="bg-emerald-500 h-full rounded-full"
+              style={{ width: `${progressPct}%` }}
+            />
+          </View>
         </View>
 
-        {/* Step Guide & Sensor Status */}
+        {/* Step Guide & Anti-Cheat Info */}
         <View className="items-center w-full mb-4 px-2">
           <View className="bg-white/90 rounded-2xl p-4 w-full border border-slate-200 mb-3 shadow-xs">
             <Text className="text-xs font-bold text-navy text-center">
-              🚶 Walk with real rhythmic strides out of bed. In-bed wiggling or phone shaking is automatically filtered out by human gait analysis.
+              🚶 Walk with real rhythmic strides. Shaking the phone in bed does not count as walking.
             </Text>
           </View>
 
@@ -205,19 +216,19 @@ export function StepMissionScreen({ navigation, route }: Props) {
             <View className="w-full items-center">
               <Pressable
                 onPress={handleManualStepFallback}
-                className="w-full bg-amber-500 py-3 rounded-2xl items-center shadow-xs mb-2 active:bg-amber-600"
+                className="w-full bg-amber-500 py-3.5 rounded-2xl items-center shadow-xs mb-2 active:bg-amber-600"
               >
                 <Text className="text-white text-xs font-black uppercase tracking-wider">
                   ⚠️ Sensor Unavailable: Tap to Step (+1)
                 </Text>
               </Pressable>
               <Text className="text-xs text-subtext text-center font-medium">
-                Step sensor not available on this device or permission denied.
+                Motion sensor not available on this device.
               </Text>
             </View>
           ) : (
             <Text className="text-xs font-semibold text-slate-500 text-center">
-              Hardware step sensor active. Walk around to register steps.
+              Sensors active. Walk around to complete steps.
             </Text>
           )}
         </View>
@@ -227,7 +238,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
       <CustomConfirmModal
         visible={showSuccessModal}
         title="Mission Complete! 🚶"
-        message={`${target} steps completed! You are up and out of bed. Great job!`}
+        message={`${target} steps completed! You are up and out of bed. Good morning!`}
         confirmText="Start My Day ☀️"
         icon="👟"
         onConfirm={() => {

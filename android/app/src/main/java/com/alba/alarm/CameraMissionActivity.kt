@@ -1,803 +1,1309 @@
 package com.alba.alarm
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Matrix
+import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
-import android.widget.Button
+import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
-import androidx.camera.core.UseCaseGroup
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.camera.view.transform.CoordinateTransform
-import androidx.camera.view.transform.ImageProxyTransformFactory
 import androidx.core.content.ContextCompat
+import com.google.android.gms.tasks.Task
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
+import com.google.mlkit.vision.pose.PoseDetector
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
 import java.io.File
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import kotlin.math.abs
-import kotlin.math.acos
-import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.min
 
 class CameraMissionActivity : ComponentActivity() {
-    private val cameraExecutor = Executors.newSingleThreadExecutor()
+
+    companion object {
+        const val TAG = "CameraMissionActivity"
+
+        const val EXTRA_MODE = "mode"
+        const val EXTRA_TARGET = "target"
+        const val EXTRA_BARCODE_VALUE = "barcodeValue"
+        const val EXTRA_BARCODE_NAME = "barcodeName"
+        const val EXTRA_REFERENCE_PATH = "referencePath"
+        const val EXTRA_MATCH_THRESHOLD = "matchThreshold"
+
+        const val EXTRA_PATH = "path"
+        const val EXTRA_VALUE = "value"
+        const val EXTRA_FORMAT = "format"
+        const val EXTRA_COUNT = "count"
+        const val EXTRA_SCORE = "score"
+        const val EXTRA_COMPLETED = "completed"
+        const val EXTRA_REASON = "reason"
+
+        const val MODE_PHOTO = "photo"
+        const val MODE_BARCODE = "barcode"
+        const val MODE_SQUAT = "squat"
+        const val MODE_REGISTER_BARCODE = "register_barcode"
+        const val MODE_REGISTER_PHOTO = "register_photo"
+    }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    private var camera: Camera? = null
+    private var cameraControl: CameraControl? = null
     private var imageCapture: ImageCapture? = null
-    private var squatReps = 0
-    private var finished = false
+    private var isTorchOn = false
+    private var isFrontCamera = false
+
+    private var toneGenerator: ToneGenerator? = null
+    private var isFinished = false
+
+    private lateinit var rootContainer: FrameLayout
+    private lateinit var previewView: PreviewView
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) startCamera() else finishCancelled("permission")
+        if (granted) setupCamera() else finishCancelled("permission_denied")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initToneGenerator()
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            startCamera()
+            setupCamera()
         } else {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    private fun startCamera() {
-        val previewView = PreviewView(this).apply {
-            scaleType = PreviewView.ScaleType.FILL_CENTER
-            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-        }
-        val overlayView = PoseGraphicOverlay(this)
-        val label = TextView(this).apply {
-            text = "Camera"
-            setTextColor(0xFFFFFFFF.toInt())
-            textSize = 22f
-            setPadding(48, 120, 48, 48)
-        }
-        val root = FrameLayout(this).apply {
-            setBackgroundColor(0xFF000000.toInt())
-            addView(previewView, FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-            ))
-            addView(overlayView, FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-            ))
-            addView(label)
-        }
-        setContentView(root)
-
-        val mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_PHOTO
-        val providerFuture = ProcessCameraProvider.getInstance(this)
-        providerFuture.addListener({
-            val provider = providerFuture.get()
-            val preview = Preview.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-                .build().also {
-                    it.surfaceProvider = previewView.surfaceProvider
-                }
-            val front = CameraSelector.DEFAULT_FRONT_CAMERA
-            val selector = if (mode == MODE_SQUAT && runCatching { provider.hasCamera(front) }.getOrDefault(false)) {
-                front
-            } else {
-                CameraSelector.DEFAULT_BACK_CAMERA
-            }
-            provider.unbindAll()
-            when (mode) {
-                MODE_BARCODE -> bindBarcode(provider, preview, selector, label)
-                MODE_SQUAT -> bindSquat(provider, preview, selector, label, overlayView, previewView)
-                else -> bindPhoto(provider, preview, selector, label)
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-    private fun bindPhoto(
-        provider: ProcessCameraProvider,
-        preview: Preview,
-        selector: CameraSelector,
-        label: TextView,
-    ) {
-        val capture = ImageCapture.Builder()
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-            .build()
-        imageCapture = capture
-        provider.bindToLifecycle(this, selector, preview, capture)
-        label.text = "Tap the screen to capture"
-        label.setOnClickListener { takePhoto() }
-        findViewById<FrameLayout>(android.R.id.content).getChildAt(0)?.setOnClickListener { takePhoto() }
-    }
-
-    private fun takePhoto() {
-        val capture = imageCapture ?: return
-        val file = File(getExternalFilesDir("missions"), "capture-${System.currentTimeMillis()}.jpg")
-        file.parentFile?.mkdirs()
-        val options = ImageCapture.OutputFileOptions.Builder(file).build()
-        capture.takePicture(options, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
-            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                val data = intent.apply { putExtra(EXTRA_PATH, file.absolutePath) }
-                setResult(RESULT_OK, data)
-                finish()
-            }
-
-            override fun onError(exception: ImageCaptureException) {
-                Log.e(TAG, "capture failed", exception)
-                finishCancelled("capture")
-            }
-        })
-    }
-
-    private fun bindBarcode(
-        provider: ProcessCameraProvider,
-        preview: Preview,
-        selector: CameraSelector,
-        label: TextView,
-    ) {
-        label.text = "Point at the registered code"
-        val scanner = BarcodeScanning.getClient()
-        val analysis = ImageAnalysis.Builder()
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-        analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-            val media = imageProxy.image
-            if (media == null || finished) {
-                imageProxy.close()
-                return@setAnalyzer
-            }
-            val image = InputImage.fromMediaImage(media, imageProxy.imageInfo.rotationDegrees)
-            scanner.process(image)
-                .addOnSuccessListener { codes ->
-                    val value = codes.firstOrNull { !it.rawValue.isNullOrBlank() }?.rawValue
-                    if (value != null && !finished) {
-                        finished = true
-                        val data = intent.apply { putExtra(EXTRA_VALUE, value) }
-                        setResult(RESULT_OK, data)
-                        finish()
-                    }
-                }
-                .addOnCompleteListener { imageProxy.close() }
-        }
-        provider.bindToLifecycle(this, selector, preview, analysis)
-    }
-
-    private var toneGenerator: ToneGenerator? = null
-
-    private fun playSquatSound(isFinal: Boolean = false) {
+    private fun initToneGenerator() {
         try {
-            if (toneGenerator == null) {
-                toneGenerator = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
-            }
+            toneGenerator = ToneGenerator(AudioManager.STREAM_ALARM, 90)
+        } catch (_: Throwable) {
+            toneGenerator = null
+        }
+    }
+
+    private fun playBeep(isFinal: Boolean = false) {
+        try {
             if (isFinal) {
-                toneGenerator?.startTone(ToneGenerator.TONE_PROP_ACK, 320)
+                toneGenerator?.startTone(ToneGenerator.TONE_PROP_ACK, 350)
             } else {
                 toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP2, 160)
             }
         } catch (_: Throwable) {}
     }
 
-    private fun triggerHapticFeedback(longBuzz: Boolean = false) {
+    private fun vibrateFeedback(type: String) {
         try {
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                vm?.defaultVibrator
+                (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
             } else {
                 @Suppress("DEPRECATION")
                 getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            }
-            val duration = if (longBuzz) 140L else 60L
+            } ?: return
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+                when (type) {
+                    "rep" -> vibrator.vibrate(VibrationEffect.createOneShot(70L, VibrationEffect.DEFAULT_AMPLITUDE))
+                    "success" -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 80, 180), -1))
+                    "error" -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 80, 60, 80), -1))
+                }
             } else {
                 @Suppress("DEPRECATION")
-                vibrator?.vibrate(duration)
+                when (type) {
+                    "rep" -> vibrator.vibrate(70L)
+                    "success" -> vibrator.vibrate(longArrayOf(0, 100, 80, 180), -1)
+                    "error" -> vibrator.vibrate(longArrayOf(0, 80, 60, 80), -1)
+                }
             }
         } catch (_: Throwable) {}
     }
 
-    private fun bindSquat(
-        provider: ProcessCameraProvider,
-        preview: Preview,
-        selector: CameraSelector,
-        label: TextView,
-        overlay: PoseGraphicOverlay,
-        previewView: PreviewView,
-    ) {
-        label.visibility = View.GONE
-        val isFront = (selector == CameraSelector.DEFAULT_FRONT_CAMERA)
-        val target = intent.getIntExtra(EXTRA_TARGET, 3).coerceAtLeast(1)
+    private fun toggleTorch() {
+        isTorchOn = !isTorchOn
+        try {
+            cameraControl?.enableTorch(isTorchOn)
+        } catch (_: Throwable) {}
+    }
 
-        val options = PoseDetectorOptions.Builder()
-            .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
-            .build()
-        val detector = PoseDetection.getClient(options)
-        val analysis = ImageAnalysis.Builder()
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-        val transformFactory = ImageProxyTransformFactory().apply {
-            isUsingRotationDegrees = true
-            isUsingCropRect = false
+    private fun dp(v: Int): Int =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), resources.displayMetrics).toInt()
+
+    private fun setupCamera() {
+        rootContainer = FrameLayout(this).apply {
+            setBackgroundColor(0xFF0E1116.toInt())
         }
-        var phase = "Standing"
-        var missing = 0
-        analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-            val media = imageProxy.image
-            if (media == null || finished) {
-                imageProxy.close()
-                return@setAnalyzer
-            }
-            val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-            val image = InputImage.fromMediaImage(media, rotationDegrees)
+        previewView = PreviewView(this).apply {
+            scaleType = PreviewView.ScaleType.FILL_CENTER
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        }
+        rootContainer.addView(previewView, FrameLayout.LayoutParams(-1, -1))
+        setContentView(rootContainer)
 
-            // Extract exact coordinate transformation matrix mapping MLKit image coordinates to PreviewView screen coordinates
-            val matrix = runCatching {
-                val sourceTransform = transformFactory.getOutputTransform(imageProxy)
-                val targetTransform = previewView.outputTransform
-                if (sourceTransform != null && targetTransform != null) {
-                    val ct = CoordinateTransform(sourceTransform, targetTransform)
-                    val m = Matrix()
-                    ct.transform(m)
-                    m
-                } else null
+        val mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_PHOTO
+        when (mode) {
+            MODE_SQUAT -> buildSquatFlow()
+            MODE_BARCODE -> buildBarcodeMissionFlow()
+            MODE_REGISTER_BARCODE -> buildBarcodeRegisterFlow()
+            MODE_REGISTER_PHOTO -> buildPhotoRegisterFlow()
+            else -> buildPhotoMissionFlow()
+        }
+    }
+
+    // =========================================================================
+    // 1. SQUAT MISSION FLOW
+    // =========================================================================
+
+    private fun buildSquatFlow() {
+        val targetReps = intent.getIntExtra(EXTRA_TARGET, 3).coerceAtLeast(1)
+        val squatCounter = SquatCounter()
+        val skeletonOverlay = SkeletonView(this)
+        rootContainer.addView(skeletonOverlay, FrameLayout.LayoutParams(-1, -1))
+
+        // Top Header Badge
+        val remainingText = TextView(this).apply {
+            text = "$targetReps"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 44f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+        val subLabel = TextView(this).apply {
+            text = "squats left"
+            setTextColor(0xFF9AA3AF.toInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+        val topBadge = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(12))
+            addView(remainingText)
+            addView(subLabel)
+        }
+        rootContainer.addView(
+            topBadge,
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
+                setMargins(dp(16), dp(36), 0, 0)
+            },
+        )
+
+        // Bottom Status Box
+        val statusPill = TextView(this).apply {
+            text = "Stand in front of the camera"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xD90E1116.toInt())
+                cornerRadius = dp(24).toFloat()
+            }
+            setPadding(dp(22), dp(10), dp(22), dp(10))
+        }
+        rootContainer.addView(
+            statusPill,
+            FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), 0, dp(16), dp(72))
+            },
+        )
+
+        // Depth Progress Bar
+        val depthBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = 0
+            isIndeterminate = false
+            progressTintList = ColorStateList.valueOf(0xFFFF8A3D.toInt())
+            progressBackgroundTintList = ColorStateList.valueOf(0x80333E4D.toInt())
+        }
+        val depthContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(14).toFloat()
+            }
+            setPadding(dp(16), dp(8), dp(16), dp(8))
+            val dLabel = TextView(this@CameraMissionActivity).apply {
+                text = "Depth"
+                setTextColor(0xFF9AA3AF.toInt())
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            addView(dLabel)
+            addView(depthBar, LinearLayout.LayoutParams(0, dp(8), 1f).apply { marginStart = dp(12) })
+        }
+        rootContainer.addView(
+            depthContainer,
+            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
+                setMargins(dp(16), 0, dp(16), dp(20))
+            },
+        )
+
+        // Close/Emergency Button
+        val closeBtn = TextView(this).apply {
+            text = "✕"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0x80000000.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setOnClickListener { finishCancelled("user_closed") }
+        }
+        rootContainer.addView(
+            closeBtn,
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.TOP or Gravity.END).apply {
+                setMargins(0, dp(36), dp(16), 0)
+            },
+        )
+
+        val providerFuture = ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider = providerFuture.get()
+            val front = CameraSelector.DEFAULT_FRONT_CAMERA
+            val selector = if (provider.hasCamera(front)) front else CameraSelector.DEFAULT_BACK_CAMERA
+            isFrontCamera = (selector == front)
+
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).build()
+            preview.surfaceProvider = previewView.surfaceProvider
+
+            val poseDetector = PoseDetection.getClient(
+                PoseDetectorOptions.Builder().setDetectorMode(PoseDetectorOptions.STREAM_MODE).build(),
+            )
+
+            val analysis = ImageAnalysis.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                if (isFinished) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val media = imageProxy.image
+                if (media == null) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val rotation = imageProxy.imageInfo.rotationDegrees
+                val isSideways = rotation % 180 != 0
+                val frameW = if (isSideways) imageProxy.height else imageProxy.width
+                val frameH = if (isSideways) imageProxy.width else imageProxy.height
+
+                val inputImage = InputImage.fromMediaImage(media, rotation)
+                poseDetector.process(inputImage)
+                    .addOnSuccessListener { pose ->
+                        if (isFinished) return@addOnSuccessListener
+                        val legs = extractLegs(pose)
+                        val nowMs = SystemClock.elapsedRealtime()
+                        val counted = squatCounter.update(legs, frameH.toFloat(), nowMs)
+
+                        mainHandler.post {
+                            if (isFinished) return@post
+                            val state = squatCounter.state
+                            val isDeep = (state == SquatCounter.State.DOWN)
+                            skeletonOverlay.update(pose, frameW, frameH, isFrontCamera, isDeep)
+
+                            depthBar.progress = (squatCounter.depth * 100).toInt()
+                            depthBar.progressTintList = ColorStateList.valueOf(
+                                if (isDeep) 0xFF34D399.toInt() else 0xFFFF8A3D.toInt(),
+                            )
+
+                            val left = (targetReps - squatCounter.reps).coerceAtLeast(0)
+                            remainingText.text = "$left"
+
+                            if (counted) {
+                                playBeep(squatCounter.reps >= targetReps)
+                                vibrateFeedback("rep")
+                                if (squatCounter.reps >= targetReps) {
+                                    isFinished = true
+                                    vibrateFeedback("success")
+                                    statusPill.text = "Goal Complete! 🏋️✓"
+                                    statusPill.setTextColor(0xFF34D399.toInt())
+                                    mainHandler.postDelayed({
+                                        val data = Intent().apply {
+                                            putExtra(EXTRA_COUNT, squatCounter.reps)
+                                            putExtra(EXTRA_COMPLETED, true)
+                                        }
+                                        setResult(Activity.RESULT_OK, data)
+                                        finish()
+                                    }, 500)
+                                    return@post
+                                } else {
+                                    statusPill.text = "Nice rep! Squat down again"
+                                }
+                            } else {
+                                statusPill.text = when (state) {
+                                    SquatCounter.State.NOT_VISIBLE -> if (pose.allPoseLandmarks.isEmpty()) "Step into camera frame" else "Step back so feet are in view"
+                                    SquatCounter.State.STAND_UP -> "Stand up straight"
+                                    SquatCounter.State.READY -> "Squat down"
+                                    SquatCounter.State.DOWN -> "Now stand up"
+                                }
+                            }
+                        }
+                    }
+                    .addOnCompleteListener { imageProxy.close() }
+            }
+
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, selector, preview, analysis)
+                cameraControl = camera?.cameraControl
+            } catch (e: Exception) {
+                Log.e(TAG, "Squat camera bind error", e)
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun extractLegs(pose: Pose): List<SquatCounter.Leg> {
+        val lHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)?.takeIf { it.inFrameLikelihood >= 0.45f }
+        val lKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)?.takeIf { it.inFrameLikelihood >= 0.45f }
+        val lAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)?.takeIf { it.inFrameLikelihood >= 0.45f }
+
+        val rHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP)?.takeIf { it.inFrameLikelihood >= 0.45f }
+        val rKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE)?.takeIf { it.inFrameLikelihood >= 0.45f }
+        val rAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE)?.takeIf { it.inFrameLikelihood >= 0.45f }
+
+        val legs = mutableListOf<SquatCounter.Leg>()
+        if (lHip != null && lKnee != null && lAnkle != null) {
+            legs.add(
+                SquatCounter.Leg(
+                    SquatCounter.Point(lHip.position.x, lHip.position.y),
+                    SquatCounter.Point(lKnee.position.x, lKnee.position.y),
+                    SquatCounter.Point(lAnkle.position.x, lAnkle.position.y),
+                ),
+            )
+        }
+        if (rHip != null && rKnee != null && rAnkle != null) {
+            legs.add(
+                SquatCounter.Leg(
+                    SquatCounter.Point(rHip.position.x, rHip.position.y),
+                    SquatCounter.Point(rKnee.position.x, rKnee.position.y),
+                    SquatCounter.Point(rAnkle.position.x, rAnkle.position.y),
+                ),
+            )
+        }
+        return legs
+    }
+
+    // =========================================================================
+    // 2. BARCODE MISSION FLOW (LIVE IN-CAMERA VERIFICATION)
+    // =========================================================================
+
+    private fun buildBarcodeMissionFlow() {
+        val expectedCode = intent.getStringExtra(EXTRA_BARCODE_VALUE)?.trim().orEmpty()
+        val targetName = intent.getStringExtra(EXTRA_BARCODE_NAME)?.trim() ?: "Registered Barcode"
+
+        val reticleView = BarcodeReticleView(this)
+        rootContainer.addView(reticleView, FrameLayout.LayoutParams(-1, -1))
+
+        // Top Header
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+            val title = TextView(this@CameraMissionActivity).apply {
+                text = "BARCODE MISSION 📷"
+                setTextColor(0xFF34D399.toInt())
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val sub = TextView(this@CameraMissionActivity).apply {
+                text = "Scan: $targetName"
+                setTextColor(Color.WHITE)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(0, dp(2), 0, 0)
+            }
+            addView(title)
+            addView(sub)
+        }
+        rootContainer.addView(
+            header,
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), dp(36), dp(16), 0)
+            },
+        )
+
+        // Torch Toggle Button
+        val torchBtn = TextView(this).apply {
+            text = "🔦"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0x80000000.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setOnClickListener {
+                toggleTorch()
+                setTextColor(if (isTorchOn) 0xFFFBBF24.toInt() else Color.WHITE)
+            }
+        }
+        rootContainer.addView(
+            torchBtn,
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.TOP or Gravity.END).apply {
+                setMargins(0, dp(36), dp(16), 0)
+            },
+        )
+
+        // Live Warning / Status Pill
+        val feedbackPill = TextView(this).apply {
+            text = "Point camera at the barcode"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xD90E1116.toInt())
+                cornerRadius = dp(24).toFloat()
+            }
+            setPadding(dp(20), dp(12), dp(20), dp(12))
+        }
+        rootContainer.addView(
+            feedbackPill,
+            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(20), 0, dp(20), dp(32))
+            },
+        )
+
+        val scanner = BarcodeScanning.getClient()
+        val providerFuture = ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider = providerFuture.get()
+            val selector = CameraSelector.DEFAULT_BACK_CAMERA
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_16_9).build()
+            preview.surfaceProvider = previewView.surfaceProvider
+
+            val analysis = ImageAnalysis.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            var lastMismatchCode = ""
+            var lastMismatchTime = 0L
+
+            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                if (isFinished) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val media = imageProxy.image
+                if (media == null) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val inputImage = InputImage.fromMediaImage(media, imageProxy.imageInfo.rotationDegrees)
+                scanner.process(inputImage)
+                    .addOnSuccessListener { barcodes ->
+                        val code = barcodes.firstOrNull { !it.rawValue.isNullOrBlank() }?.rawValue ?: return@addOnSuccessListener
+                        val now = SystemClock.elapsedRealtime()
+
+                        if (expectedCode.isEmpty() || code == expectedCode) {
+                            if (!isFinished) {
+                                isFinished = true
+                                mainHandler.post {
+                                    playBeep(true)
+                                    vibrateFeedback("success")
+                                    reticleView.setSuccess(true)
+                                    feedbackPill.text = "Code Verified! ✓"
+                                    feedbackPill.setTextColor(0xFF34D399.toInt())
+                                    feedbackPill.background = GradientDrawable().apply {
+                                        setColor(0xEE064E3B.toInt())
+                                        cornerRadius = dp(24).toFloat()
+                                    }
+                                    mainHandler.postDelayed({
+                                        val data = Intent().apply {
+                                            putExtra(EXTRA_VALUE, code)
+                                            putExtra(EXTRA_COMPLETED, true)
+                                        }
+                                        setResult(Activity.RESULT_OK, data)
+                                        finish()
+                                    }, 400)
+                                }
+                            }
+                        } else {
+                            if (code != lastMismatchCode || now - lastMismatchTime > 2000L) {
+                                lastMismatchCode = code
+                                lastMismatchTime = now
+                                mainHandler.post {
+                                    vibrateFeedback("error")
+                                    feedbackPill.text = "Scanned: $code\nExpected: $expectedCode"
+                                    feedbackPill.setTextColor(0xFFF87171.toInt())
+                                    feedbackPill.background = GradientDrawable().apply {
+                                        setColor(0xEE450A0A.toInt())
+                                        cornerRadius = dp(24).toFloat()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .addOnCompleteListener { imageProxy.close() }
+            }
+
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, selector, preview, analysis)
+                cameraControl = camera?.cameraControl
+            } catch (e: Exception) {
+                Log.e(TAG, "Barcode camera bind error", e)
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    // =========================================================================
+    // 3. BARCODE REGISTRATION FLOW (3-FRAME CONFIRMATION)
+    // =========================================================================
+
+    private fun buildBarcodeRegisterFlow() {
+        val reticleView = BarcodeReticleView(this)
+        rootContainer.addView(reticleView, FrameLayout.LayoutParams(-1, -1))
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+            val title = TextView(this@CameraMissionActivity).apply {
+                text = "REGISTER BARCODE 📷"
+                setTextColor(0xFF38BDF8.toInt())
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val sub = TextView(this@CameraMissionActivity).apply {
+                text = "Hold code steady in the frame"
+                setTextColor(Color.WHITE)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(0, dp(2), 0, 0)
+            }
+            addView(title)
+            addView(sub)
+        }
+        rootContainer.addView(
+            header,
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), dp(36), dp(16), 0)
+            },
+        )
+
+        val closeBtn = TextView(this).apply {
+            text = "✕"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0x80000000.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setOnClickListener { finishCancelled("register_cancelled") }
+        }
+        rootContainer.addView(
+            closeBtn,
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.TOP or Gravity.END).apply {
+                setMargins(0, dp(36), dp(16), 0)
+            },
+        )
+
+        val statusPill = TextView(this).apply {
+            text = "Scanning..."
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xD90E1116.toInt())
+                cornerRadius = dp(24).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+        }
+        rootContainer.addView(
+            statusPill,
+            FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), 0, dp(16), dp(36))
+            },
+        )
+
+        val scanner = BarcodeScanning.getClient()
+        val providerFuture = ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider = providerFuture.get()
+            val selector = CameraSelector.DEFAULT_BACK_CAMERA
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_16_9).build()
+            preview.surfaceProvider = previewView.surfaceProvider
+
+            val analysis = ImageAnalysis.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            var candidateValue: String? = null
+            var candidateFormat: String? = null
+            var confirmCount = 0
+
+            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                if (isFinished) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val media = imageProxy.image
+                if (media == null) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val inputImage = InputImage.fromMediaImage(media, imageProxy.imageInfo.rotationDegrees)
+                scanner.process(inputImage)
+                    .addOnSuccessListener { barcodes ->
+                        val item = barcodes.firstOrNull { !it.rawValue.isNullOrBlank() }
+                        val code = item?.rawValue
+                        if (code != null) {
+                            if (code == candidateValue) {
+                                confirmCount++
+                            } else {
+                                candidateValue = code
+                                candidateFormat = item.format.toString()
+                                confirmCount = 1
+                            }
+                            if (confirmCount >= 3 && !isFinished) {
+                                isFinished = true
+                                mainHandler.post {
+                                    playBeep(true)
+                                    vibrateFeedback("success")
+                                    reticleView.setSuccess(true)
+                                    statusPill.text = "Registered: $code ✓"
+                                    statusPill.setTextColor(0xFF34D399.toInt())
+                                    mainHandler.postDelayed({
+                                        val data = Intent().apply {
+                                            putExtra(EXTRA_VALUE, code)
+                                            putExtra(EXTRA_FORMAT, candidateFormat)
+                                            putExtra(EXTRA_COMPLETED, true)
+                                        }
+                                        setResult(Activity.RESULT_OK, data)
+                                        finish()
+                                    }, 400)
+                                }
+                            }
+                        }
+                    }
+                    .addOnCompleteListener { imageProxy.close() }
+            }
+
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, selector, preview, analysis)
+                cameraControl = camera?.cameraControl
+            } catch (e: Exception) {
+                Log.e(TAG, "Register barcode camera bind error", e)
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    // =========================================================================
+    // 4. PHOTO MISSION FLOW (WITH PiP REFERENCE & IN-CAMERA VERIFICATION)
+    // =========================================================================
+
+    private fun buildPhotoMissionFlow() {
+        val referencePath = intent.getStringExtra(EXTRA_REFERENCE_PATH).orEmpty()
+        val threshold = intent.getIntExtra(EXTRA_MATCH_THRESHOLD, 68).coerceIn(40, 95)
+
+        val reticleView = PhotoReticleView(this)
+        rootContainer.addView(reticleView, FrameLayout.LayoutParams(-1, -1))
+
+        // Top Header
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(18), dp(10), dp(18), dp(10))
+            val title = TextView(this@CameraMissionActivity).apply {
+                text = "PHOTO MISSION 📸"
+                setTextColor(0xFF38BDF8.toInt())
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val sub = TextView(this@CameraMissionActivity).apply {
+                text = "Take matching target photo"
+                setTextColor(Color.WHITE)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(0, dp(2), 0, 0)
+            }
+            addView(title)
+            addView(sub)
+        }
+        rootContainer.addView(
+            header,
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), dp(36), dp(16), 0)
+            },
+        )
+
+        // Torch Toggle Button
+        val torchBtn = TextView(this).apply {
+            text = "🔦"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0x80000000.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setOnClickListener {
+                toggleTorch()
+                setTextColor(if (isTorchOn) 0xFFFBBF24.toInt() else Color.WHITE)
+            }
+        }
+        rootContainer.addView(
+            torchBtn,
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.TOP or Gravity.START).apply {
+                setMargins(dp(16), dp(36), 0, 0)
+            },
+        )
+
+        // Picture-in-Picture (PiP) Reference Thumbnail
+        if (referencePath.isNotEmpty() && File(referencePath).exists()) {
+            val pipBitmap = runCatching {
+                val opts = BitmapFactory.Options().apply { inSampleSize = 4 }
+                BitmapFactory.decodeFile(referencePath, opts)
             }.getOrNull()
 
-            detector.process(image)
-                .addOnSuccessListener { pose ->
-                    val leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
-                    val rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP)
-                    val nose = pose.getPoseLandmark(PoseLandmark.NOSE)
-                    val leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
-                    val rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
-                    val leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)
-                    val rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE)
-                    val leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)
-                    val rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE)
-
-                    val isUserDetected = (nose?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (leftShoulder?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (rightShoulder?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (leftHip?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (rightHip?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (leftKnee?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (rightKnee?.inFrameLikelihood ?: 0f) > 0.35f
-
-                    // Calculate knee angle for both legs to support front, side, and 3/4 angles
-                    val leftKneeAngle = kneeAngle(leftHip, leftKnee, leftAnkle)
-                    val rightKneeAngle = kneeAngle(rightHip, rightKnee, rightAnkle)
-
-                    // Pick the knee angle that reflects squat flexion (minimum angle)
-                    val knee = when {
-                        leftKneeAngle != null && rightKneeAngle != null -> min(leftKneeAngle, rightKneeAngle)
-                        leftKneeAngle != null -> leftKneeAngle
-                        rightKneeAngle != null -> rightKneeAngle
-                        else -> null
+            if (pipBitmap != null) {
+                val pipContainer = FrameLayout(this).apply {
+                    background = GradientDrawable().apply {
+                        setColor(0xCC000000.toInt())
+                        cornerRadius = dp(14).toFloat()
+                        setStroke(dp(2), 0xFF38BDF8.toInt())
                     }
+                    clipToOutline = true
+                    setPadding(dp(3), dp(3), dp(3), dp(3))
+                    val img = ImageView(this@CameraMissionActivity).apply {
+                        setImageBitmap(pipBitmap)
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                    }
+                    val badge = TextView(this@CameraMissionActivity).apply {
+                        text = "TARGET"
+                        setTextColor(Color.WHITE)
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f)
+                        typeface = Typeface.DEFAULT_BOLD
+                        background = GradientDrawable().apply {
+                            setColor(0xCC0284C7.toInt())
+                            cornerRadius = dp(6).toFloat()
+                        }
+                        setPadding(dp(6), dp(2), dp(6), dp(2))
+                    }
+                    addView(img, FrameLayout.LayoutParams(-1, -1))
+                    addView(badge, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                        bottomMargin = dp(4)
+                    })
+                }
+                rootContainer.addView(
+                    pipContainer,
+                    FrameLayout.LayoutParams(dp(76), dp(100), Gravity.TOP or Gravity.END).apply {
+                        setMargins(0, dp(36), dp(16), 0)
+                    },
+                )
+            }
+        }
 
-                    if (finished) return@addOnSuccessListener
-                    if (knee == null) {
-                        missing += 1
-                        val msg = if (!isUserDetected) {
-                            "Step into camera frame"
-                        } else if (missing > 15) {
-                            "Step back to show legs"
+        // Live Warning / Status Banner
+        val statusBanner = TextView(this).apply {
+            text = "Frame the object and press shutter"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xD90E1116.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+        }
+        rootContainer.addView(
+            statusBanner,
+            FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(20), 0, dp(20), dp(116))
+            },
+        )
+
+        // Shutter Button
+        var isTakingShot = false
+        val shutterBtn = FrameLayout(this).apply {
+            background = GradientDrawable().apply {
+                setColor(Color.TRANSPARENT)
+                shape = GradientDrawable.OVAL
+                setStroke(dp(4), Color.WHITE)
+            }
+            val inner = View(this@CameraMissionActivity).apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    shape = GradientDrawable.OVAL
+                }
+            }
+            addView(inner, FrameLayout.LayoutParams(dp(60), dp(60), Gravity.CENTER))
+        }
+        rootContainer.addView(
+            shutterBtn,
+            FrameLayout.LayoutParams(dp(76), dp(76), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                bottomMargin = dp(24)
+            },
+        )
+
+        val capture = ImageCapture.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .build()
+        imageCapture = capture
+
+        shutterBtn.setOnClickListener {
+            if (isTakingShot || isFinished) return@setOnClickListener
+            isTakingShot = true
+            statusBanner.text = "Comparing photo similarity..."
+            statusBanner.setTextColor(0xFF38BDF8.toInt())
+
+            val captureFile = File(getExternalFilesDir("missions"), "shot-${System.currentTimeMillis()}.jpg")
+            captureFile.parentFile?.mkdirs()
+            val options = ImageCapture.OutputFileOptions.Builder(captureFile).build()
+
+            capture.takePicture(options, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    val capturedPath = captureFile.absolutePath
+                    val score = if (referencePath.isNotEmpty() && File(referencePath).exists()) {
+                        PhotoMatcher.similarityPercent(referencePath, capturedPath)
+                    } else 100
+
+                    mainHandler.post {
+                        val passed = (score >= threshold)
+                        if (passed) {
+                            isFinished = true
+                            playBeep(true)
+                            vibrateFeedback("success")
+                            statusBanner.text = "Photo Matched! $score% ✓"
+                            statusBanner.setTextColor(0xFF34D399.toInt())
+                            statusBanner.background = GradientDrawable().apply {
+                                setColor(0xEE064E3B.toInt())
+                                cornerRadius = dp(20).toFloat()
+                            }
+                            mainHandler.postDelayed({
+                                val data = Intent().apply {
+                                    putExtra(EXTRA_PATH, capturedPath)
+                                    putExtra(EXTRA_SCORE, score)
+                                    putExtra(EXTRA_COMPLETED, true)
+                                }
+                                setResult(Activity.RESULT_OK, data)
+                                finish()
+                            }, 450)
                         } else {
-                            "Detecting posture..."
-                        }
-                        overlay.updatePose(
-                            pose = pose,
-                            imgWidth = image.width,
-                            imgHeight = image.height,
-                            isFront = isFront,
-                            phase = msg,
-                            reps = squatReps,
-                            target = target,
-                            kneeAngle = null,
-                            isUserDetected = isUserDetected,
-                            isSquatSuccess = false,
-                            matrix = matrix,
-                        )
-                        return@addOnSuccessListener
-                    }
-                    missing = 0
-                    var isSquatSuccess = false
-                    when (phase) {
-                        "Standing" -> {
-                            if (knee < 140) phase = "Descending"
-                        }
-                        "Descending" -> {
-                            // 118 degrees corresponds to natural parallel squat depth in 2D camera view
-                            if (knee <= 118) {
-                                phase = "Good Squat ✓"
-                                isSquatSuccess = true
-                                triggerHapticFeedback(false)
-                            } else if (knee > 160) {
-                                phase = "Standing"
-                            }
-                        }
-                        "Good Squat ✓" -> {
-                            isSquatSuccess = true
-                            if (knee > 125) {
-                                phase = "Ascending"
-                            }
-                        }
-                        "Ascending" -> {
-                            if (knee >= 148) {
-                                phase = "Standing"
-                                squatReps += 1
-                                playSquatSound(squatReps >= target)
-                                triggerHapticFeedback(squatReps >= target)
-                            } else if (knee <= 118) {
-                                phase = "Good Squat ✓"
-                                isSquatSuccess = true
+                            isTakingShot = false
+                            vibrateFeedback("error")
+                            statusBanner.text = "Match $score% (Needed $threshold%)\nAlign closer with reference photo"
+                            statusBanner.setTextColor(0xFFF87171.toInt())
+                            statusBanner.background = GradientDrawable().apply {
+                                setColor(0xEE450A0A.toInt())
+                                cornerRadius = dp(20).toFloat()
                             }
                         }
                     }
+                }
 
-                    overlay.updatePose(
-                        pose = pose,
-                        imgWidth = image.width,
-                        imgHeight = image.height,
-                        isFront = isFront,
-                        phase = phase,
-                        reps = squatReps,
-                        target = target,
-                        kneeAngle = knee,
-                        isUserDetected = isUserDetected,
-                        isSquatSuccess = isSquatSuccess,
-                        matrix = matrix,
-                    )
+                override fun onError(exception: ImageCaptureException) {
+                    mainHandler.post {
+                        isTakingShot = false
+                        statusBanner.text = "Capture failed, try again"
+                        statusBanner.setTextColor(0xFFF87171.toInt())
+                    }
+                }
+            })
+        }
 
-                    if (squatReps >= target) {
-                        finished = true
-                        val data = intent.apply {
-                            putExtra(EXTRA_COUNT, squatReps)
+        val providerFuture = ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider = providerFuture.get()
+            val selector = CameraSelector.DEFAULT_BACK_CAMERA
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_16_9).build()
+            preview.surfaceProvider = previewView.surfaceProvider
+
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, selector, preview, capture)
+                cameraControl = camera?.cameraControl
+            } catch (e: Exception) {
+                Log.e(TAG, "Photo camera bind error", e)
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    // =========================================================================
+    // 5. PHOTO REGISTRATION FLOW
+    // =========================================================================
+
+    private fun buildPhotoRegisterFlow() {
+        val reticleView = PhotoReticleView(this)
+        rootContainer.addView(reticleView, FrameLayout.LayoutParams(-1, -1))
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+            val title = TextView(this@CameraMissionActivity).apply {
+                text = "REGISTER REFERENCE PHOTO 📸"
+                setTextColor(0xFF38BDF8.toInt())
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val sub = TextView(this@CameraMissionActivity).apply {
+                text = "Frame your target item clearly"
+                setTextColor(Color.WHITE)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(0, dp(2), 0, 0)
+            }
+            addView(title)
+            addView(sub)
+        }
+        rootContainer.addView(
+            header,
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), dp(36), dp(16), 0)
+            },
+        )
+
+        val closeBtn = TextView(this).apply {
+            text = "✕"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0x80000000.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setOnClickListener { finishCancelled("register_cancelled") }
+        }
+        rootContainer.addView(
+            closeBtn,
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.TOP or Gravity.END).apply {
+                setMargins(0, dp(36), dp(16), 0)
+            },
+        )
+
+        val shutterBtn = FrameLayout(this).apply {
+            background = GradientDrawable().apply {
+                setColor(Color.TRANSPARENT)
+                shape = GradientDrawable.OVAL
+                setStroke(dp(4), Color.WHITE)
+            }
+            val inner = View(this@CameraMissionActivity).apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    shape = GradientDrawable.OVAL
+                }
+            }
+            addView(inner, FrameLayout.LayoutParams(dp(60), dp(60), Gravity.CENTER))
+        }
+        rootContainer.addView(
+            shutterBtn,
+            FrameLayout.LayoutParams(dp(76), dp(76), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                bottomMargin = dp(28)
+            },
+        )
+
+        val capture = ImageCapture.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+            .build()
+        imageCapture = capture
+
+        shutterBtn.setOnClickListener {
+            val captureFile = File(getExternalFilesDir("references"), "ref-${System.currentTimeMillis()}.jpg")
+            captureFile.parentFile?.mkdirs()
+            val options = ImageCapture.OutputFileOptions.Builder(captureFile).build()
+
+            capture.takePicture(options, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    mainHandler.post {
+                        playBeep(true)
+                        vibrateFeedback("success")
+                        val data = Intent().apply {
+                            putExtra(EXTRA_PATH, captureFile.absolutePath)
                             putExtra(EXTRA_COMPLETED, true)
                         }
-                        setResult(RESULT_OK, data)
+                        setResult(Activity.RESULT_OK, data)
                         finish()
                     }
                 }
-                .addOnCompleteListener { imageProxy.close() }
-        }
-        val viewPort = previewView.viewPort
-        if (viewPort != null) {
-            val useCaseGroup = UseCaseGroup.Builder()
-                .setViewPort(viewPort)
-                .addUseCase(preview)
-                .addUseCase(analysis)
-                .build()
-            provider.bindToLifecycle(this, selector, useCaseGroup)
-        } else {
-            provider.bindToLifecycle(this, selector, preview, analysis)
-        }
-    }
 
-    private fun kneeAngle(hip: PoseLandmark?, knee: PoseLandmark?, ankle: PoseLandmark?): Double? {
-        if (hip == null || knee == null) return null
-        if (min(hip.inFrameLikelihood, knee.inFrameLikelihood) < 0.25f) {
-            return null
+                override fun onError(exception: ImageCaptureException) {
+                    mainHandler.post {
+                        vibrateFeedback("error")
+                    }
+                }
+            })
         }
-        if (ankle != null && ankle.inFrameLikelihood >= 0.25f) {
-            val abx = hip.position.x - knee.position.x
-            val aby = hip.position.y - knee.position.y
-            val cbx = ankle.position.x - knee.position.x
-            val cby = ankle.position.y - knee.position.y
-            val mag = hypot(abx.toDouble(), aby.toDouble()) * hypot(cbx.toDouble(), cby.toDouble())
-            if (mag > 0.0) {
-                val dot = abx * cbx + aby * cby
-                return Math.toDegrees(acos((dot / mag).coerceIn(-1.0, 1.0)))
+
+        val providerFuture = ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider = providerFuture.get()
+            val selector = CameraSelector.DEFAULT_BACK_CAMERA
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_16_9).build()
+            preview.surfaceProvider = previewView.surfaceProvider
+
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, selector, preview, capture)
+                cameraControl = camera?.cameraControl
+            } catch (e: Exception) {
+                Log.e(TAG, "Photo register camera bind error", e)
             }
-        }
-        // Fallback when ankles/feet are below camera frame: use thigh vertical angle
-        val dx = (knee.position.x - hip.position.x).toDouble()
-        val dy = (knee.position.y - hip.position.y).toDouble()
-        if (dy != 0.0) {
-            val angleFromVertical = Math.toDegrees(kotlin.math.atan2(kotlin.math.abs(dx), dy))
-            val approxKnee = 180.0 - (angleFromVertical * 1.3).coerceIn(0.0, 95.0)
-            return approxKnee
-        }
-        return null
+        }, ContextCompat.getMainExecutor(this))
     }
 
     private fun finishCancelled(reason: String) {
-        setResult(RESULT_CANCELED, intent.apply { putExtra(EXTRA_REASON, reason) })
+        val data = Intent().apply { putExtra(EXTRA_REASON, reason) }
+        setResult(Activity.RESULT_CANCELED, data)
         finish()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            toneGenerator?.release()
-        } catch (_: Throwable) {}
-        toneGenerator = null
         cameraExecutor.shutdown()
+        toneGenerator?.release()
+        toneGenerator = null
     }
 
-    companion object {
-        private const val TAG = "CameraMission"
-        const val EXTRA_MODE = "mode"
-        const val EXTRA_TARGET = "target"
-        const val EXTRA_PATH = "path"
-        const val EXTRA_VALUE = "value"
-        const val EXTRA_COUNT = "count"
-        const val EXTRA_COMPLETED = "completed"
-        const val EXTRA_REASON = "reason"
-        const val MODE_PHOTO = "photo"
-        const val MODE_BARCODE = "barcode"
-        const val MODE_SQUAT = "squat"
-    }
-}
+    // =========================================================================
+    // CUSTOM OVERLAY VIEWS
+    // =========================================================================
 
-class PoseGraphicOverlay(context: Context) : View(context) {
-    private val lock = Any()
-    private var currentPose: Pose? = null
-    private var imageWidth: Int = 0
-    private var imageHeight: Int = 0
-    private var isFrontFacing: Boolean = true
-    private var phaseText: String = "Standing"
-    private var repCount: Int = 0
-    private var targetReps: Int = 3
-    private var kneeAngleDeg: Double? = null
-    private var userDetected: Boolean = false
-    private var squatSuccess: Boolean = false
+    /** Draws skeleton bones and joint landmarks over the live preview. */
+    private class SkeletonView(context: Context) : View(context) {
+        private var pose: Pose? = null
+        private var frameW = 1
+        private var frameH = 1
+        private var mirrored = false
+        private var isDeep = false
 
-    fun getCurrentPose(): Pose? = synchronized(lock) { currentPose }
-    fun getImageWidth(): Int = synchronized(lock) { imageWidth }
-    fun getImageHeight(): Int = synchronized(lock) { imageHeight }
-
-    // Dynamic Lines matching user reference image
-    private val linePaint = Paint().apply {
-        color = 0xFF00E5FF.toInt()
-        strokeWidth = 14f
-        style = Paint.Style.STROKE
-        strokeCap = Paint.Cap.ROUND
-        strokeJoin = Paint.Join.ROUND
-        isAntiAlias = true
-    }
-
-    // Yellow Joint Dots matching user reference image
-    private val dotPaint = Paint().apply {
-        color = 0xFFFFEB3B.toInt()
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    // Cyan/Green Border around Yellow Dots
-    private val dotBorderPaint = Paint().apply {
-        color = 0xFF00E5FF.toInt()
-        strokeWidth = 5f
-        style = Paint.Style.STROKE
-        isAntiAlias = true
-    }
-
-    // Top Title Paint matching "Output: Squat"
-    private val hudTitlePaint = Paint().apply {
-        color = 0xFF00E5FF.toInt()
-        textSize = 54f
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        isAntiAlias = true
-        setShadowLayer(8f, 2f, 2f, 0xFF000000.toInt())
-    }
-
-    // Subtitle Text Paint
-    private val hudSubtitlePaint = Paint().apply {
-        color = 0xFFFFFFFF.toInt()
-        textSize = 38f
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        isAntiAlias = true
-        setShadowLayer(6f, 2f, 2f, 0xFF000000.toInt())
-    }
-
-    // Status Indicator Paint
-    private val hudStatusPaint = Paint().apply {
-        color = 0xFF00E676.toInt()
-        textSize = 32f
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        isAntiAlias = true
-        setShadowLayer(4f, 1f, 1f, 0xFF000000.toInt())
-    }
-
-    // Angle Annotation Paint (green when squatting, red when standing)
-    private val anglePaint = Paint().apply {
-        color = 0xFFFF1744.toInt()
-        textSize = 36f
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        isAntiAlias = true
-        setShadowLayer(6f, 1f, 1f, 0xFF000000.toInt())
-    }
-
-    // Frosted Card Background
-    private val hudCardPaint = Paint().apply {
-        color = 0xBB000000.toInt()
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    private val hudCardBorder = Paint().apply {
-        color = 0x6600E5FF.toInt()
-        strokeWidth = 4f
-        style = Paint.Style.STROKE
-        isAntiAlias = true
-    }
-
-    private val hudProgressBarBg = Paint().apply {
-        color = 0x44FFFFFF.toInt()
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    private val hudProgressBarFill = Paint().apply {
-        color = 0xFF00E676.toInt()
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    private var transformMatrix: Matrix? = null
-
-    fun updatePose(
-        pose: Pose?,
-        imgWidth: Int,
-        imgHeight: Int,
-        isFront: Boolean,
-        phase: String,
-        reps: Int,
-        target: Int,
-        kneeAngle: Double?,
-        isUserDetected: Boolean = false,
-        isSquatSuccess: Boolean = false,
-        matrix: Matrix? = null,
-    ) {
-        synchronized(lock) {
-            currentPose = pose
-            imageWidth = imgWidth
-            imageHeight = imgHeight
-            isFrontFacing = isFront
-            phaseText = phase
-            repCount = reps
-            targetReps = target
-            kneeAngleDeg = kneeAngle
-            userDetected = isUserDetected
-            squatSuccess = isSquatSuccess
-            transformMatrix = matrix
+        private val bonePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            strokeWidth = 10f
+            strokeCap = Paint.Cap.ROUND
         }
-        postInvalidate()
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        val pose: Pose?
-        val imgW: Int
-        val imgH: Int
-        val isFront: Boolean
-        val phase: String
-        val reps: Int
-        val target: Int
-        val angle: Double?
-        val isDetected: Boolean
-        val isSuccess: Boolean
-        val currentMatrix: Matrix?
-
-        synchronized(lock) {
-            pose = currentPose
-            imgW = imageWidth
-            imgH = imageHeight
-            isFront = isFrontFacing
-            phase = phaseText
-            reps = repCount
-            target = targetReps
-            angle = kneeAngleDeg
-            isDetected = userDetected
-            isSuccess = squatSuccess
-            currentMatrix = transformMatrix
+        private val jointPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
         }
 
-        val isSquatActive = isSuccess || phase == "Good Squat ✓"
-
-        // Dynamic Line & Border Colors: Turns neon green when user performs a squat
-        if (isSquatActive) {
-            linePaint.color = 0xFF00E676.toInt() // Neon Green
-            dotBorderPaint.color = 0xFF00E676.toInt()
-            hudCardBorder.color = 0xFF00E676.toInt()
-            hudTitlePaint.color = 0xFF00E676.toInt()
-            anglePaint.color = 0xFF00E676.toInt()
-        } else {
-            linePaint.color = 0xFF00E5FF.toInt() // Cyan
-            dotBorderPaint.color = 0xFF00E5FF.toInt()
-            hudCardBorder.color = 0x6600E5FF.toInt()
-            hudTitlePaint.color = 0xFF00E5FF.toInt()
-            anglePaint.color = 0xFFFF1744.toInt()
+        fun update(newPose: Pose?, width: Int, height: Int, mirror: Boolean, deep: Boolean) {
+            pose = newPose
+            frameW = width
+            frameH = height
+            mirrored = mirror
+            isDeep = deep
+            bonePaint.color = if (deep) 0xFF34D399.toInt() else 0xFF38BDF8.toInt()
+            invalidate()
         }
 
-        // Draw HUD Header Badge (Positioned absolutely over camera preview)
-        val cardLeft = 28f
-        val cardTop = 64f
-        val cardRight = width - 28f
-        val cardBottom = 275f
-        canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 28f, 28f, hudCardPaint)
-        canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 28f, 28f, hudCardBorder)
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val p = pose ?: return
+            if (frameW <= 0 || frameH <= 0 || width <= 0 || height <= 0) return
 
-        // Large Rep Counter Headline
-        val titleText = if (isSquatActive) "🔥 SQUATS: $reps / $target (REP DETECTED!)" else "🏋️ SQUATS: $reps / $target"
-        canvas.drawText(titleText, cardLeft + 26f, cardTop + 56f, hudTitlePaint)
+            val scale = max(width / frameW.toFloat(), height / frameH.toFloat())
+            val dx = (width - frameW * scale) / 2f
+            val dy = (height - frameH * scale) / 2f
 
-        // Phase & Knee Angle
-        val angleLabel = if (angle != null) " • Knee: ${angle.toInt()}° (Goal ≤ 118°)" else ""
-        canvas.drawText("Phase: $phase$angleLabel", cardLeft + 26f, cardTop + 112f, hudSubtitlePaint)
+            fun tx(rawX: Float): Float =
+                (dx + rawX * scale).let { if (mirrored) width - it else it }
+            fun ty(rawY: Float): Float = dy + rawY * scale
 
-        // Guidance & Body Presence Indicator
-        val statusText = when {
-            isSquatActive -> "🟢 PERFECT SQUAT! STAND UP TO COUNT"
-            phase == "Descending" -> "⬇️ SINK LOWER TO COMPLETE SQUAT"
-            phase == "Ascending" -> "⬆️ STRAIGHTEN LEGS TO FINISH"
-            isDetected -> "🟢 READY: SQUAT DOWN WITH HIPS BACK"
-            else -> "🟡 STEP FULLY INTO FRONT CAMERA FRAME"
-        }
-        hudStatusPaint.color = if (isSquatActive || isDetected) 0xFF00E676.toInt() else 0xFFFFD54F.toInt()
-        canvas.drawText(statusText, cardLeft + 26f, cardTop + 158f, hudStatusPaint)
+            val bones = listOf(
+                PoseLandmark.LEFT_SHOULDER to PoseLandmark.RIGHT_SHOULDER,
+                PoseLandmark.LEFT_SHOULDER to PoseLandmark.LEFT_ELBOW,
+                PoseLandmark.LEFT_ELBOW to PoseLandmark.LEFT_WRIST,
+                PoseLandmark.RIGHT_SHOULDER to PoseLandmark.RIGHT_ELBOW,
+                PoseLandmark.RIGHT_ELBOW to PoseLandmark.RIGHT_WRIST,
+                PoseLandmark.LEFT_SHOULDER to PoseLandmark.LEFT_HIP,
+                PoseLandmark.RIGHT_SHOULDER to PoseLandmark.RIGHT_HIP,
+                PoseLandmark.LEFT_HIP to PoseLandmark.RIGHT_HIP,
+                PoseLandmark.LEFT_HIP to PoseLandmark.LEFT_KNEE,
+                PoseLandmark.LEFT_KNEE to PoseLandmark.LEFT_ANKLE,
+                PoseLandmark.RIGHT_HIP to PoseLandmark.RIGHT_KNEE,
+                PoseLandmark.RIGHT_KNEE to PoseLandmark.RIGHT_ANKLE,
+            )
 
-        // Target progress bar
-        val barTop = cardBottom - 26f
-        val barBottom = cardBottom - 12f
-        val barLeft = cardLeft + 26f
-        val barRight = cardRight - 26f
-        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, 8f, 8f, hudProgressBarBg)
-        val progressPct = (reps.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
-        val fillRight = barLeft + (barRight - barLeft) * progressPct
-        if (progressPct > 0f) {
-            canvas.drawRoundRect(barLeft, barTop, fillRight, barBottom, 8f, 8f, hudProgressBarFill)
-        }
-
-        if (pose == null || imgW <= 0 || imgH <= 0) return
-
-        val viewW = width.toFloat()
-        val viewH = height.toFloat()
-        val scale = max(viewW / imgW, viewH / imgH)
-        val offsetX = (viewW - imgW * scale) / 2f
-        val offsetY = (viewH - imgH * scale) / 2f
-        val pts = FloatArray(2)
-
-        fun transformPoint(x: Float, y: Float): Pair<Float, Float> {
-            if (currentMatrix != null) {
-                pts[0] = x
-                pts[1] = y
-                currentMatrix.mapPoints(pts)
-                return Pair(pts[0], pts[1])
+            for ((startType, endType) in bones) {
+                val lmStart = p.getPoseLandmark(startType) ?: continue
+                val lmEnd = p.getPoseLandmark(endType) ?: continue
+                if (lmStart.inFrameLikelihood < 0.35f || lmEnd.inFrameLikelihood < 0.35f) continue
+                canvas.drawLine(tx(lmStart.position.x), ty(lmStart.position.y), tx(lmEnd.position.x), ty(lmEnd.position.y), bonePaint)
             }
-            val mappedX = x * scale + offsetX
-            val finalX = if (isFront) viewW - mappedX else mappedX
-            val finalY = y * scale + offsetY
-            return Pair(finalX, finalY)
-        }
 
-        fun drawLineBetween(lm1: PoseLandmark?, lm2: PoseLandmark?) {
-            if (lm1 == null || lm2 == null) return
-            if (lm1.inFrameLikelihood < 0.35f || lm2.inFrameLikelihood < 0.35f) return
-            val (x1, y1) = transformPoint(lm1.position.x, lm1.position.y)
-            val (x2, y2) = transformPoint(lm2.position.x, lm2.position.y)
-            canvas.drawLine(x1, y1, x2, y2, linePaint)
-        }
-
-        fun drawJointDot(lm: PoseLandmark?) {
-            if (lm == null || lm.inFrameLikelihood < 0.35f) return
-            val (x, y) = transformPoint(lm.position.x, lm.position.y)
-            canvas.drawCircle(x, y, 14f, dotPaint)
-            canvas.drawCircle(x, y, 14f, dotBorderPaint)
-        }
-
-        // Key Landmarks
-        val leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
-        val rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
-        val leftElbow = pose.getPoseLandmark(PoseLandmark.LEFT_ELBOW)
-        val rightElbow = pose.getPoseLandmark(PoseLandmark.RIGHT_ELBOW)
-        val leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST)
-        val rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST)
-        val leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
-        val rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP)
-        val leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)
-        val rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE)
-        val leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)
-        val rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE)
-        val leftHeel = pose.getPoseLandmark(PoseLandmark.LEFT_HEEL)
-        val rightHeel = pose.getPoseLandmark(PoseLandmark.RIGHT_HEEL)
-        val leftFootIndex = pose.getPoseLandmark(PoseLandmark.LEFT_FOOT_INDEX)
-        val rightFootIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_FOOT_INDEX)
-        val nose = pose.getPoseLandmark(PoseLandmark.NOSE)
-        val leftEye = pose.getPoseLandmark(PoseLandmark.LEFT_EYE)
-        val rightEye = pose.getPoseLandmark(PoseLandmark.RIGHT_EYE)
-        val leftEar = pose.getPoseLandmark(PoseLandmark.LEFT_EAR)
-        val rightEar = pose.getPoseLandmark(PoseLandmark.RIGHT_EAR)
-
-        // Arms & Shoulders (Cyan lines)
-        drawLineBetween(leftShoulder, rightShoulder)
-        drawLineBetween(leftShoulder, leftElbow)
-        drawLineBetween(leftElbow, leftWrist)
-        drawLineBetween(rightShoulder, rightElbow)
-        drawLineBetween(rightElbow, rightWrist)
-
-        // Torso
-        drawLineBetween(leftShoulder, leftHip)
-        drawLineBetween(rightShoulder, rightHip)
-        drawLineBetween(leftHip, rightHip)
-
-        // Legs
-        drawLineBetween(leftHip, leftKnee)
-        drawLineBetween(leftKnee, leftAnkle)
-        drawLineBetween(rightHip, rightKnee)
-        drawLineBetween(rightKnee, rightAnkle)
-
-        // Feet triangles
-        drawLineBetween(leftAnkle, leftHeel)
-        drawLineBetween(leftHeel, leftFootIndex)
-        drawLineBetween(leftAnkle, leftFootIndex)
-        drawLineBetween(rightAnkle, rightHeel)
-        drawLineBetween(rightHeel, rightFootIndex)
-        drawLineBetween(rightAnkle, rightFootIndex)
-
-        // Face
-        drawLineBetween(leftEye, nose)
-        drawLineBetween(rightEye, nose)
-        drawLineBetween(leftEye, leftEar)
-        drawLineBetween(rightEye, rightEar)
-
-        // Joint Dots (Yellow circles with Cyan border)
-        drawJointDot(nose)
-        drawJointDot(leftEye)
-        drawJointDot(rightEye)
-        drawJointDot(leftEar)
-        drawJointDot(rightEar)
-        drawJointDot(leftShoulder)
-        drawJointDot(rightShoulder)
-        drawJointDot(leftElbow)
-        drawJointDot(rightElbow)
-        drawJointDot(leftWrist)
-        drawJointDot(rightWrist)
-        drawJointDot(leftHip)
-        drawJointDot(rightHip)
-        drawJointDot(leftKnee)
-        drawJointDot(rightKnee)
-        drawJointDot(leftAnkle)
-        drawJointDot(rightAnkle)
-        drawJointDot(leftHeel)
-        drawJointDot(rightHeel)
-        drawJointDot(leftFootIndex)
-        drawJointDot(rightFootIndex)
-
-        // Draw Knee Angle text near knee if available
-        if (angle != null) {
-            val kneeLm = if ((leftKnee?.inFrameLikelihood ?: 0f) > (rightKnee?.inFrameLikelihood ?: 0f)) leftKnee else rightKnee
-            if (kneeLm != null && kneeLm.inFrameLikelihood > 0.4f) {
-                val (kx, ky) = transformPoint(kneeLm.position.x, kneeLm.position.y)
-                canvas.drawText("${angle.toInt()}°", kx + 24f, ky - 10f, anglePaint)
+            val joints = listOf(
+                PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER,
+                PoseLandmark.LEFT_ELBOW, PoseLandmark.RIGHT_ELBOW,
+                PoseLandmark.LEFT_WRIST, PoseLandmark.RIGHT_WRIST,
+                PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP,
+                PoseLandmark.LEFT_KNEE, PoseLandmark.RIGHT_KNEE,
+                PoseLandmark.LEFT_ANKLE, PoseLandmark.RIGHT_ANKLE,
+            )
+            for (jt in joints) {
+                val lm = p.getPoseLandmark(jt) ?: continue
+                if (lm.inFrameLikelihood < 0.35f) continue
+                canvas.drawCircle(tx(lm.position.x), ty(lm.position.y), 10f, jointPaint)
             }
+        }
+    }
+
+    /** Viewfinder box with corner brackets and animated scanner laser for barcodes. */
+    private class BarcodeReticleView(context: Context) : View(context) {
+        private var isSuccess = false
+        private var scanLineY = 0f
+        private var scanDown = true
+
+        private val bracketPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            strokeWidth = 8f
+            style = Paint.Style.STROKE
+            color = 0xFF38BDF8.toInt()
+        }
+        private val laserPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            strokeWidth = 4f
+            color = 0xFF38BDF8.toInt()
+        }
+
+        fun setSuccess(success: Boolean) {
+            isSuccess = success
+            bracketPaint.color = if (success) 0xFF34D399.toInt() else 0xFF38BDF8.toInt()
+            laserPaint.color = bracketPaint.color
+            invalidate()
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val boxSize = width.coerceAtMost(height) * 0.72f
+            val left = (width - boxSize) / 2f
+            val top = (height - boxSize) / 2f
+            val right = left + boxSize
+            val bottom = top + boxSize
+            val cornerLen = 42f
+
+            // 4 corners
+            canvas.drawLine(left, top, left + cornerLen, top, bracketPaint)
+            canvas.drawLine(left, top, left, top + cornerLen, bracketPaint)
+
+            canvas.drawLine(right, top, right - cornerLen, top, bracketPaint)
+            canvas.drawLine(right, top, right, top + cornerLen, bracketPaint)
+
+            canvas.drawLine(left, bottom, left + cornerLen, bottom, bracketPaint)
+            canvas.drawLine(left, bottom, left, bottom - cornerLen, bracketPaint)
+
+            canvas.drawLine(right, bottom, right - cornerLen, bottom, bracketPaint)
+            canvas.drawLine(right, bottom, right, bottom - cornerLen, bracketPaint)
+
+            // Animated Laser Line
+            if (!isSuccess) {
+                if (scanLineY < top || scanLineY > bottom) scanLineY = top
+                canvas.drawLine(left + 10f, scanLineY, right - 10f, scanLineY, laserPaint)
+                scanLineY += if (scanDown) 6f else -6f
+                if (scanLineY >= bottom - 10f) scanDown = false
+                if (scanLineY <= top + 10f) scanDown = true
+                postInvalidateDelayed(16)
+            }
+        }
+    }
+
+    /** Reticle overlay for photo capture. */
+    private class PhotoReticleView(context: Context) : View(context) {
+        private val reticlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            strokeWidth = 4f
+            style = Paint.Style.STROKE
+            color = 0x80FFFFFF.toInt()
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val boxW = width * 0.82f
+            val boxH = boxW * 1.0f
+            val left = (width - boxW) / 2f
+            val top = (height - boxH) / 2.2f
+            val right = left + boxW
+            val bottom = top + boxH
+            val corner = 32f
+
+            canvas.drawLine(left, top, left + corner, top, reticlePaint)
+            canvas.drawLine(left, top, left, top + corner, reticlePaint)
+
+            canvas.drawLine(right, top, right - corner, top, reticlePaint)
+            canvas.drawLine(right, top, right, top + corner, reticlePaint)
+
+            canvas.drawLine(left, bottom, left + corner, bottom, reticlePaint)
+            canvas.drawLine(left, bottom, left, bottom - corner, reticlePaint)
+
+            canvas.drawLine(right, bottom, right - corner, bottom, reticlePaint)
+            canvas.drawLine(right, bottom, right, bottom - corner, reticlePaint)
         }
     }
 }

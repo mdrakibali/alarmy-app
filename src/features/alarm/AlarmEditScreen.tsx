@@ -1218,7 +1218,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={async () => {
-              const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
+              const shot = await NativeAlarm.openCameraMission({ mode: 'register_photo' });
               if (shot?.path) {
                 patch({ photoReferencePath: shot.path });
                 toast.showToast({
@@ -1290,7 +1290,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={async () => {
-              const res = await NativeAlarm.openCameraMission({ mode: 'barcode' });
+              const res = await NativeAlarm.openCameraMission({ mode: 'register_barcode' });
               if (res?.value) {
                 patch({ barcodeValue: res.value.trim() });
                 toast.showToast({
