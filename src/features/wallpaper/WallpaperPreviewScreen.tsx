@@ -62,9 +62,11 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
       type: 'success',
       icon: '🖼️',
     });
-    const index = navigation.getState()?.index ?? 0;
-    if (index >= 2) navigation.pop(2);
-    else if (navigation.canGoBack()) navigation.goBack();
+    try {
+      navigation.navigate('AlarmEdit');
+    } catch {
+      if (navigation.canGoBack()) navigation.goBack();
+    }
   };
 
   const applyRinging = () => {
@@ -95,13 +97,13 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
       <View className="absolute inset-0 bg-black/25" pointerEvents="none" />
       <View
         style={{ paddingTop: Math.max(insets.top, 16) }}
-        className="flex-row items-center justify-between px-5"
+        className="flex-row items-center justify-between px-5 z-20"
       >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="h-10 w-10 rounded-full bg-black/50 items-center justify-center"
         >
-          <Text className="text-white font-bold">✕</Text>
+          <Text className="text-white font-bold">‹</Text>
         </TouchableOpacity>
         {!isCustom ? (
           <TouchableOpacity
@@ -114,9 +116,42 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
           <View className="w-10" />
         )}
       </View>
+
+      {/* Alarmy-Style Clock & Date Live Overlay (1.7 Background Preview) */}
+      <View className="items-center mt-6 z-10 px-4">
+        <Text className="text-white/80 font-bold text-sm tracking-wide">
+          {new Date().toLocaleDateString(undefined, {
+            month: 'long',
+            day: 'numeric',
+            weekday: 'short',
+          })}
+        </Text>
+        <Text
+          style={{
+            textShadowColor: 'rgba(0, 0, 0, 0.45)',
+            textShadowOffset: { width: 0, height: 2 },
+            textShadowRadius: 8,
+          }}
+          className="text-white font-black text-7xl mt-1 tracking-tight"
+        >
+          07:00
+        </Text>
+      </View>
+
       <View className="flex-1" />
-      <View style={{ paddingBottom: insets.bottom + 16 }} className="px-5">
-        <Text className="text-2xl font-black text-white">{name}</Text>
+
+      {/* Bottom Action Area */}
+      <View style={{ paddingBottom: insets.bottom + 16 }} className="px-5 z-20">
+        <View className="items-center mb-3">
+          <View className="flex-row items-center bg-black/50 border border-white/20 rounded-full px-4 py-1.5">
+            <Text className="text-white text-xs mr-1.5">ılıl</Text>
+            <Text className="text-white text-xs font-semibold">
+              Alarm rings with wallpaper visual
+            </Text>
+          </View>
+        </View>
+
+        <Text className="text-xl font-black text-white text-center mb-1">{name}</Text>
         {motion?.kind === 'video' ? (
           <TouchableOpacity
             onPress={async () => {

@@ -372,6 +372,7 @@ export function SleepScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             className="mt-4 -mx-1"
+            // eslint-disable-next-line react-native/no-inline-styles
             contentContainerStyle={{ paddingHorizontal: 4 }}
           >
             {CATEGORIES.map(cat => (
