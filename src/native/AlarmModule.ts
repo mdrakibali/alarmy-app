@@ -10,10 +10,30 @@ const { AlarmModule } = NativeModules;
 
 export interface NativeAlarmRecord {
   id: string;
+  hour?: number;
+  minute?: number;
+  label?: string;
+  soundId?: string;
+  volume?: number;
+  vibrate?: boolean;
   enabled: boolean;
+  repeatDays?: number[];
+  snooze?: { enabled: boolean; intervalMin: number; maxCount: number };
+  missions?: string[];
   snoozeUsed: number;
   snoozeMaxCount: number;
   triggerTimeMs: number;
+  photoReferencePath?: string;
+  photoMatchThreshold?: number;
+  barcodeValue?: string;
+  stepTarget?: number;
+  squatTarget?: number;
+  shakeTarget?: number;
+  wallpaper?: string;
+  mathCount?: number;
+  mathDifficulty?: 'easy' | 'normal' | 'hard';
+  memoryPairs?: number;
+  typingPhrase?: string;
 }
 
 export interface RingingAlarmInfo {
@@ -119,6 +139,33 @@ class AlarmModuleBridge {
     } catch (e) {
       console.warn('NativeAlarm snoozeAlarm failed:', e);
       return false;
+    }
+  }
+
+  async dismissSnooze(alarmId: string): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) {
+      return false;
+    }
+    try {
+      if (AlarmModule.dismissSnooze) {
+        return await AlarmModule.dismissSnooze(alarmId);
+      }
+      return false;
+    } catch (e) {
+      console.warn('NativeAlarm dismissSnooze failed:', e);
+      return false;
+    }
+  }
+
+  async getInitialSnoozeIntent(): Promise<{ alarmId: string; intervalMin: number } | null> {
+    if (Platform.OS !== 'android' || !AlarmModule?.getInitialSnoozeIntent) {
+      return null;
+    }
+    try {
+      return await AlarmModule.getInitialSnoozeIntent();
+    } catch (e) {
+      console.warn('NativeAlarm getInitialSnoozeIntent failed:', e);
+      return null;
     }
   }
 

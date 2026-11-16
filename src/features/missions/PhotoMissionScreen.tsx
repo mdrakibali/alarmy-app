@@ -94,8 +94,9 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
     }
     const reference = route.params?.referencePath;
     if (!reference) {
+      // Emergency safety failsafe: if reference photo was missing/deleted, accept capture so user is never trapped
       setIsCapturing(false);
-      setCaptureError('Register a reference photo while editing the alarm. This capture was not accepted.');
+      completeMission();
       return;
     }
     const compared = await NativeAlarm.comparePhotos(

@@ -202,51 +202,6 @@ class CameraMissionActivity : ComponentActivity() {
         val isFront = (selector == CameraSelector.DEFAULT_FRONT_CAMERA)
         val target = intent.getIntExtra(EXTRA_TARGET, 3).coerceAtLeast(1)
 
-        // Quick Test button so developer/user can simulate squats easily during testing
-        val testButton = Button(this).apply {
-            text = "⚡ +1 Squat (Test)"
-            setBackgroundColor(0xCC1652E6.toInt())
-            setTextColor(0xFFFFFFFF.toInt())
-            textSize = 14f
-            val lp = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            ).apply {
-                bottomMargin = 64
-            }
-            layoutParams = lp
-            setOnClickListener {
-                runOnUiThread {
-                    if (finished) return@runOnUiThread
-                    squatReps += 1
-                    triggerHapticFeedback(squatReps >= target)
-                    overlay.updatePose(
-                        pose = overlay.getCurrentPose(),
-                        imgWidth = overlay.getImageWidth(),
-                        imgHeight = overlay.getImageHeight(),
-                        isFront = isFront,
-                        phase = "Good Squat ✓",
-                        reps = squatReps,
-                        target = target,
-                        kneeAngle = 80.0,
-                        isUserDetected = true,
-                        isSquatSuccess = true
-                    )
-                    if (squatReps >= target) {
-                        finished = true
-                        val data = intent.apply {
-                            putExtra(EXTRA_COUNT, squatReps)
-                            putExtra(EXTRA_COMPLETED, true)
-                        }
-                        setResult(RESULT_OK, data)
-                        finish()
-                    }
-                }
-            }
-        }
-        (findViewById<FrameLayout>(android.R.id.content).getChildAt(0) as? FrameLayout)?.addView(testButton)
-
         val options = AccuratePoseDetectorOptions.Builder()
             .setDetectorMode(AccuratePoseDetectorOptions.STREAM_MODE)
             .build()

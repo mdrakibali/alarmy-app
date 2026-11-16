@@ -14,6 +14,13 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
 
+  companion object {
+    @Volatile
+    var pendingSnoozeAlarmId: String? = null
+    @Volatile
+    var pendingSnoozeIntervalMin: Int = 5
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     turnScreenOnAndShowWhenLocked()
@@ -53,6 +60,8 @@ class MainActivity : ReactActivity() {
       val alarmId = intent.getStringExtra(com.alarmyclone.alarm.AlarmScheduler.EXTRA_ALARM_ID)
       val intervalMin = intent.getIntExtra(com.alarmyclone.alarm.AlarmScheduler.EXTRA_SNOOZE_INTERVAL, 5)
       if (alarmId != null) {
+        pendingSnoozeAlarmId = alarmId
+        pendingSnoozeIntervalMin = intervalMin
         val map = com.facebook.react.bridge.Arguments.createMap().apply {
           putString("alarmId", alarmId)
           putInt("intervalMin", intervalMin)

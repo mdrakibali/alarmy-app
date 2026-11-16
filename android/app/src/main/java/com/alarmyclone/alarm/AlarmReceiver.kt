@@ -13,16 +13,26 @@ class AlarmReceiver : BroadcastReceiver() {
         const val ACTION_ALARM_TRIGGER = "com.alarmyclone.ALARM_TRIGGER"
         const val ACTION_ALARM_RINGING = "com.alarmyclone.ALARM_RINGING"
         private const val TAG = "AlarmReceiver"
-        private var wakeLock: PowerManager.WakeLock? = null
+        private val activeWakeLocks = java.util.concurrent.ConcurrentHashMap<String, PowerManager.WakeLock>()
 
-        fun releaseWakeLock() {
+        fun releaseWakeLock(alarmId: String? = null) {
             try {
-                wakeLock?.let {
-                    if (it.isHeld) {
-                        it.release()
+                if (alarmId != null) {
+                    activeWakeLocks.remove(alarmId)?.let {
+                        if (it.isHeld) {
+                            it.release()
+                        }
+                    }
+                } else {
+                    val iterator = activeWakeLocks.values.iterator()
+                    while (iterator.hasNext()) {
+                        val wl = iterator.next()
+                        if (wl.isHeld) {
+                            wl.release()
+                        }
+                        iterator.remove()
                     }
                 }
-                wakeLock = null
             } catch (e: Exception) {
                 Log.e(TAG, "Error releasing WakeLock", e)
             }
@@ -35,12 +45,20 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // Acquire WakeLock to keep CPU awake while service starts
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
-        powerManager?.let {
-            wakeLock = it.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                "AlarmyClone:AlarmReceiverWakeLock"
-            ).apply {
-                acquire(3 * 60 * 1000L /* 3 minutes timeout */)
+        powerManager?.let { pm ->
+            try {
+                val wl = pm.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "AlarmyClone:AlarmReceiver:$alarmId"
+                ).apply {
+                    setReferenceCounted(false)
+                    acquire(3 * 60 * 1000L /* 3 minutes timeout */)
+                }
+                activeWakeLocks.put(alarmId, wl)?.let { oldWl ->
+                    if (oldWl.isHeld) oldWl.release()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error acquiring WakeLock for $alarmId", e)
             }
         }
 

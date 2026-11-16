@@ -12,6 +12,7 @@ interface AlarmState {
   toggleAlarm: (id: string) => void;
   snoozeAlarm: (id: string, intervalMin: number) => void;
   clearSnooze: (id: string) => void;
+  dismissSnooze: (id: string) => void;
   rescheduleAll: () => void;
   syncFromNative: () => Promise<void>;
 }
@@ -103,6 +104,19 @@ export const useAlarmStore = create<AlarmState>()(
           ),
         }));
       },
+      dismissSnooze: id => {
+        set(s => ({
+          alarms: s.alarms.map(a => {
+            if (a.id !== id) return a;
+            const isRepeating = a.repeatDays && a.repeatDays.length > 0;
+            return {
+              ...a,
+              enabled: isRepeating ? a.enabled : false,
+              snoozedUntil: undefined,
+            };
+          }),
+        }));
+      },
       rescheduleAll: () => {
         const { alarms } = get();
         for (const alarm of alarms) {
@@ -122,18 +136,54 @@ export const useAlarmStore = create<AlarmState>()(
       syncFromNative: async () => {
         const native = await NativeAlarm.listAlarms();
         if (native.length === 0) return;
-        set(s => ({
-          alarms: s.alarms.map(alarm => {
-            const match = native.find(row => row.id === alarm.id);
-            if (!match) return alarm;
-            return {
-              ...alarm,
-              enabled: match.enabled,
-              snoozedUntil:
-                match.snoozeUsed > 0 ? match.triggerTimeMs : alarm.snoozedUntil,
-            };
-          }),
-        }));
+        set(s => {
+          if (s.alarms.length === 0) {
+            const hydrated: Alarm[] = native.map(row => ({
+              id: row.id,
+              hour: row.hour ?? 7,
+              minute: row.minute ?? 0,
+              label: row.label ?? 'Alarm',
+              repeatDays: row.repeatDays ?? [],
+              enabled: row.enabled,
+              soundId: row.soundId ?? 'default',
+              volume: row.volume ?? 1.0,
+              vibrate: row.vibrate ?? true,
+              snooze: row.snooze ?? {
+                enabled: true,
+                intervalMin: 5,
+                maxCount: row.snoozeMaxCount ?? 3,
+              },
+              missions: (row.missions ?? []) as any,
+              wallpaper: row.wallpaper,
+              snoozedUntil: row.snoozeUsed > 0 ? row.triggerTimeMs : undefined,
+              gentleWakeup: true,
+              photoReferencePath: row.photoReferencePath,
+              photoMatchThreshold: row.photoMatchThreshold ?? 72,
+              barcodeValue: row.barcodeValue,
+              stepTarget: row.stepTarget ?? 5,
+              squatTarget: row.squatTarget ?? 3,
+              shakeTarget: row.shakeTarget ?? 5,
+              mathCount: row.mathCount ?? 2,
+              mathDifficulty: row.mathDifficulty ?? 'normal',
+              memoryPairs: row.memoryPairs ?? 6,
+              typingPhrase: row.typingPhrase,
+            }));
+            return { alarms: hydrated };
+          }
+
+          return {
+            alarms: s.alarms.map(alarm => {
+              const match = native.find(row => row.id === alarm.id);
+              if (!match) return alarm;
+              return {
+                ...alarm,
+                enabled: match.enabled,
+                snoozedUntil:
+                  match.snoozeUsed > 0 ? match.triggerTimeMs : undefined,
+              };
+            }),
+          };
+        });
       },
     }),
     {

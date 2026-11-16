@@ -104,6 +104,18 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             val gentleWakeup = if (alarmMap.hasKey("gentleWakeup")) alarmMap.getBoolean("gentleWakeup") else true
             val wakeUpCheckMin = if (alarmMap.hasKey("wakeUpCheckMin")) alarmMap.getInt("wakeUpCheckMin") else 0
 
+            val photoReferencePath = if (alarmMap.hasKey("photoReferencePath") && !alarmMap.isNull("photoReferencePath")) alarmMap.getString("photoReferencePath") else null
+            val photoMatchThreshold = if (alarmMap.hasKey("photoMatchThreshold")) alarmMap.getInt("photoMatchThreshold") else 72
+            val barcodeValue = if (alarmMap.hasKey("barcodeValue") && !alarmMap.isNull("barcodeValue")) alarmMap.getString("barcodeValue") else null
+            val stepTarget = if (alarmMap.hasKey("stepTarget")) alarmMap.getInt("stepTarget") else 5
+            val squatTarget = if (alarmMap.hasKey("squatTarget")) alarmMap.getInt("squatTarget") else 3
+            val shakeTarget = if (alarmMap.hasKey("shakeTarget")) alarmMap.getInt("shakeTarget") else 5
+            val wallpaper = if (alarmMap.hasKey("wallpaper") && !alarmMap.isNull("wallpaper")) alarmMap.getString("wallpaper") else null
+            val mathCount = if (alarmMap.hasKey("mathCount")) alarmMap.getInt("mathCount") else 2
+            val mathDifficulty = if (alarmMap.hasKey("mathDifficulty") && !alarmMap.isNull("mathDifficulty")) alarmMap.getString("mathDifficulty") ?: "normal" else "normal"
+            val memoryPairs = if (alarmMap.hasKey("memoryPairs")) alarmMap.getInt("memoryPairs") else 6
+            val typingPhrase = if (alarmMap.hasKey("typingPhrase") && !alarmMap.isNull("typingPhrase")) alarmMap.getString("typingPhrase") else null
+
             val model = AlarmModel(
                 id = id,
                 hour = hour,
@@ -120,17 +132,60 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 enabled = enabled,
                 gentleWakeup = gentleWakeup,
                 wakeUpCheckMin = wakeUpCheckMin.coerceIn(0, 30),
+                photoReferencePath = photoReferencePath,
+                photoMatchThreshold = photoMatchThreshold,
+                barcodeValue = barcodeValue,
+                stepTarget = stepTarget,
+                squatTarget = squatTarget,
+                shakeTarget = shakeTarget,
+                wallpaper = wallpaper,
+                mathCount = mathCount,
+                mathDifficulty = mathDifficulty,
+                memoryPairs = memoryPairs,
+                typingPhrase = typingPhrase,
             )
 
             val scheduled = if (enabled) {
                 AlarmScheduler.schedule(reactContext, model)
             } else {
-                AlarmScheduler.cancel(reactContext, id)
+                AlarmScheduler.disable(reactContext, id, model)
                 true
             }
             promise.resolve(scheduled)
         } catch (e: Exception) {
             promise.reject("SCHEDULE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun dismissSnooze(alarmId: String, promise: Promise) {
+        try {
+            val ok = AlarmScheduler.dismissSnooze(reactContext, alarmId)
+            AlarmScheduler.cancelSnoozeNotification(reactContext)
+            sendEvent("onSnoozeDismissed", alarmId)
+            promise.resolve(ok)
+        } catch (e: Exception) {
+            promise.reject("DISMISS_SNOOZE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun getInitialSnoozeIntent(promise: Promise) {
+        try {
+            val alarmId = com.alarmyclone.MainActivity.pendingSnoozeAlarmId
+            val intervalMin = com.alarmyclone.MainActivity.pendingSnoozeIntervalMin
+            if (alarmId != null) {
+                // Clear after single consumption
+                com.alarmyclone.MainActivity.pendingSnoozeAlarmId = null
+                val map = Arguments.createMap()
+                map.putString("alarmId", alarmId)
+                map.putInt("intervalMin", intervalMin)
+                promise.resolve(map)
+            } else {
+                promise.resolve(null)
+            }
+        } catch (e: Exception) {
+            promise.reject("GET_INITIAL_SNOOZE_ERROR", e.message, e)
         }
     }
 
@@ -279,10 +334,46 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             AlarmStorage.getAllAlarms(reactContext).forEach { alarm ->
                 val map = Arguments.createMap()
                 map.putString("id", alarm.id)
+                map.putInt("hour", alarm.hour)
+                map.putInt("minute", alarm.minute)
+                map.putString("label", alarm.label)
+                map.putString("soundId", alarm.soundId)
+                map.putDouble("volume", alarm.volume.toDouble())
+                map.putBoolean("vibrate", alarm.vibrate)
                 map.putBoolean("enabled", alarm.enabled)
+
+                val days = Arguments.createArray()
+                alarm.repeatDays.forEach { days.pushInt(it) }
+                map.putArray("repeatDays", days)
+
+                val snoozeMap = Arguments.createMap()
+                snoozeMap.putBoolean("enabled", alarm.snoozeEnabled)
+                snoozeMap.putInt("intervalMin", alarm.snoozeIntervalMin)
+                snoozeMap.putInt("maxCount", alarm.snoozeMaxCount)
+                map.putMap("snooze", snoozeMap)
+
+                val missions = Arguments.createArray()
+                alarm.missions.forEach { missions.pushString(it) }
+                map.putArray("missions", missions)
+
+                map.putBoolean("gentleWakeup", alarm.gentleWakeup)
+                map.putInt("wakeUpCheckMin", alarm.wakeUpCheckMin)
                 map.putInt("snoozeUsed", alarm.snoozeUsed)
                 map.putInt("snoozeMaxCount", alarm.snoozeMaxCount)
                 map.putDouble("triggerTimeMs", alarm.triggerTimeMs.toDouble())
+
+                alarm.photoReferencePath?.let { map.putString("photoReferencePath", it) }
+                map.putInt("photoMatchThreshold", alarm.photoMatchThreshold)
+                alarm.barcodeValue?.let { map.putString("barcodeValue", it) }
+                map.putInt("stepTarget", alarm.stepTarget)
+                map.putInt("squatTarget", alarm.squatTarget)
+                map.putInt("shakeTarget", alarm.shakeTarget)
+                alarm.wallpaper?.let { map.putString("wallpaper", it) }
+                map.putInt("mathCount", alarm.mathCount)
+                map.putString("mathDifficulty", alarm.mathDifficulty)
+                map.putInt("memoryPairs", alarm.memoryPairs)
+                alarm.typingPhrase?.let { map.putString("typingPhrase", it) }
+
                 arr.pushMap(map)
             }
             promise.resolve(arr)

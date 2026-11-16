@@ -28,15 +28,7 @@ class AlarmActionReceiver : BroadcastReceiver() {
                 AlarmService.stop(context)
             }
             ACTION_DISMISS_SNOOZE -> {
-                AlarmScheduler.cancelSnoozeNotification(context)
-                val alarm = AlarmStorage.getAlarm(context, alarmId)
-                if (alarm != null) {
-                    if (alarm.repeatDays.isNotEmpty()) {
-                        AlarmScheduler.schedule(context, alarm.copy(snoozeUsed = 0), recalculateWallClock = true)
-                    } else {
-                        AlarmStorage.saveAlarm(context, alarm.copy(enabled = false, snoozeUsed = 0))
-                    }
-                }
+                AlarmScheduler.dismissSnooze(context, alarmId)
                 AlarmModule.instance?.sendEvent("onSnoozeDismissed", alarmId)
             }
         }

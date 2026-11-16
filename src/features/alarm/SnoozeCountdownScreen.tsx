@@ -14,6 +14,7 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const { alarmId, intervalMin, wallpaper } = route.params;
   const alarmFromStore = useAlarmStore(s => s.alarms.find(a => a.id === alarmId));
+  const dismissSnoozeInStore = useAlarmStore(s => s.dismissSnooze);
   const clearSnooze = useAlarmStore(s => s.clearSnooze);
   const themeAlarm = useThemeStore(s => s.alarmBackground);
   const wallpaperId = wallpaper || alarmFromStore?.wallpaper || themeAlarm;
@@ -75,8 +76,8 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
   };
 
   const handleDismissAlarm = async () => {
-    clearSnooze(alarmId);
-    await NativeAlarm.cancelAlarm(alarmId);
+    dismissSnoozeInStore(alarmId);
+    await NativeAlarm.dismissSnooze(alarmId);
     await NativeAlarm.stopAlarm();
     navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };

@@ -22,6 +22,17 @@ data class AlarmModel(
     val requestCode: Int = 0,
     val snoozeUsed: Int = 0,
     val wakeUpCheckMin: Int = 0,
+    val photoReferencePath: String? = null,
+    val photoMatchThreshold: Int = 72,
+    val barcodeValue: String? = null,
+    val stepTarget: Int = 5,
+    val squatTarget: Int = 3,
+    val shakeTarget: Int = 5,
+    val wallpaper: String? = null,
+    val mathCount: Int = 2,
+    val mathDifficulty: String = "normal",
+    val memoryPairs: Int = 6,
+    val typingPhrase: String? = null,
 ) {
     fun toJsonObject(): JSONObject {
         val obj = JSONObject()
@@ -41,6 +52,17 @@ data class AlarmModel(
         obj.put("requestCode", requestCode)
         obj.put("snoozeUsed", snoozeUsed)
         obj.put("wakeUpCheckMin", wakeUpCheckMin)
+        photoReferencePath?.let { obj.put("photoReferencePath", it) }
+        obj.put("photoMatchThreshold", photoMatchThreshold)
+        barcodeValue?.let { obj.put("barcodeValue", it) }
+        obj.put("stepTarget", stepTarget)
+        obj.put("squatTarget", squatTarget)
+        obj.put("shakeTarget", shakeTarget)
+        wallpaper?.let { obj.put("wallpaper", it) }
+        obj.put("mathCount", mathCount)
+        obj.put("mathDifficulty", mathDifficulty)
+        obj.put("memoryPairs", memoryPairs)
+        typingPhrase?.let { obj.put("typingPhrase", it) }
 
         val daysArray = JSONArray()
         repeatDays.forEach { daysArray.put(it) }
@@ -88,6 +110,17 @@ data class AlarmModel(
                 requestCode = obj.optInt("requestCode", 0),
                 snoozeUsed = obj.optInt("snoozeUsed", 0),
                 wakeUpCheckMin = obj.optInt("wakeUpCheckMin", 0),
+                photoReferencePath = if (obj.has("photoReferencePath") && !obj.isNull("photoReferencePath")) obj.getString("photoReferencePath") else null,
+                photoMatchThreshold = obj.optInt("photoMatchThreshold", 72),
+                barcodeValue = if (obj.has("barcodeValue") && !obj.isNull("barcodeValue")) obj.getString("barcodeValue") else null,
+                stepTarget = obj.optInt("stepTarget", 5),
+                squatTarget = obj.optInt("squatTarget", 3),
+                shakeTarget = obj.optInt("shakeTarget", 5),
+                wallpaper = if (obj.has("wallpaper") && !obj.isNull("wallpaper")) obj.getString("wallpaper") else null,
+                mathCount = obj.optInt("mathCount", 2),
+                mathDifficulty = obj.optString("mathDifficulty", "normal"),
+                memoryPairs = obj.optInt("memoryPairs", 6),
+                typingPhrase = if (obj.has("typingPhrase") && !obj.isNull("typingPhrase")) obj.getString("typingPhrase") else null,
             )
         }
     }

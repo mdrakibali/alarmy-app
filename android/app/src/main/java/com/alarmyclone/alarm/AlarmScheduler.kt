@@ -100,6 +100,38 @@ object AlarmScheduler {
         Log.d(TAG, "Cancelled alarm $alarmId")
     }
 
+    fun disable(context: Context, alarmId: String, model: AlarmModel? = null) {
+        val existing = AlarmStorage.getAlarm(context, alarmId)
+        val code = model?.requestCode ?: existing?.requestCode ?: 0
+        cancelPending(context, alarmId, code)
+        cancelSnoozeNotification(context)
+        val toSave = (model ?: existing)?.copy(enabled = false, snoozeUsed = 0)
+        if (toSave != null) {
+            AlarmStorage.saveAlarm(context, toSave)
+        }
+        Log.d(TAG, "Disabled alarm $alarmId (preserved in database)")
+    }
+
+    fun dismissSnooze(context: Context, alarmId: String): Boolean {
+        cancelSnoozeNotification(context)
+        val existing = AlarmStorage.getAlarm(context, alarmId)
+        if (existing != null) {
+            cancelPending(context, alarmId, existing.requestCode)
+            AlarmService.stop(context)
+            if (existing.repeatDays.isNotEmpty()) {
+                schedule(context, existing.copy(snoozeUsed = 0), recalculateWallClock = true)
+            } else {
+                AlarmStorage.saveAlarm(context, existing.copy(enabled = false, snoozeUsed = 0))
+            }
+            Log.d(TAG, "Safely dismissed snooze for $alarmId (repeating=${existing.repeatDays.isNotEmpty()})")
+            return true
+        } else {
+            cancelLegacyHashPending(context, alarmId)
+            AlarmService.stop(context)
+            return false
+        }
+    }
+
     private fun cancelPending(context: Context, alarmId: String, requestCode: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val intent = Intent(context, AlarmReceiver::class.java).apply {

@@ -32,6 +32,10 @@ export interface Alarm {
   stepTarget?: number;
   squatTarget?: number;
   shakeTarget?: number;
+  mathCount?: number;
+  mathDifficulty?: 'easy' | 'normal' | 'hard';
+  memoryPairs?: number;
+  typingPhrase?: string;
   backupSoundId?: string;
   wakeUpCheckMin?: number;
   timePressure?: boolean;

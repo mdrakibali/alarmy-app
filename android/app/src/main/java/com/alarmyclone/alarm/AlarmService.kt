@@ -130,7 +130,7 @@ class AlarmService : Service() {
         }
 
         // Release the broadcast receiver's wake lock now that foreground service is holding state
-        AlarmReceiver.releaseWakeLock()
+        AlarmReceiver.releaseWakeLock(alarmId)
 
         return START_STICKY
     }
