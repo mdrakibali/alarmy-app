@@ -174,9 +174,8 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   const formattedDate = formatAlbaDate(currentTime);
   const formattedClock = formatAlbaClock(currentTime);
 
-  const displayLabel = label || 'Wake up early';
-  const hasEmoji = /\p{Extended_Pictographic}/u.test(displayLabel);
-  const labelWithEmoji = hasEmoji ? displayLabel : `🐥 ${displayLabel}`;
+  const displayLabel = label || 'Morning Alarm';
+  const labelWithEmoji = displayLabel;
 
   return (
     <AppBackground

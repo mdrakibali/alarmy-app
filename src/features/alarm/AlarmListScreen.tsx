@@ -467,7 +467,7 @@ function AlarmCard({
     ? alarm.habitIcon
     : alarm.isQuickAlarm
     ? '⚡'
-    : '🐥';
+    : '⏰';
 
   return (
     <Pressable

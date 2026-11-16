@@ -245,7 +245,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
           {/* Dark Label Badge Pill */}
           <View className="bg-black/60 px-4 py-1.5 rounded-full flex-row items-center border border-white/10 shadow-md">
             <Text className="text-white font-extrabold text-sm tracking-wide">
-              🐥 Wake up early
+              Morning Alarm
             </Text>
           </View>
 

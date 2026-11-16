@@ -33,7 +33,7 @@ interface HabitTemplate {
 const HABIT_TEMPLATES: HabitTemplate[] = [
   {
     id: 'wake_up',
-    icon: '🐥',
+    icon: '🌅',
     title: 'Wake up early',
     defaultHour: 6,
     defaultMinute: 30,
