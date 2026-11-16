@@ -75,6 +75,7 @@ function AnimatedEqualizer({ color = '#1652E6' }: { color?: string }) {
       {[anim1, anim2, anim3].map((anim, index) => (
         <Animated.View
           key={index}
+          // eslint-disable-next-line react-native/no-inline-styles
           style={{
             height: 14,
             backgroundColor: color,

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -227,16 +228,34 @@ export function AlarmListScreen() {
           </View>
         )}
 
-        <View className="flex-row items-center justify-between px-5 py-2">
-          <Text className="text-sm font-bold text-slate-700">
-            {nextAlarmCountdown ? `Ring in ${nextAlarmCountdown}` : 'No upcoming alarms'}
-          </Text>
-        </View>
+        {nextAlarmCountdown ? (
+          <View className="mx-4 mb-3 p-3.5 rounded-2xl bg-ice border border-primary/20 flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1 pr-2">
+              <View className="h-8 w-8 rounded-full bg-primary/10 items-center justify-center mr-2.5">
+                <Text className="text-sm">⏰</Text>
+              </View>
+              <View>
+                <Text className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Upcoming Alarm</Text>
+                <Text className="text-sm font-black text-slate-900">
+                  Rings in {nextAlarmCountdown}
+                </Text>
+              </View>
+            </View>
+            <View className="bg-primary px-2.5 py-1 rounded-full">
+              <Text className="text-white text-[10px] font-black uppercase tracking-wider">Active</Text>
+            </View>
+          </View>
+        ) : (
+          <View className="px-5 py-2">
+            <Text className="text-xs font-bold text-slate-400">No active alarms set</Text>
+          </View>
+        )}
 
         {/* Alarms List */}
         <FlatList
           data={sorted}
           keyExtractor={item => item.id}
+          // eslint-disable-next-line react-native/no-inline-styles
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 4,
@@ -551,19 +570,19 @@ function AlarmCard({
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <View className="items-center justify-center py-20 px-6">
-      <View className="h-20 w-20 rounded-full bg-slate-100 items-center justify-center mb-4">
-        <Text className="text-3xl">⏰</Text>
+    <View className="items-center justify-center py-16 px-6">
+      <View className="h-20 w-20 rounded-full bg-ice border border-primary/20 items-center justify-center mb-4 shadow-xs">
+        <Text className="text-3xl">☀️</Text>
       </View>
-      <Text className="text-lg font-bold text-slate-800">No alarms yet</Text>
-      <Text className="mb-6 mt-1.5 text-center text-sm text-slate-500">
-        Tap the button below to schedule your first smart alarm.
+      <Text className="text-xl font-black text-slate-900">No active alarms</Text>
+      <Text className="mb-6 mt-1.5 text-center text-xs text-slate-500 max-w-xs leading-relaxed font-medium">
+        Set your first alarm with wake-up missions to guarantee you get out of bed on time.
       </Text>
       <Pressable
         onPress={onAdd}
-        className="rounded-2xl bg-[#FF2D55] px-6 py-3.5 shadow-sm active:bg-[#E0264A]"
+        className="rounded-2xl bg-primary px-7 py-3.5 shadow-md active:bg-primary-dark"
       >
-        <Text className="text-sm font-bold text-white">Create Alarm</Text>
+        <Text className="text-sm font-extrabold text-white tracking-wide">+ Set First Alarm</Text>
       </Pressable>
     </View>
   );

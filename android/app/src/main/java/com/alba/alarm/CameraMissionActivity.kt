@@ -624,8 +624,8 @@ class CameraMissionActivity : ComponentActivity() {
                                 blinkCount++
                                 mainHandler.post {
                                     if (isFinished) return@post
-                                    playBeep(ToneGenerator.TONE_PROP_BEEP)
-                                    vibrate(60)
+                                    playBeep(false)
+                                    vibrateFeedback("rep")
                                     eyeStatePill.text = "Eyes Open 👁️"
                                     val left = (targetBlinks - blinkCount).coerceAtLeast(0)
                                     remainingText.text = "$left"
@@ -658,8 +658,8 @@ class CameraMissionActivity : ComponentActivity() {
     private fun finishSuccessBlink(count: Int) {
         if (isFinished) return
         isFinished = true
-        playBeep(ToneGenerator.TONE_PROP_BEEP2)
-        vibrate(150)
+        playBeep(true)
+        vibrateFeedback("success")
 
         mainHandler.postDelayed({
             val data = Intent().apply {
