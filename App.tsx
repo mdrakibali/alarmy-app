@@ -116,19 +116,7 @@ function App() {
     const sub = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
         checkRingingAlarm();
-
-    // Check if app was cold-started from a snooze notification tap
-    const checkInitialSnooze = async () => {
-      const initialSnooze = await NativeAlarm.getInitialSnoozeIntent();
-      if (initialSnooze?.alarmId && navigationRef.current) {
-        navigationRef.current.navigate('SnoozeCountdown', {
-          alarmId: initialSnooze.alarmId,
-          intervalMin: initialSnooze.intervalMin || 5,
-        });
-      }
-    };
-
-    checkInitialSnooze();
+        checkInitialSnooze();
       }
     });
 

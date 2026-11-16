@@ -38,7 +38,7 @@ const MOTIVATIONAL_PHRASES = [
 export function normalizeTyping(str: string): string {
   return str
     .replace(/[“”"']/g, '')
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
@@ -114,7 +114,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
-  }, [navigation, route.params]);
+  }, [navigation, route.params, targetPhrase]);
 
   const handleChangeText = (text: string) => {
     setTypedText(text);

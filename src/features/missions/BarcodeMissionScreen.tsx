@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BackHandler,
   Pressable,
@@ -28,7 +28,8 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
-  const allMissions = route.params?.missions ?? [];
+  const missionsParam = route.params?.missions;
+  const allMissions = useMemo(() => missionsParam ?? [], [missionsParam]);
 
   const [selectedTarget, setSelectedTarget] = useState(DEMO_BARCODES[0]);
   const [manualInput, setManualInput] = useState('');
@@ -44,8 +45,9 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
   }, []);
 
   const isCompletedRef = useRef(false);
+  const registeredCode = route.params?.registeredCode?.trim() ?? '';
 
-  const completeMission = async () => {
+  const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
 
@@ -75,10 +77,9 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
-  };
+  }, [alarmId, allMissions, missionIndex, navigation, route.params]);
 
-  const registeredCode = route.params?.registeredCode?.trim() ?? '';
-  const acceptValue = (value: string, fromText: boolean) => {
+  const acceptValue = useCallback((value: string, fromText: boolean) => {
     if (accepted.current) return;
     if (!registeredCode) {
       accepted.current = true;
@@ -93,9 +94,9 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     }
     accepted.current = true;
     completeMission();
-  };
+  }, [completeMission, registeredCode]);
 
-  const startRealCameraScan = async () => {
+  const startRealCameraScan = useCallback(async () => {
     setErrorMsg('');
     try {
       const res = await NativeAlarm.openCameraMission({ mode: 'barcode' });
@@ -107,11 +108,11 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     } catch {
       setErrorMsg('Could not open camera scanner. Please try again.');
     }
-  };
+  }, [acceptValue]);
 
   useEffect(() => {
     startRealCameraScan();
-  }, []);
+  }, [startRealCameraScan]);
 
   const handleVerifyManualCode = () => {
     if (!registeredCode) {
