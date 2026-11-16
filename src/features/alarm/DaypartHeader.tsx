@@ -115,11 +115,11 @@ export function DaypartHeader({
         </Animated.View>
       </View>
       <View className="px-4 pb-4 -mt-2">
-        <Text className="text-2xl font-black text-[#08173E]">{theme.title}</Text>
-        <Text className="text-sm text-[#556889] mt-0.5">
+        <Text className="text-2xl font-black text-navy">{theme.title}</Text>
+        <Text className="text-sm text-subtext mt-0.5">
           {dateLabel} · {clock}
         </Text>
-        <Text className="text-sm font-bold text-[#1652E6] mt-2">
+        <Text className="text-sm font-bold text-primary mt-2">
           {countdown ? `Next alarm in ${countdown}` : 'No upcoming alarm'}
         </Text>
       </View>

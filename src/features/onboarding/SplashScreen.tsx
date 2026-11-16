@@ -88,7 +88,7 @@ export function SplashScreen({ navigation }: Props) {
         >
           {/* Circular Logo Badge */}
           <View className="w-40 h-40 rounded-full bg-white border border-blue-100 items-center justify-center shadow-lg mb-5 relative overflow-hidden">
-            <View className="absolute inset-2 rounded-full bg-[#EEF4FF]/70" />
+            <View className="absolute inset-2 rounded-full bg-ice/70" />
             <Image
               source={require('@/assets/logo/alba-smart-alarm-mark.png')}
               className="w-32 h-32"
@@ -98,19 +98,19 @@ export function SplashScreen({ navigation }: Props) {
 
           {/* App Title */}
           <View className="flex-row items-center mb-1.5">
-            <Text className="text-4xl font-black text-[#08173E] tracking-tight">
+            <Text className="text-4xl font-black text-navy tracking-tight">
               Alba
             </Text>
           </View>
 
           {/* Tagline Badge */}
-          <View className="bg-[#EEF4FF] px-3.5 py-1 rounded-full border border-[#1652E6]/25 mb-2.5">
-            <Text className="text-xs font-black text-[#1652E6] tracking-wide">
+          <View className="bg-ice px-3.5 py-1 rounded-full border border-primary/25 mb-2.5">
+            <Text className="text-xs font-black text-primary tracking-wide">
               Smart Alarm & Wake-Up ☀️
             </Text>
           </View>
 
-          <Text className="text-xs font-semibold text-[#556889] tracking-wide text-center">
+          <Text className="text-xs font-semibold text-subtext tracking-wide text-center">
             Unbeatable Morning Alarms • Gentle Routines
           </Text>
         </Animated.View>

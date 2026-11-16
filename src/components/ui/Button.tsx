@@ -4,7 +4,7 @@ import { Pressable, Text } from 'react-native';
 type Variant = 'primary' | 'danger' | 'ghost';
 
 const styles: Record<Variant, { box: string; label: string }> = {
-  primary: { box: 'bg-[#1652E6]', label: 'text-white' },
+  primary: { box: 'bg-primary', label: 'text-white' },
   danger: { box: 'bg-rose-50', label: 'text-rose-600' },
   ghost: { box: 'bg-slate-100', label: 'text-slate-700' },
 };

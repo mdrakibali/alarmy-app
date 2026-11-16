@@ -12,7 +12,7 @@ export function Screen({
   return (
     <SafeAreaView
       edges={['top']}
-      className="flex-1 bg-[#F5F6F8]"
+      className="flex-1 bg-background"
     >
       <View className={`flex-1 ${padded ? 'px-4' : 'px-0'}`}>
         {children}

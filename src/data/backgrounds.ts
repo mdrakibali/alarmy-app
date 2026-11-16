@@ -104,7 +104,7 @@ export const BACKGROUND_ITEMS: BackgroundItem[] = [
   },
   {
     id: 'gradient',
-    name: 'Alarmy Coral',
+    name: 'Alba Sunrise',
     category: 'Aesthetic',
     source: require('../assets/images/backgrounds/bg_gradient.png'),
     previewColor: '#FF385C',

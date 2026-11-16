@@ -100,11 +100,11 @@ function App() {
               ...DefaultTheme,
               colors: {
                 ...DefaultTheme.colors,
-                background: '#F5F6F8',
+                background: '#F8FAFC',
                 card: '#FFFFFF',
-                primary: '#4E7D5B',
-                text: '#0F172A',
-                border: '#F1F5F9',
+                primary: '#1652E6',
+                text: '#08173E',
+                border: '#EEF4FF',
               },
             }}
           >

@@ -62,14 +62,14 @@ export function AlarmListScreen() {
 
   return (
     <Screen padded={false}>
-      <View className="flex-1 bg-[#F8FAFC]">
+      <View className="flex-1 bg-background">
         <DaypartHeader now={new Date(nowTimestamp)} countdown={nextAlarmCountdown} />
         <Pressable
           onPress={() => navigation.navigate('AlarmEdit')}
           className="mx-4 mb-3 flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-100"
         >
           <View className="flex-row items-center flex-1">
-            <View className="mr-3 h-8 px-2.5 items-center justify-center rounded-lg bg-[#1652E6]">
+            <View className="mr-3 h-8 px-2.5 items-center justify-center rounded-lg bg-primary">
               <Text className="text-xs font-black tracking-wider text-white">
                 NEW
               </Text>
@@ -78,7 +78,7 @@ export function AlarmListScreen() {
               <Text className="text-xs font-semibold text-slate-400">
                 Overslept AGAIN?
               </Text>
-              <Text className="text-sm font-bold text-[#08173E]">
+              <Text className="text-sm font-bold text-navy">
                 Try our new wake-up missions
               </Text>
             </View>
@@ -122,7 +122,7 @@ export function AlarmListScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
             onPress={() => navigation.navigate('AlarmEdit')}
-            className="h-16 w-16 items-center justify-center rounded-full bg-[#FF7A00] shadow-2xl active:scale-95"
+            className="h-16 w-16 items-center justify-center rounded-full bg-secondary shadow-2xl active:scale-95"
           >
             <Text className="text-3xl font-light text-white leading-none">
               +
@@ -171,7 +171,7 @@ function AlarmCard({
               <Text
                 key={index}
                 className={`mr-3 text-xs font-bold ${
-                  isSelected ? 'text-[#08173E] font-extrabold' : 'text-slate-300'
+                  isSelected ? 'text-navy font-extrabold' : 'text-slate-300'
                 }`}
               >
                 {dayLabel}
@@ -241,7 +241,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </Text>
       <Pressable
         onPress={onAdd}
-        className="rounded-2xl bg-[#1652E6] px-6 py-3.5 shadow-sm active:bg-[#0B45C4]"
+        className="rounded-2xl bg-primary px-6 py-3.5 shadow-sm active:bg-primary-dark"
       >
         <Text className="text-sm font-bold text-white">Create Alarm</Text>
       </Pressable>

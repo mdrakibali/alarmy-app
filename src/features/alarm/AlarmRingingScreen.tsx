@@ -226,11 +226,11 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
 
-          {/* Primary Action Button: Alarmy signature Coral Red (#FF2D55) */}
+          {/* Primary Action Button */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleDismissOrMission}
-            className="w-full bg-[#FF2D55] py-4.5 rounded-3xl items-center justify-center shadow-2xl"
+            className="w-full bg-danger py-4.5 rounded-3xl items-center justify-center shadow-2xl"
           >
             <Text className="text-white text-xl font-black tracking-wider">
               {hasMission ? 'Start Mission' : 'Dismiss'}

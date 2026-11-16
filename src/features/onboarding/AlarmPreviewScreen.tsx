@@ -147,7 +147,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     addAlarm({
       hour,
       minute,
-      label: 'My First Alarmy',
+      label: 'My First Alba',
       repeatDays: [0, 1, 2, 3, 4, 5, 6],
       enabled: true,
       soundId,

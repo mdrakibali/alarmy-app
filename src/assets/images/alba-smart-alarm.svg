@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Alba Smart Alarm</title>
+  <desc id="desc">A modern blue alarm clock with orange motion accents and Alba Smart Alarm wordmark.</desc>
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#287BFF"/><stop offset="1" stop-color="#092B83"/></linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB21A"/><stop offset="1" stop-color="#FF641D"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0B286B" flood-opacity=".18"/></filter>
+  </defs>
+  <g filter="url(#shadow)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- bells and top button -->
+    <path d="M292 230 C260 180 279 117 330 99 C376 83 421 111 439 157 L391 215Z" fill="url(#blue)"/>
+    <path d="M732 230 C764 180 745 117 694 99 C648 83 603 111 585 157 L633 215Z" fill="url(#blue)"/>
+    <path d="M492 112 Q512 91 532 112 L532 141 L492 141Z" fill="#174AAE"/>
+    <rect x="477" y="132" width="70" height="25" rx="12" fill="#174AAE"/>
+    <!-- clock body -->
+    <circle cx="512" cy="405" r="258" fill="url(#blue)"/>
+    <circle cx="512" cy="405" r="207" fill="#FFFFFF" stroke="#C8D9FF" stroke-width="12"/>
+    <!-- hour marks -->
+    <g stroke="#6C91D8" stroke-width="18">
+      <path d="M512 230 V258"/><path d="M512 552 V580"/><path d="M337 405 H365"/><path d="M659 405 H687"/>
+    </g>
+    <!-- hands -->
+    <path d="M512 405 L400 326" stroke="#0B286B" stroke-width="28"/>
+    <path d="M512 405 L625 291" stroke="#0B286B" stroke-width="28"/>
+    <circle cx="512" cy="405" r="25" fill="url(#orange)"/>
+    <!-- feet -->
+    <path d="M350 628 L326 672 Q316 690 337 697 L374 707 Q397 711 408 689 L423 660Z" fill="#123C9C"/>
+    <path d="M674 628 L698 672 Q708 690 687 697 L650 707 Q627 711 616 689 L601 660Z" fill="#123C9C"/>
+    <!-- energetic orbit -->
+    <path d="M212 453 C260 550 411 560 590 515 C714 484 800 414 805 350 C849 421 782 512 668 566 C474 659 254 620 212 530 C197 499 197 474 212 453Z" fill="url(#orange)"/>
+    <!-- wake rays -->
+    <g fill="url(#orange)"><path d="M786 139 L806 73 Q811 57 827 66 L850 80 Q862 88 853 103 L817 157Z"/><path d="M852 184 L907 143 Q921 133 932 148 L946 170 Q955 184 939 194 L875 221Z"/><path d="M882 247 L951 242 Q970 241 972 259 L974 284 Q975 301 956 302 L884 293Z"/></g>
+  </g>
+  <!-- wordmark -->
+  <text x="512" y="835" text-anchor="middle" font-family="Inter, Poppins, Arial, sans-serif" font-size="116" font-weight="800" letter-spacing="-5" fill="#102D73">Alba</text>
+  <path d="M384 789 L405 751 Q414 735 429 751 L451 789" fill="none" stroke="url(#orange)" stroke-width="13" stroke-linecap="round"/>
+  <text x="512" y="908" text-anchor="middle" font-family="Inter, Poppins, Arial, sans-serif" font-size="43" font-weight="600" letter-spacing="3" fill="#F47724">SMART ALARM</text>
+</svg>

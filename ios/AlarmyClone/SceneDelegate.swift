@@ -30,7 +30,7 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
     #endif
     
     reactNativeFactory?.startReactNative(
-      withModuleName: "AlarmyClone",
+      withModuleName: "Alba",
       in: window,
       connectionOptions: connectionOptions
     )

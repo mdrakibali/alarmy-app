@@ -69,7 +69,7 @@ export function PermissionScreen({ navigation, route }: Props) {
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
           {
             title: 'Alarm Notifications',
-            message: 'Alarmy needs notification permission to show alarm ringing banners.',
+            message: 'Alba needs notification permission to show alarm ringing banners.',
             buttonPositive: 'Allow',
           },
         );
