@@ -114,3 +114,4 @@
 - **Root Cause**: `ReportScreen.tsx` assumed it was only ever rendered in bottom tabs.
 - **Resolution**:
   - Added `canGoBack && <TouchableOpacity onPress={goBack}>` at the top of `ReportScreen.tsx`.
+

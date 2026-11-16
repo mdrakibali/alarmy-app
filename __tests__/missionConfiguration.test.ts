@@ -106,3 +106,4 @@ describe('Alarm Mission Configuration & Native Persistence', () => {
     expect(scheduled.shakeTarget).toBe(25);
   });
 });
+

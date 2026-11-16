@@ -58,3 +58,4 @@
 - `tsc --noEmit`: 0 errors
 - `jest`: 26 passed, 6 suites
 - `metro bundle`: exit code 0
+
