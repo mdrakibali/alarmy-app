@@ -203,6 +203,14 @@ class AlarmModuleBridge {
     }
   }
 
+  triggerHapticTick(): void {
+    if (Platform.OS === 'android' && AlarmModule?.triggerHapticTick) {
+      try {
+        AlarmModule.triggerHapticTick();
+      } catch {}
+    }
+  }
+
   async listAlarms(): Promise<NativeAlarmRecord[]> {
     if (Platform.OS !== 'android' || !AlarmModule) {
       return [];
