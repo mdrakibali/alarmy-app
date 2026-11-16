@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -19,6 +21,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
@@ -32,7 +35,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseLandmark
-import com.google.mlkit.vision.pose.accurate.AccuratePoseDetectorOptions
+import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
 import java.io.File
 import java.util.concurrent.Executors
 import kotlin.math.acos
@@ -88,9 +91,11 @@ class CameraMissionActivity : ComponentActivity() {
         val providerFuture = ProcessCameraProvider.getInstance(this)
         providerFuture.addListener({
             val provider = providerFuture.get()
-            val preview = Preview.Builder().build().also {
-                it.surfaceProvider = previewView.surfaceProvider
-            }
+            val preview = Preview.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+                .build().also {
+                    it.surfaceProvider = previewView.surfaceProvider
+                }
             val front = CameraSelector.DEFAULT_FRONT_CAMERA
             val selector = if (mode == MODE_SQUAT && runCatching { provider.hasCamera(front) }.getOrDefault(false)) {
                 front
@@ -112,7 +117,9 @@ class CameraMissionActivity : ComponentActivity() {
         selector: CameraSelector,
         label: TextView,
     ) {
-        val capture = ImageCapture.Builder().build()
+        val capture = ImageCapture.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+            .build()
         imageCapture = capture
         provider.bindToLifecycle(this, selector, preview, capture)
         label.text = "Tap the screen to capture"
@@ -148,6 +155,7 @@ class CameraMissionActivity : ComponentActivity() {
         label.text = "Point at the registered code"
         val scanner = BarcodeScanning.getClient()
         val analysis = ImageAnalysis.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
         analysis.setAnalyzer(cameraExecutor) { imageProxy ->
@@ -170,6 +178,21 @@ class CameraMissionActivity : ComponentActivity() {
                 .addOnCompleteListener { imageProxy.close() }
         }
         provider.bindToLifecycle(this, selector, preview, analysis)
+    }
+
+    private var toneGenerator: ToneGenerator? = null
+
+    private fun playSquatSound(isFinal: Boolean = false) {
+        try {
+            if (toneGenerator == null) {
+                toneGenerator = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
+            }
+            if (isFinal) {
+                toneGenerator?.startTone(ToneGenerator.TONE_PROP_ACK, 320)
+            } else {
+                toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP2, 160)
+            }
+        } catch (_: Throwable) {}
     }
 
     private fun triggerHapticFeedback(longBuzz: Boolean = false) {
@@ -202,11 +225,12 @@ class CameraMissionActivity : ComponentActivity() {
         val isFront = (selector == CameraSelector.DEFAULT_FRONT_CAMERA)
         val target = intent.getIntExtra(EXTRA_TARGET, 3).coerceAtLeast(1)
 
-        val options = AccuratePoseDetectorOptions.Builder()
-            .setDetectorMode(AccuratePoseDetectorOptions.STREAM_MODE)
+        val options = PoseDetectorOptions.Builder()
+            .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
             .build()
         val detector = PoseDetection.getClient(options)
         val analysis = ImageAnalysis.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
         var phase = "Standing"
@@ -226,22 +250,31 @@ class CameraMissionActivity : ComponentActivity() {
                     val nose = pose.getPoseLandmark(PoseLandmark.NOSE)
                     val leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
                     val rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
+                    val leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)
+                    val rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE)
+                    val leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)
+                    val rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE)
 
                     val isUserDetected = (nose?.inFrameLikelihood ?: 0f) > 0.35f ||
                             (leftShoulder?.inFrameLikelihood ?: 0f) > 0.35f ||
                             (rightShoulder?.inFrameLikelihood ?: 0f) > 0.35f ||
                             (leftHip?.inFrameLikelihood ?: 0f) > 0.35f ||
-                            (rightHip?.inFrameLikelihood ?: 0f) > 0.35f
+                            (rightHip?.inFrameLikelihood ?: 0f) > 0.35f ||
+                            (leftKnee?.inFrameLikelihood ?: 0f) > 0.35f ||
+                            (rightKnee?.inFrameLikelihood ?: 0f) > 0.35f
 
-                    val knee = kneeAngle(
-                        leftHip,
-                        pose.getPoseLandmark(PoseLandmark.LEFT_KNEE),
-                        pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE),
-                    ) ?: kneeAngle(
-                        rightHip,
-                        pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE),
-                        pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE),
-                    )
+                    // Calculate knee angle for both legs to support front, side, and 3/4 angles
+                    val leftKneeAngle = kneeAngle(leftHip, leftKnee, leftAnkle)
+                    val rightKneeAngle = kneeAngle(rightHip, rightKnee, rightAnkle)
+
+                    // Pick the knee angle that reflects squat flexion (minimum angle)
+                    val knee = when {
+                        leftKneeAngle != null && rightKneeAngle != null -> min(leftKneeAngle, rightKneeAngle)
+                        leftKneeAngle != null -> leftKneeAngle
+                        rightKneeAngle != null -> rightKneeAngle
+                        else -> null
+                    }
+
                     if (finished) return@addOnSuccessListener
                     if (knee == null) {
                         missing += 1
@@ -250,7 +283,7 @@ class CameraMissionActivity : ComponentActivity() {
                         } else if (missing > 15) {
                             "Step back to show legs"
                         } else {
-                            "Detecting legs..."
+                            "Detecting posture..."
                         }
                         overlay.updatePose(
                             pose = pose,
@@ -269,23 +302,35 @@ class CameraMissionActivity : ComponentActivity() {
                     missing = 0
                     var isSquatSuccess = false
                     when (phase) {
-                        "Standing" -> if (knee < 145) phase = "Descending"
-                        "Descending" -> when {
-                            knee < 100 -> {
+                        "Standing" -> {
+                            if (knee < 140) phase = "Descending"
+                        }
+                        "Descending" -> {
+                            // 118 degrees corresponds to natural parallel squat depth in 2D camera view
+                            if (knee <= 118) {
                                 phase = "Good Squat ✓"
                                 isSquatSuccess = true
                                 triggerHapticFeedback(false)
+                            } else if (knee > 160) {
+                                phase = "Standing"
                             }
-                            knee > 165 -> phase = "Standing"
                         }
                         "Good Squat ✓" -> {
                             isSquatSuccess = true
-                            if (knee > 120) phase = "Ascending"
+                            if (knee > 125) {
+                                phase = "Ascending"
+                            }
                         }
-                        "Ascending" -> if (knee > 155) {
-                            phase = "Standing"
-                            squatReps += 1
-                            triggerHapticFeedback(squatReps >= target)
+                        "Ascending" -> {
+                            if (knee >= 148) {
+                                phase = "Standing"
+                                squatReps += 1
+                                playSquatSound(squatReps >= target)
+                                triggerHapticFeedback(squatReps >= target)
+                            } else if (knee <= 118) {
+                                phase = "Good Squat ✓"
+                                isSquatSuccess = true
+                            }
                         }
                     }
 
@@ -319,10 +364,10 @@ class CameraMissionActivity : ComponentActivity() {
 
     private fun kneeAngle(hip: PoseLandmark?, knee: PoseLandmark?, ankle: PoseLandmark?): Double? {
         if (hip == null || knee == null) return null
-        if (min(hip.inFrameLikelihood, knee.inFrameLikelihood) < 0.30f) {
+        if (min(hip.inFrameLikelihood, knee.inFrameLikelihood) < 0.25f) {
             return null
         }
-        if (ankle != null && ankle.inFrameLikelihood >= 0.30f) {
+        if (ankle != null && ankle.inFrameLikelihood >= 0.25f) {
             val abx = hip.position.x - knee.position.x
             val aby = hip.position.y - knee.position.y
             val cbx = ankle.position.x - knee.position.x
@@ -351,6 +396,10 @@ class CameraMissionActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            toneGenerator?.release()
+        } catch (_: Throwable) {}
+        toneGenerator = null
         cameraExecutor.shutdown()
     }
 
@@ -543,34 +592,43 @@ class PoseGraphicOverlay(context: Context) : View(context) {
             anglePaint.color = 0xFFFF1744.toInt()
         }
 
-        // Draw HUD Header Badge
-        val cardLeft = 32f
-        val cardTop = 70f
-        val cardRight = width - 32f
-        val cardBottom = 280f
-        canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 32f, 32f, hudCardPaint)
-        canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 32f, 32f, hudCardBorder)
+        // Draw HUD Header Badge (Positioned absolutely over camera preview)
+        val cardLeft = 28f
+        val cardTop = 64f
+        val cardRight = width - 28f
+        val cardBottom = 275f
+        canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 28f, 28f, hudCardPaint)
+        canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 28f, 28f, hudCardBorder)
 
-        val titleText = if (isSquatActive) "Output: Squat  ✅ SQUAT DETECTED!" else "Output: Squat"
-        canvas.drawText(titleText, cardLeft + 28f, cardTop + 58f, hudTitlePaint)
+        // Large Rep Counter Headline
+        val titleText = if (isSquatActive) "🔥 SQUATS: $reps / $target (REP DETECTED!)" else "🏋️ SQUATS: $reps / $target"
+        canvas.drawText(titleText, cardLeft + 26f, cardTop + 56f, hudTitlePaint)
 
-        val angleLabel = if (angle != null) " • Knee: ${angle.toInt()}°" else ""
-        canvas.drawText("Squats: $reps / $target ($phase)$angleLabel", cardLeft + 28f, cardTop + 116f, hudSubtitlePaint)
+        // Phase & Knee Angle
+        val angleLabel = if (angle != null) " • Knee: ${angle.toInt()}° (Goal ≤ 118°)" else ""
+        canvas.drawText("Phase: $phase$angleLabel", cardLeft + 26f, cardTop + 112f, hudSubtitlePaint)
 
-        val statusText = if (isDetected) "🟢 USER DETECTED" else "🟡 STEP INTO CAMERA FRAME"
-        hudStatusPaint.color = if (isDetected) 0xFF00E676.toInt() else 0xFFFFD54F.toInt()
-        canvas.drawText(statusText, cardLeft + 28f, cardTop + 162f, hudStatusPaint)
+        // Guidance & Body Presence Indicator
+        val statusText = when {
+            isSquatActive -> "🟢 PERFECT SQUAT! STAND UP TO COUNT"
+            phase == "Descending" -> "⬇️ SINK LOWER TO COMPLETE SQUAT"
+            phase == "Ascending" -> "⬆️ STRAIGHTEN LEGS TO FINISH"
+            isDetected -> "🟢 READY: SQUAT DOWN WITH HIPS BACK"
+            else -> "🟡 STEP FULLY INTO FRONT CAMERA FRAME"
+        }
+        hudStatusPaint.color = if (isSquatActive || isDetected) 0xFF00E676.toInt() else 0xFFFFD54F.toInt()
+        canvas.drawText(statusText, cardLeft + 26f, cardTop + 158f, hudStatusPaint)
 
-        // Progress Bar
-        val barTop = cardBottom - 24f
+        // Target progress bar
+        val barTop = cardBottom - 26f
         val barBottom = cardBottom - 12f
-        val barLeft = cardLeft + 28f
-        val barRight = cardRight - 28f
-        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, 6f, 6f, hudProgressBarBg)
+        val barLeft = cardLeft + 26f
+        val barRight = cardRight - 26f
+        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, 8f, 8f, hudProgressBarBg)
         val progressPct = (reps.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
         val fillRight = barLeft + (barRight - barLeft) * progressPct
         if (progressPct > 0f) {
-            canvas.drawRoundRect(barLeft, barTop, fillRight, barBottom, 6f, 6f, hudProgressBarFill)
+            canvas.drawRoundRect(barLeft, barTop, fillRight, barBottom, 8f, 8f, hudProgressBarFill)
         }
 
         if (pose == null || imgW <= 0 || imgH <= 0) return

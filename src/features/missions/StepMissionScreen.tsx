@@ -197,7 +197,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
         <View className="items-center w-full mb-4 px-2">
           <View className="bg-white/90 rounded-2xl p-4 w-full border border-slate-200 mb-3 shadow-xs">
             <Text className="text-xs font-bold text-navy text-center">
-              💡 Hold your phone and walk {target} steps around your room. Motion sensors detect every physical step.
+              🚶 Walk with real rhythmic strides out of bed. In-bed wiggling or phone shaking is automatically filtered out by human gait analysis.
             </Text>
           </View>
 
