@@ -8,9 +8,11 @@ import {
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useCameraPermission } from 'react-native-vision-camera';
-import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
-import { TextRecognitionCamera } from 'vision-camera-ocr-plugin';
+import {
+  CodeScanner,
+  TextRecognitionCamera,
+  useCameraPermission,
+} from '@/components/camera/CameraScanner';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';

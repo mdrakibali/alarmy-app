@@ -19,8 +19,10 @@ import { findMotionMedia, MOTION_MEDIA } from '@/data/motionMedia';
 import { OFFLINE_PACK } from '@/data/offlinePack';
 import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
-import { useCameraPermission } from 'react-native-vision-camera';
-import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
+import {
+  CodeScanner,
+  useCameraPermission,
+} from '@/components/camera/CameraScanner';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useToast } from '@/components/ui/AppToast';

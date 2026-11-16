@@ -1,3 +1,17 @@
+import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
+import { findAlbaBackground } from '@/data/albaBackgrounds';
+import { BACKGROUND_ITEMS } from '@/data/backgrounds';
+import { findMotionMedia } from '@/data/motionMedia';
+import { WALLPAPERS } from '@/data/wallpapers';
+import { wallpaperThumb } from '@/data/wallpaperThumbs';
+import { useAlarmStore } from '@/features/alarm/alarmStore';
+import { formatAlarmyDate, formatTime } from '@/features/alarm/format';
+import { NativeAlarm } from '@/native/AlarmModule';
+import type { RootStackParamList } from '@/navigation/types';
+import { storage } from '@/storage/mmkv';
+import { useThemeStore } from '@/storage/themeStore';
+import { useAppInsets } from '@/utils/safeArea';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
@@ -9,20 +23,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useAppInsets } from '@/utils/safeArea';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BACKGROUND_ITEMS } from '@/data/backgrounds';
-import { WALLPAPERS } from '@/data/wallpapers';
-import { wallpaperThumb } from '@/data/wallpaperThumbs';
-import { findAlbaBackground } from '@/data/albaBackgrounds';
-import { findMotionMedia } from '@/data/motionMedia';
-import { useAlarmStore } from '@/features/alarm/alarmStore';
-import { formatAlarmyDate, formatTime } from '@/features/alarm/format';
-import { NativeAlarm } from '@/native/AlarmModule';
-import type { RootStackParamList } from '@/navigation/types';
-import { storage } from '@/storage/mmkv';
-import { useThemeStore } from '@/storage/themeStore';
-import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AlarmPreview'>;
 
@@ -288,7 +288,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleStartMissionPress}
-            className="w-full bg-danger py-4.5 rounded-3xl items-center justify-center shadow-2xl"
+            className="w-full bg-danger h-16 rounded-3xl items-center justify-center shadow-2xl"
           >
             <Text className="text-white text-xl font-black tracking-wider">
               {mission ? 'Start Mission' : 'Dismiss'}
