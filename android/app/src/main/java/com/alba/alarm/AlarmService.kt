@@ -93,7 +93,7 @@ class AlarmService : Service() {
         // Ringing notification matching Alarmy format (Image 3)
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Alarmy")
+            .setContentTitle("Alba")
             .setContentText("Tap to dismiss ⏰ ⏰ ⏰ ⏰")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)

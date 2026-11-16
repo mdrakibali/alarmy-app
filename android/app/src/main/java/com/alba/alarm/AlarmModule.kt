@@ -40,7 +40,8 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
         private const val PICK_REQUEST = 4402
         private const val AUDIO_REQUEST = 4403
         private const val VIDEO_REQUEST = 4404
-        private var instance: AlarmModule? = null
+        @Volatile
+        var instance: AlarmModule? = null
 
         fun emitAlarmRinging(alarmId: String?) {
             instance?.sendEvent("onAlarmRinging", alarmId)
@@ -1010,7 +1011,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
         // Required for RN built-in Event Emitter Calls.
     }
 
-    private fun sendEvent(eventName: String, params: Any?) {
+    fun sendEvent(eventName: String, params: Any?) {
         reactContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit(eventName, params)

@@ -42,6 +42,8 @@ export interface RingingAlarmInfo {
   snoozeEnabled: boolean;
   snoozeIntervalMin: number;
   missions: string[];
+  snoozeUsed?: number;
+  snoozeMaxCount?: number;
 }
 
 export interface OfflineFile {

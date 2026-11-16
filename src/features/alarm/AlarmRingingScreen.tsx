@@ -150,7 +150,12 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   };
 
   const hasMission = missions.length > 0;
-  const snoozeMaxCount = alarmFromStore?.snooze.maxCount ?? 3;
+  const snoozeUsed = activeInfo?.snoozeUsed ?? 0;
+  const snoozeMaxCount =
+    alarmFromStore?.snooze.maxCount ?? activeInfo?.snoozeMaxCount ?? 3;
+  const remainingSnoozes = Math.max(0, snoozeMaxCount - snoozeUsed);
+  const canSnooze = snoozeEnabled && remainingSnoozes > 0;
+
   const formattedDate = formatAlbaDate(currentTime);
   const formattedClock = formatAlbaClock(currentTime);
 
@@ -206,8 +211,8 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
             </View>
           )}
 
-          {/* Snooze Button: ❸ Snooze floating white pill */}
-          {snoozeEnabled && (
+          {/* Snooze Button: Floating white pill with remaining count */}
+          {canSnooze ? (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleSnooze}
@@ -215,14 +220,20 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
             >
               <View className="w-5 h-5 rounded-full bg-black items-center justify-center mr-2">
                 <Text className="text-white text-[11px] font-black">
-                  {snoozeMaxCount}
+                  {remainingSnoozes}
                 </Text>
               </View>
               <Text className="text-slate-900 font-black text-base tracking-wide">
                 Snooze
               </Text>
             </TouchableOpacity>
-          )}
+          ) : snoozeEnabled && remainingSnoozes === 0 ? (
+            <View className="bg-black/60 px-5 py-2 rounded-full mb-4 border border-rose-400/50 shadow-md">
+              <Text className="text-rose-300 font-extrabold text-xs tracking-wide text-center">
+                🚫 Snooze limit exhausted ({snoozeMaxCount}/{snoozeMaxCount}) • Complete mission to dismiss
+              </Text>
+            </View>
+          ) : null}
 
           {/* Primary Action Button */}
           <TouchableOpacity
