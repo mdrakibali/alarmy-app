@@ -82,9 +82,6 @@ export const MISSION_DETAILS: Record<
 };
 
 export const SOUND_OPTIONS = [
-  { id: 'kt_tone_sunrise', label: 'Sunrise Chime (ktAlarm)', icon: '🌅' },
-  { id: 'kt_tone_chime', label: 'Crystal Bells (ktAlarm)', icon: '🔔' },
-  { id: 'kt_tone_bell', label: 'Pure Alarm Bell (ktAlarm)', icon: '🛎️' },
   { id: 'alarm_gentle_morning', label: 'Gentle Morning Chime', icon: '☀️' },
   { id: 'alarm_cinematic_horn', label: 'Cinematic Horn Rise', icon: '🎺' },
   { id: 'alarm_epic_countdown', label: 'Epic Countdown Alert', icon: '🎬' },
