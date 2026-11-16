@@ -89,3 +89,4 @@ class UninstallProtectionReceiver : DeviceAdminReceiver() {
         Log.i("UninstallProtection", "Alba device admin uninstall protection disabled")
     }
 }
+

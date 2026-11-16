@@ -82,3 +82,4 @@ class FlipDetector(
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 }
+
