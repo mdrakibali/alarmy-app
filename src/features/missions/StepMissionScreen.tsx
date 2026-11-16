@@ -24,7 +24,8 @@ const DEFAULT_STEPS = 10;
 
 export function StepMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
-  const target = route.params?.stepTarget ?? DEFAULT_STEPS;
+  const isPreview = Boolean(route.params?.isPreview);
+  const target = isPreview ? 5 : (route.params?.stepTarget ?? DEFAULT_STEPS);
   const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
   const [stepsWalked, setStepsWalked] = useState(() => Math.min(target - 1, Math.max(0, savedSubProgress)));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -35,6 +36,11 @@ export function StepMissionScreen({ navigation, route }: Props) {
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     useActiveMissionStore.getState().updateSubProgress(target);
 
@@ -68,7 +74,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [navigation, route.params, target]);
+  }, [navigation, route.params, target, isPreview]);
 
   const handleManualStepFallback = () => {
     try {
@@ -88,9 +94,10 @@ export function StepMissionScreen({ navigation, route }: Props) {
   };
 
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const addStep = useCallback((count: number) => {
     try {
@@ -146,6 +153,24 @@ export function StepMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • 5 steps to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="bg-ice border border-primary/25 px-4 py-1.5 rounded-full mb-2">
             <Text className="text-primary font-extrabold text-xs uppercase tracking-wider">
               STEP MISSION 🚶
@@ -237,17 +262,29 @@ export function StepMissionScreen({ navigation, route }: Props) {
       {/* Success Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Mission Complete! 🚶"
-        message={`${target} steps completed! You are up and out of bed. Good morning!`}
-        confirmText="Start My Day ☀️"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Mission Complete! 🚶'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Step mission. This is what you'll walk in the morning to dismiss your alarm."
+            : `${target} steps completed! You are up and out of bed. Good morning!`
+        }
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day ☀️'}
         icon="👟"
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>

@@ -89,10 +89,11 @@ function generateProblem(difficulty: 'easy' | 'normal' | 'hard' = 'normal'): Mat
 
 export function MathMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const isPreview = Boolean(route.params?.isPreview);
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
   const allMissions = route.params?.missions ?? [];
-  const TOTAL_PROBLEMS = route.params?.mathCount ?? 2;
+  const TOTAL_PROBLEMS = isPreview ? 1 : (route.params?.mathCount ?? 2);
   const difficulty = route.params?.mathDifficulty ?? 'normal';
 
   const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
@@ -109,10 +110,11 @@ export function MathMissionScreen({ navigation, route }: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   React.useEffect(() => {
-    // Disable back button during mission
+    if (isPreview) return;
+    // Disable back button during real alarm mission
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const handleKeyPress = (val: string) => {
     setErrorMsg('');
@@ -139,6 +141,11 @@ export function MathMissionScreen({ navigation, route }: Props) {
       if (nextIndex >= TOTAL_PROBLEMS) {
         if (isCompletedRef.current) return;
         isCompletedRef.current = true;
+
+        if (isPreview) {
+          setShowSuccessModal(true);
+          return;
+        }
 
         const hasNext = proceedToNextMission(
           navigation,
@@ -206,6 +213,24 @@ export function MathMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header & Progress */}
         <View className="items-center">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-2 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • 1 problem to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="flex-row items-center justify-between w-full mb-2">
             <View className="px-3 py-1 rounded-full bg-ice border border-primary/25">
               <Text className="text-primary font-extrabold text-[11px] uppercase tracking-wider">
@@ -390,18 +415,30 @@ export function MathMissionScreen({ navigation, route }: Props) {
       {/* Completion Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Good Morning! ☀️"
-        message="Math mission completed successfully. Your alarm is dismissed. Have a fantastic day!"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Good Morning! ☀️'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Math mission. This is what you'll solve in the morning to dismiss your alarm."
+            : 'Math mission completed successfully. Your alarm is dismissed. Have a fantastic day!'
+        }
         icon="🧠"
-        confirmText="Start My Day"
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day'}
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>

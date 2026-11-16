@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Text, Vibration, View } from 'react-native';
+import { BackHandler, Pressable, Text, Vibration, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
@@ -14,8 +14,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ShakeMission'>;
 
 export function ShakeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const isPreview = Boolean(route.params?.isPreview);
 
-  const REQUIRED_SHAKES = route.params?.shakeTarget ?? 5;
+  const REQUIRED_SHAKES = isPreview ? 5 : (route.params?.shakeTarget ?? 5);
   const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
   const initialCompleted = Math.min(savedSubProgress, REQUIRED_SHAKES - 1);
   const [shakesLeft, setShakesLeft] = useState<number>(() => {
@@ -27,6 +28,11 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     useActiveMissionStore.getState().updateSubProgress(REQUIRED_SHAKES);
 
@@ -56,7 +62,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [navigation, REQUIRED_SHAKES, route.params]);
+  }, [navigation, REQUIRED_SHAKES, route.params, isPreview]);
 
   const handleShake = useCallback(() => {
     if (isCompletedRef.current) return;
@@ -82,8 +88,10 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
   }, [completeMission, REQUIRED_SHAKES]);
 
   useEffect(() => {
-    // Disable back button during mission
-    const backSub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    // Disable back button during mission (only if not preview)
+    const backSub = isPreview
+      ? { remove: () => {} }
+      : BackHandler.addEventListener('hardwareBackPress', () => true);
 
     // Listen to real physical phone shakes via Accelerometer sensor
     const unsubscribeShake = NativeAlarm.onShake(() => {
@@ -94,7 +102,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
       backSub.remove();
       unsubscribeShake();
     };
-  }, [handleShake]);
+  }, [handleShake, isPreview]);
 
   const progress = ((REQUIRED_SHAKES - shakesLeft) / REQUIRED_SHAKES) * 100;
 
@@ -108,7 +116,25 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
         className="flex-1 px-6 justify-between items-center"
       >
         {/* Top Header */}
-        <View className="items-center mt-2">
+        <View className="items-center mt-2 w-full">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • 5 shakes to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="px-3.5 py-1 rounded-full bg-ice border border-primary/25 mb-1">
             <Text className="text-primary font-extrabold tracking-wider uppercase text-xs">
               Shake Wake-up Mission 📱
@@ -154,18 +180,30 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
       {/* Completion Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Awake and Energized! ⚡"
-        message="Shake mission completed! You shook your phone 30 times. Sleep inertia defeated!"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Awake and Energized! ⚡'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Shake mission. This is what you'll complete in the morning to dismiss your alarm."
+            : 'Shake mission completed! You shook your phone. Sleep inertia defeated!'
+        }
         icon="📱"
-        confirmText="Start My Day"
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day'}
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>
