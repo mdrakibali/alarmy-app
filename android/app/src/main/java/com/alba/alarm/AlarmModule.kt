@@ -231,6 +231,9 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             val alarm = ringingId?.let { AlarmStorage.getAlarm(reactContext, it) }
             AlarmService.stop(reactContext)
             AlarmScheduler.cancelSnoozeNotification(reactContext)
+            if (ringingId != null) {
+                AlarmScheduler.dismissSnooze(reactContext, ringingId)
+            }
             if (alarm != null && alarm.wakeUpCheckMin > 0) {
                 val whenMs = System.currentTimeMillis() + alarm.wakeUpCheckMin * 60_000L
                 AlarmScheduler.schedule(
@@ -239,7 +242,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                     explicitTriggerTimeMs = whenMs,
                 )
             }
-            sendEvent("onAlarmDismissed", null)
+            sendEvent("onAlarmDismissed", ringingId)
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("STOP_ERROR", e.message, e)

@@ -14,7 +14,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
-import { proceedToNextMission } from './missionNavigation';
+import { dismissAlarmOnMissionSuccess, proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarcodeMission'>;
 
@@ -67,7 +67,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
       snoozeCount: 0,
     });
 
-    await NativeAlarm.stopAlarm();
+    await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
   }, [alarmId, allMissions, missionIndex, navigation, route.params]);
 

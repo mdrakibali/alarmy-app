@@ -384,11 +384,43 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         {/* STEP 3: SOUNDS */}
         {step === 3 && (
           <View className="py-2">
-            <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
+            <Text className="text-slate-500 text-xs font-semibold mb-3 text-center">
               Tap any sound to hear the audio preview immediately
             </Text>
 
-            {ALARM_SOUND_ITEMS.slice(0, 10).map(s => {
+            {/* Category Filter Chips */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="mb-4"
+              contentContainerStyle={{ paddingHorizontal: 2 }}
+            >
+              {soundCategories.map(cat => {
+                const isActive = soundCategory === cat;
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    activeOpacity={0.75}
+                    onPress={() => setSoundCategory(cat)}
+                    className={`mr-2 px-3.5 py-1.5 rounded-full border ${
+                      isActive
+                        ? 'bg-primary border-primary'
+                        : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-bold ${
+                        isActive ? 'text-white' : 'text-slate-700'
+                      }`}
+                    >
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {filteredSounds.map(s => {
               const isSelected = selectedSound === s.id;
               return (
                 <Pressable
@@ -445,17 +477,19 @@ export function WelcomeWizardScreen({ navigation }: Props) {
               const missionIndex = selectedMissions.indexOf(m.id);
               const isSelected = missionIndex !== -1;
               return (
-                <Pressable
+                <View
                   key={m.id}
-                  onPress={() => handleToggleMission(m.id)}
                   className={`p-5 rounded-3xl mb-3 border-2 shadow-xs ${
                     isSelected
                       ? 'bg-ice border-primary'
                       : 'bg-white border-slate-100'
                   }`}
                 >
-                  <View pointerEvents="none" className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center flex-1 pr-2">
+                  <Pressable
+                    onPress={() => handleToggleMission(m.id)}
+                    className="flex-row items-center justify-between mb-2"
+                  >
+                    <View pointerEvents="none" className="flex-row items-center flex-1 pr-2">
                       <Text className="text-3xl mr-3">{m.icon}</Text>
                       <View className="flex-1">
                         <Text className="text-base font-black text-slate-900">
@@ -481,8 +515,44 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                         <Text className="text-slate-400 text-xs font-black">+</Text>
                       )}
                     </View>
-                  </View>
-                </Pressable>
+                  </Pressable>
+
+                  {/* Immediate Photo setup if selected */}
+                  {isSelected && m.id === 'photo' && (
+                    <View className="mt-2.5 pt-2 border-t border-slate-200/60 flex-row items-center justify-between">
+                      <Text className="text-[11px] font-semibold text-slate-600 flex-1 mr-2">
+                        {photoReferencePath ? '✓ Reference photo captured' : '⚠️ Reference photo required'}
+                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.75}
+                        onPress={handleTakeReferencePhoto}
+                        className="bg-primary px-3 py-1.5 rounded-xl shadow-xs"
+                      >
+                        <Text className="text-white text-[11px] font-bold">
+                          {photoReferencePath ? 'Change 📸' : 'Take Photo 📸'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Immediate QR setup if selected */}
+                  {isSelected && m.id === 'qr' && (
+                    <View className="mt-2.5 pt-2 border-t border-slate-200/60 flex-row items-center justify-between">
+                      <Text className="text-[11px] font-semibold text-slate-600 flex-1 mr-2">
+                        {barcodeValue ? `✓ Code: ${barcodeValue}` : '⚠️ Barcode / QR required'}
+                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.75}
+                        onPress={handleScanReferenceBarcode}
+                        className="bg-emerald-600 px-3 py-1.5 rounded-xl shadow-xs"
+                      >
+                        <Text className="text-white text-[11px] font-bold">
+                          {barcodeValue ? 'Rescan 📷' : 'Scan Code 📷'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               );
             })}
           </View>

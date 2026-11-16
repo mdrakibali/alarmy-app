@@ -62,10 +62,20 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
     return () => clearInterval(timer);
   }, [alarmId, navigation, secondsLeft]);
 
+  const hasMissions = Boolean(alarmFromStore?.missions && alarmFromStore.missions.length > 0);
+
   const handleSolveMissionNow = () => {
     clearSnooze(alarmId);
     NativeAlarm.startAlarm(alarmId).catch(() => {});
     navigation.replace('AlarmRinging', { id: alarmId });
+  };
+
+  const handleDirectDismiss = async () => {
+    try {
+      await NativeAlarm.dismissSnooze(alarmId);
+    } catch {}
+    useAlarmStore.getState().dismissSnooze(alarmId);
+    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
 
   const minutes = Math.floor(secondsLeft / 60);
@@ -113,15 +123,30 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
           </Text>
         </View>
 
-        {/* Bottom Action: Mandatory Start Mission Button */}
+        {/* Bottom Action: Start Mission or Direct Dismiss */}
         <View className="w-full">
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={handleSolveMissionNow}
-            className="w-full bg-[#FF2D55] py-4 rounded-3xl items-center shadow-2xl active:bg-[#E0264A]"
-          >
-            <Text className="text-white text-lg font-black tracking-wider">Start Mission</Text>
-          </TouchableOpacity>
+          {hasMissions ? (
+            <>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handleSolveMissionNow}
+                className="w-full bg-[#FF2D55] py-4 rounded-3xl items-center shadow-2xl active:bg-[#E0264A]"
+              >
+                <Text className="text-white text-lg font-black tracking-wider">Start Mission</Text>
+              </TouchableOpacity>
+              <Text className="text-white/70 text-xs font-semibold text-center mt-2.5">
+                Complete mission to dismiss alarm & cancel remaining snoozes ✓
+              </Text>
+            </>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleDirectDismiss}
+              className="w-full bg-emerald-600 py-4 rounded-3xl items-center shadow-2xl active:bg-emerald-700"
+            >
+              <Text className="text-white text-lg font-black tracking-wider">I'm Awake • Turn Off Alarm</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </AppBackground>

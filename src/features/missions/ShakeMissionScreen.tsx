@@ -8,7 +8,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { useAppInsets } from '@/utils/safeArea';
-import { proceedToNextMission } from './missionNavigation';
+import { dismissAlarmOnMissionSuccess, proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShakeMission'>;
 
@@ -54,7 +54,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
       snoozeCount: 0,
     });
 
-    await NativeAlarm.stopAlarm();
+    await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
   }, [navigation, REQUIRED_SHAKES, route.params]);
 

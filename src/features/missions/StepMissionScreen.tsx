@@ -16,7 +16,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { useAppInsets } from '@/utils/safeArea';
-import { proceedToNextMission } from './missionNavigation';
+import { dismissAlarmOnMissionSuccess, proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StepMission'>;
 
@@ -66,7 +66,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
       snoozeCount: 0,
     });
 
-    await NativeAlarm.stopAlarm();
+    await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
   }, [navigation, route.params, target]);
 

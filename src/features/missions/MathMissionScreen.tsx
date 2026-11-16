@@ -8,7 +8,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { useActiveMissionStore } from '@/storage/activeMissionStore';
-import { proceedToNextMission } from './missionNavigation';
+import { dismissAlarmOnMissionSuccess, proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MathMission'>;
 
@@ -159,7 +159,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
           missionsCompleted: allMissions.length > 0 ? allMissions : ['math'],
           snoozeCount: 0,
         });
-        await NativeAlarm.stopAlarm();
+        await dismissAlarmOnMissionSuccess(alarmId);
         setShowSuccessModal(true);
       } else {
         setProblemIndex(nextIndex);

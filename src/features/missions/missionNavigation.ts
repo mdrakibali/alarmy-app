@@ -2,6 +2,22 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { useActiveMissionStore } from '@/storage/activeMissionStore';
+import { NativeAlarm } from '@/native/AlarmModule';
+
+export async function dismissAlarmOnMissionSuccess(alarmId?: string) {
+  useActiveMissionStore.getState().clearSession();
+  if (alarmId) {
+    try {
+      await NativeAlarm.dismissSnooze(alarmId);
+    } catch {}
+    try {
+      useAlarmStore.getState().dismissSnooze(alarmId);
+    } catch {}
+  }
+  try {
+    await NativeAlarm.stopAlarm();
+  } catch {}
+}
 
 export interface MissionNavigationExtraParams {
   squatTarget?: number;
@@ -126,8 +142,8 @@ export function proceedToNextMission(
   }
 
   if (nextMissionIdx >= allMissions.length) {
-    // All chained missions successfully completed!
-    useActiveMissionStore.getState().clearSession();
+    // All chained missions successfully completed! Auto-dismiss any active snooze & stop alarm
+    dismissAlarmOnMissionSuccess(alarmId).catch(() => {});
     return false; // No more missions left
   }
 

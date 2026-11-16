@@ -162,6 +162,10 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
       missionsCompleted: [],
       snoozeCount: 0,
     });
+    if (id) {
+      await NativeAlarm.dismissSnooze(id).catch(() => {});
+      useAlarmStore.getState().dismissSnooze(id);
+    }
     await NativeAlarm.stopAlarm();
     navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
