@@ -24,6 +24,21 @@ import { QuickAlarmModal } from './QuickAlarmModal';
 import { HabitAlarmModal } from './HabitAlarmModal';
 import { useToast } from '@/components/ui/AppToast';
 
+import {
+  AlarmClock,
+  Calendar,
+  ChevronRight,
+  Copy,
+  Edit3,
+  Moon,
+  MoreVertical,
+  Plus,
+  Sparkles,
+  Trash2,
+  X,
+  Zap,
+} from 'lucide-react-native';
+
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export function AlarmListScreen() {
@@ -153,10 +168,8 @@ export function AlarmListScreen() {
           className="mx-4 mb-3 flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-100"
         >
           <View className="flex-row items-center flex-1">
-            <View className="mr-3 h-8 px-2.5 items-center justify-center rounded-lg bg-primary">
-              <Text className="text-xs font-black tracking-wider text-white">
-                NEW
-              </Text>
+            <View className="mr-3 h-8 w-8 items-center justify-center rounded-xl bg-primary">
+              <Sparkles size={16} color="#FFFFFF" />
             </View>
             <View>
               <Text className="text-xs font-semibold text-slate-400">
@@ -167,7 +180,7 @@ export function AlarmListScreen() {
               </Text>
             </View>
           </View>
-          <Text className="text-lg font-bold text-slate-400">›</Text>
+          <ChevronRight size={18} color="#94A3B8" />
         </Pressable>
 
         {/* Active Snooze Floating Banner */}
@@ -175,7 +188,9 @@ export function AlarmListScreen() {
           <View className="mx-4 mb-3 p-4 rounded-3xl bg-indigo-950 border border-indigo-400/40 shadow-xl">
             <View className="flex-row items-center justify-between mb-3">
               <View className="flex-row items-center flex-1 mr-2">
-                <Text className="text-2xl mr-2.5">😴</Text>
+                <View className="h-9 w-9 rounded-full bg-amber-400/20 items-center justify-center mr-2.5 border border-amber-400/30">
+                  <Moon size={18} color="#FBBF24" />
+                </View>
                 <View className="flex-1">
                   <View className="flex-row items-center">
                     <Text className="text-amber-400 text-xs font-black uppercase tracking-wider mr-2">
@@ -301,7 +316,7 @@ export function AlarmListScreen() {
                 className="flex-row items-center px-4 py-3.5 active:bg-slate-50"
               >
                 <View className="w-8 h-8 rounded-xl bg-purple-50 items-center justify-center mr-3">
-                  <Text className="text-lg">🗓️</Text>
+                  <Calendar size={18} color="#9333EA" />
                 </View>
                 <Text className="text-slate-900 text-base font-bold">
                   Habit alarm
@@ -320,7 +335,7 @@ export function AlarmListScreen() {
                 className="flex-row items-center px-4 py-3.5 active:bg-slate-50"
               >
                 <View className="w-8 h-8 rounded-xl bg-blue-50 items-center justify-center mr-3">
-                  <Text className="text-lg">⚡</Text>
+                  <Zap size={18} color="#2563EB" />
                 </View>
                 <Text className="text-slate-900 text-base font-bold">
                   Quick alarm
@@ -338,7 +353,7 @@ export function AlarmListScreen() {
               className="bg-white rounded-3xl w-52 px-4 py-3.5 flex-row items-center shadow-2xl border border-slate-100/80 active:bg-slate-50"
             >
               <View className="w-8 h-8 rounded-xl bg-red-50 items-center justify-center mr-3">
-                <Text className="text-lg">⏰</Text>
+                <AlarmClock size={18} color="#E11D48" />
               </View>
               <Text className="text-slate-900 text-base font-bold">
                 Alarm
@@ -359,9 +374,11 @@ export function AlarmListScreen() {
             onPress={() => setIsFabMenuOpen(!isFabMenuOpen)}
             className="h-16 w-16 items-center justify-center rounded-full bg-[#FF2D55] shadow-2xl active:scale-95"
           >
-            <Text className="text-3xl font-light text-white leading-none">
-              {isFabMenuOpen ? '✕' : '+'}
-            </Text>
+            {isFabMenuOpen ? (
+              <X size={26} color="#FFFFFF" strokeWidth={2.4} />
+            ) : (
+              <Plus size={28} color="#FFFFFF" strokeWidth={2.4} />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -398,7 +415,7 @@ export function AlarmListScreen() {
                     {selectedAlarmForMenu.label || 'Alarm Options'}
                   </Text>
                   <TouchableOpacity onPress={() => setSelectedAlarmForMenu(null)}>
-                    <Text className="text-slate-400 font-bold text-base">✕</Text>
+                    <X size={20} color="#94A3B8" />
                   </TouchableOpacity>
                 </View>
 
@@ -410,7 +427,9 @@ export function AlarmListScreen() {
                   }}
                   className="flex-row items-center py-3.5 border-b border-slate-50"
                 >
-                  <Text className="text-xl mr-3">✏️</Text>
+                  <View className="w-8 items-center mr-2">
+                    <Edit3 size={18} color="#08173E" />
+                  </View>
                   <Text className="text-slate-800 text-base font-bold">Edit Alarm</Text>
                 </TouchableOpacity>
 
@@ -418,7 +437,9 @@ export function AlarmListScreen() {
                   onPress={() => handleDuplicate(selectedAlarmForMenu)}
                   className="flex-row items-center py-3.5 border-b border-slate-50"
                 >
-                  <Text className="text-xl mr-3">📋</Text>
+                  <View className="w-8 items-center mr-2">
+                    <Copy size={18} color="#08173E" />
+                  </View>
                   <Text className="text-slate-800 text-base font-bold">Duplicate Alarm</Text>
                 </TouchableOpacity>
 
@@ -426,7 +447,9 @@ export function AlarmListScreen() {
                   onPress={() => handleDelete(selectedAlarmForMenu.id)}
                   className="flex-row items-center py-3.5"
                 >
-                  <Text className="text-xl mr-3">🗑️</Text>
+                  <View className="w-8 items-center mr-2">
+                    <Trash2 size={18} color="#EF4444" />
+                  </View>
                   <Text className="text-red-500 text-base font-bold">Delete Alarm</Text>
                 </TouchableOpacity>
               </View>
@@ -561,7 +584,7 @@ function AlarmCard({
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           className="p-1"
         >
-          <Text className="text-base font-bold text-slate-400">⋮</Text>
+          <MoreVertical size={16} color="#94A3B8" />
         </TouchableOpacity>
       </View>
     </Pressable>
@@ -571,8 +594,8 @@ function AlarmCard({
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <View className="items-center justify-center py-16 px-6">
-      <View className="h-20 w-20 rounded-full bg-ice border border-primary/20 items-center justify-center mb-4 shadow-xs">
-        <Text className="text-3xl">☀️</Text>
+      <View className="h-20 w-20 rounded-3xl bg-blue-50 border border-blue-100 items-center justify-center mb-4 shadow-xs">
+        <AlarmClock size={36} color="#1652E6" strokeWidth={1.8} />
       </View>
       <Text className="text-xl font-black text-slate-900">No active alarms</Text>
       <Text className="mb-6 mt-1.5 text-center text-xs text-slate-500 max-w-xs leading-relaxed font-medium">

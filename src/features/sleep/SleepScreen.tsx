@@ -15,6 +15,7 @@ import {
 } from '@/data/sleepMusic';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { useAppInsets } from '@/utils/safeArea';
+import { Moon, Play, Square, Volume2 } from 'lucide-react-native';
 
 const CATEGORIES: SleepMusicCategory[] = [
   'All',
@@ -120,7 +121,7 @@ const SleepSoundCard = React.memo(
             </View>
             {isPlaying && (
               <View className="absolute -bottom-1 -right-1 bg-primary rounded-full h-5 w-5 items-center justify-center border-2 border-white">
-                <Text className="text-[10px]">🔊</Text>
+                <Volume2 size={10} color="#FFFFFF" />
               </View>
             )}
           </View>
@@ -163,9 +164,13 @@ const SleepSoundCard = React.memo(
             isPlaying ? 'bg-rose-500' : 'bg-primary'
           }`}
         >
-          <Text className="text-white text-xs font-black mr-1">
-            {isPlaying ? '■' : '▶'}
-          </Text>
+          <View className="mr-1.5">
+            {isPlaying ? (
+              <Square size={12} color="#FFFFFF" fill="#FFFFFF" />
+            ) : (
+              <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
+            )}
+          </View>
           <Text className="text-white text-xs font-black">
             {isPlaying ? 'Stop' : 'Play'}
           </Text>

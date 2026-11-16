@@ -28,6 +28,7 @@ import { useThemeStore } from '@/storage/themeStore';
 import { useToast } from '@/components/ui/AppToast';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { useAlarmStore } from './alarmStore';
+import { Check, ChevronRight, Play, Plus, Square, Trash2, X } from 'lucide-react-native';
 import {
   MISSION_DETAILS,
   SNOOZE_COUNTS,
@@ -210,7 +211,7 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               className="h-9 w-9 rounded-full bg-slate-100 items-center justify-center"
             >
-              <Text className="text-base font-bold text-slate-500">✕</Text>
+              <X size={18} color="#64748B" />
             </TouchableOpacity>
           </View>
 
@@ -851,9 +852,11 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 isPlayingSound ? 'bg-secondary' : 'bg-primary'
               }`}
             >
-              <Text className="text-white text-xs font-black">
-                {isPlayingSound ? '■' : '▶'}
-              </Text>
+              {isPlayingSound ? (
+                <Square size={13} color="#FFFFFF" fill="#FFFFFF" />
+              ) : (
+                <Play size={13} color="#FFFFFF" fill="#FFFFFF" />
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
