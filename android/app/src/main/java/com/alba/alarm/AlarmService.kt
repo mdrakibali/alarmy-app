@@ -230,6 +230,11 @@ class AlarmService : Service() {
             )
             startVolumeGuard(audioManager, maxStreamVol)
 
+            if (alarm?.useVideoAudio == true) {
+                Log.d(TAG, "Alarm configured to use video audio. Skipping AlarmService tone playback.")
+                return
+            }
+
             var soundUri: Uri? = null
 
             // 1. Check if alarm.soundId maps to bundled raw sound resource

@@ -44,6 +44,8 @@ export interface RingingAlarmInfo {
   missions: string[];
   snoozeUsed?: number;
   snoozeMaxCount?: number;
+  useVideoAudio?: boolean;
+  wallpaper?: string;
 }
 
 export interface OfflineFile {

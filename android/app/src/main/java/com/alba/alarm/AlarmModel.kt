@@ -33,6 +33,7 @@ data class AlarmModel(
     val mathDifficulty: String = "normal",
     val memoryPairs: Int = 6,
     val typingPhrase: String? = null,
+    val useVideoAudio: Boolean = false,
 ) {
     fun toJsonObject(): JSONObject {
         val obj = JSONObject()
@@ -43,6 +44,7 @@ data class AlarmModel(
         obj.put("soundId", soundId)
         obj.put("volume", volume.toDouble())
         obj.put("vibrate", vibrate)
+        obj.put("useVideoAudio", useVideoAudio)
         obj.put("snoozeEnabled", snoozeEnabled)
         obj.put("snoozeIntervalMin", snoozeIntervalMin)
         obj.put("snoozeMaxCount", snoozeMaxCount)
@@ -121,6 +123,7 @@ data class AlarmModel(
                 mathDifficulty = obj.optString("mathDifficulty", "normal"),
                 memoryPairs = obj.optInt("memoryPairs", 6),
                 typingPhrase = if (obj.has("typingPhrase") && !obj.isNull("typingPhrase")) obj.getString("typingPhrase") else null,
+                useVideoAudio = obj.optBoolean("useVideoAudio", false),
             )
         }
     }

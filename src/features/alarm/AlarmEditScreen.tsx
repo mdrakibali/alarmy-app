@@ -808,6 +808,25 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           <Text className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">
             Alarm sound
           </Text>
+
+          {/* Toggle: Use Video Sound */}
+          <View className="flex-row items-center justify-between pb-3 mb-3 border-b border-slate-100">
+            <View className="flex-1 pr-3">
+              <Text className="text-sm font-bold text-slate-800">
+                Play Wallpaper Video Audio
+              </Text>
+              <Text className="text-xs text-slate-400">
+                Use video soundtrack instead of standard ringtone
+              </Text>
+            </View>
+            <Switch
+              value={Boolean(draft.useVideoAudio)}
+              onValueChange={v => patch({ useVideoAudio: v })}
+              trackColor={{ false: '#E2E8F0', true: '#1652E6' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
           <TouchableOpacity
             onPress={async () => {
               const uri = await NativeAlarm.pickLocalAudio();

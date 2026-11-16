@@ -179,7 +179,11 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   const labelWithEmoji = hasEmoji ? displayLabel : `🐥 ${displayLabel}`;
 
   return (
-    <AppBackground target="ringing" backgroundId={wallpaperId}>
+    <AppBackground
+      target="ringing"
+      backgroundId={wallpaperId}
+      videoMuted={!(alarmFromStore?.useVideoAudio ?? activeInfo?.useVideoAudio ?? false)}
+    >
       <View
         style={{
           paddingTop: Math.max(insets.top, 24) + 12,

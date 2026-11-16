@@ -40,6 +40,7 @@ export interface Alarm {
   mathDifficulty?: 'easy' | 'normal' | 'hard';
   memoryPairs?: number;
   typingPhrase?: string;
+  useVideoAudio?: boolean;
   backupSoundId?: string;
   wakeUpCheckMin?: number;
   timePressure?: boolean;

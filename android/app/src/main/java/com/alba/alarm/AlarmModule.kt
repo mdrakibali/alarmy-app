@@ -120,6 +120,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             val mathDifficulty = if (alarmMap.hasKey("mathDifficulty") && !alarmMap.isNull("mathDifficulty")) alarmMap.getString("mathDifficulty") ?: "normal" else "normal"
             val memoryPairs = if (alarmMap.hasKey("memoryPairs")) alarmMap.getInt("memoryPairs") else 6
             val typingPhrase = if (alarmMap.hasKey("typingPhrase") && !alarmMap.isNull("typingPhrase")) alarmMap.getString("typingPhrase") else null
+            val useVideoAudio = if (alarmMap.hasKey("useVideoAudio")) alarmMap.getBoolean("useVideoAudio") else false
 
             val model = AlarmModel(
                 id = id,
@@ -148,6 +149,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 mathDifficulty = mathDifficulty,
                 memoryPairs = memoryPairs,
                 typingPhrase = typingPhrase,
+                useVideoAudio = useVideoAudio,
             )
 
             val scheduled = if (enabled) {
@@ -302,6 +304,8 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             val missionsArr = Arguments.createArray()
             alarm?.missions?.forEach { missionsArr.pushString(it) }
             putArray("missions", missionsArr)
+            putBoolean("useVideoAudio", alarm?.useVideoAudio ?: false)
+            alarm?.wallpaper?.let { putString("wallpaper", it) }
         }
         promise.resolve(map)
     }
@@ -399,6 +403,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
                 map.putString("mathDifficulty", alarm.mathDifficulty)
                 map.putInt("memoryPairs", alarm.memoryPairs)
                 alarm.typingPhrase?.let { map.putString("typingPhrase", it) }
+                map.putBoolean("useVideoAudio", alarm.useVideoAudio)
 
                 arr.pushMap(map)
             }
