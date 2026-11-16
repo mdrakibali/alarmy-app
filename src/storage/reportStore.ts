@@ -102,7 +102,7 @@ const loadLogs = (): AlarmLogEntry[] => {
   } catch (e) {
     console.warn('Failed to load report logs:', e);
   }
-  return [];
+  return generateDefaultLogs();
 };
 
 const saveLogs = (logs: AlarmLogEntry[]) => {

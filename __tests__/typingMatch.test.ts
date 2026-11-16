@@ -1,6 +1,5 @@
 import {
   checkTypingMatch,
-  normalizeTyping,
 } from '../src/features/missions/TypingMissionScreen';
 
 describe('TypingMissionScreen matching logic', () => {

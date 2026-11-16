@@ -34,7 +34,6 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
   const allMissions = route.params?.missions ?? [];
 
   const [selectedTarget, setSelectedTarget] = useState(DEMO_BARCODES[0]);
-  const [flashlight, setFlashlight] = useState(false);
   const [manualInput, setManualInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');

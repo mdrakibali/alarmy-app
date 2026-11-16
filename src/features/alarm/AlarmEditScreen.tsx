@@ -409,24 +409,6 @@ export function AlarmEditScreen({ navigation, route }: Props) {
     });
   };
 
-  const addMission = (mission: MissionType) => {
-    setDraft(current => {
-      if (current.missions.length >= 5) return current;
-      return { ...current, missions: [...current.missions, mission] };
-    });
-  };
-
-  const removeMissionByKey = (mission: MissionType) => {
-    setDraft(current => {
-      const idx = current.missions.lastIndexOf(mission);
-      if (idx === -1) return current;
-      return {
-        ...current,
-        missions: current.missions.filter((_, i) => i !== idx),
-      };
-    });
-  };
-
   const removeMission = (index: number) => {
     setDraft(current => ({
       ...current,

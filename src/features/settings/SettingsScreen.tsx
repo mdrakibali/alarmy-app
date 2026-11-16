@@ -84,7 +84,7 @@ export function SettingsScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#F5F6F8]"
+      className="flex-1 bg-background"
       contentContainerClassName="px-5"
       contentContainerStyle={{
         paddingTop: insets.top + 10,
@@ -98,19 +98,19 @@ export function SettingsScreen() {
 
       <Section title="Guest">
         <View className="p-4">
-          <Text className="text-sm text-[#08173E] font-bold">Using Alba as a guest</Text>
-          <Text className="text-xs text-[#556889] mt-1">
+          <Text className="text-sm text-navy font-bold">Using Alba as a guest</Text>
+          <Text className="text-xs text-subtext mt-1">
             No account is required. Alarms stay on this phone.
           </Text>
-          <Text className="text-xs text-[#556889] mt-3">
+          <Text className="text-xs text-subtext mt-3">
             Chronotype suggestion: {suggestedHour}:00. This does not change an alarm until you edit it.
           </Text>
           <View className="flex-row mt-3">
-            <Pressable onPress={() => setEveningType(v => !v)} className="mr-2 px-3 py-2 rounded-full bg-white border border-[#1652E6]/30">
-              <Text className="text-xs font-bold text-[#08173E]">{eveningType ? 'Evening type on' : 'Evening type'}</Text>
+            <Pressable onPress={() => setEveningType(v => !v)} className="mr-2 px-3 py-2 rounded-full bg-white border border-primary/30">
+              <Text className="text-xs font-bold text-navy">{eveningType ? 'Evening type on' : 'Evening type'}</Text>
             </Pressable>
-            <Pressable onPress={() => setLateSleep(v => !v)} className="px-3 py-2 rounded-full bg-white border border-[#1652E6]/30">
-              <Text className="text-xs font-bold text-[#08173E]">{lateSleep ? 'Late sleep on' : 'Late sleep'}</Text>
+            <Pressable onPress={() => setLateSleep(v => !v)} className="px-3 py-2 rounded-full bg-white border border-primary/30">
+              <Text className="text-xs font-bold text-navy">{lateSleep ? 'Late sleep on' : 'Late sleep'}</Text>
             </Pressable>
           </View>
           <Pressable
@@ -130,7 +130,7 @@ export function SettingsScreen() {
             }}
             className="mt-4"
           >
-            <Text className="text-sm font-bold text-[#1652E6]">Save alarm backup on this phone</Text>
+            <Text className="text-sm font-bold text-primary">Save alarm backup on this phone</Text>
           </Pressable>
         </View>
       </Section>
@@ -168,7 +168,7 @@ export function SettingsScreen() {
                   key={bg.id}
                   onPress={() => setBackground('all', bg.id)}
                   className={`mr-3 rounded-2xl overflow-hidden border-2 items-center ${
-                    isSelected ? 'border-[#1652E6]' : 'border-transparent'
+                    isSelected ? 'border-primary' : 'border-transparent'
                   }`}
                 >
                   <Image
@@ -206,7 +206,7 @@ export function SettingsScreen() {
                 onPress={() => setBrightness(b.val)}
                 className={`flex-1 mx-1 py-1.5 rounded-xl items-center border ${
                   Math.abs(brightness - b.val) < 0.1
-                    ? 'bg-[#0F172A] border-[#0F172A]'
+                    ? 'bg-slate-900 border-slate-900'
                     : 'bg-slate-50 border-slate-200/60'
                 }`}
               >
@@ -239,7 +239,7 @@ export function SettingsScreen() {
                 onPress={() => setOverlayOpacity(o.val)}
                 className={`flex-1 mx-1 py-1.5 rounded-xl items-center border ${
                   Math.abs(overlayOpacity - o.val) < 0.08
-                    ? 'bg-[#0F172A] border-[#0F172A]'
+                    ? 'bg-slate-900 border-slate-900'
                     : 'bg-slate-50 border-slate-200/60'
                 }`}
               >
@@ -303,7 +303,7 @@ export function SettingsScreen() {
             {!exactAlarmAllowed && (
               <Pressable
                 onPress={() => NativeAlarm.openExactAlarmSettings()}
-                className="bg-[#1652E6] px-3.5 py-1.5 rounded-xl active:opacity-80"
+                className="bg-primary px-3.5 py-1.5 rounded-xl active:opacity-80"
               >
                 <Text className="text-xs font-bold text-white">Grant</Text>
               </Pressable>
@@ -324,7 +324,7 @@ export function SettingsScreen() {
             {!batteryIgnored && (
               <Pressable
                 onPress={() => NativeAlarm.requestIgnoreBatteryOptimizations()}
-                className="bg-[#1652E6] px-3.5 py-1.5 rounded-xl active:opacity-80"
+                className="bg-primary px-3.5 py-1.5 rounded-xl active:opacity-80"
               >
                 <Text className="text-xs font-bold text-white">Disable</Text>
               </Pressable>
@@ -345,7 +345,7 @@ export function SettingsScreen() {
             onPress={() => Linking.openURL('https://dontkillmyapp.com')}
             className="flex-row items-center py-1"
           >
-            <Text className="text-sm font-bold text-[#1652E6]">
+            <Text className="text-sm font-bold text-primary">
               Read guide on Don't Kill My App ↗
             </Text>
           </Pressable>
@@ -355,8 +355,8 @@ export function SettingsScreen() {
       {/* About */}
       <Section title="About">
         <View className="p-4">
-          <Text className="text-[#08173E] font-black text-base">Alba — Smart Alarm & Sleep</Text>
-          <Text className="text-xs text-[#556889] mt-1">
+          <Text className="text-navy font-black text-base">Alba — Smart Alarm & Sleep</Text>
+          <Text className="text-xs text-subtext mt-1">
             Version 1.0.0 • React Native 0.88 + Kotlin Engine
           </Text>
         </View>

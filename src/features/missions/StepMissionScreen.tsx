@@ -67,7 +67,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
-  }, [navigation, route.params]);
+  }, [navigation, route.params, target]);
 
   const addStep = useCallback((count: number) => {
     setStepsWalked(count);
@@ -117,8 +117,8 @@ export function StepMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
-          <View className="bg-[#EEF4FF] border border-[#1652E6]/25 px-4 py-1.5 rounded-full mb-2">
-            <Text className="text-[#1652E6] font-extrabold text-xs uppercase tracking-wider">
+          <View className="bg-ice border border-primary/25 px-4 py-1.5 rounded-full mb-2">
+            <Text className="text-primary font-extrabold text-xs uppercase tracking-wider">
               STEP MISSION 🚶
             </Text>
           </View>
@@ -132,15 +132,15 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
         {/* Center Progress Circle */}
         <View className="items-center justify-center my-6">
-          <View className="h-56 w-56 rounded-full border-8 border-[#1652E6]/20 bg-white items-center justify-center shadow-xl">
+          <View className="h-56 w-56 rounded-full border-8 border-primary/20 bg-white items-center justify-center shadow-xl">
             <Text className="text-5xl font-black text-slate-900">
               {stepsWalked}
             </Text>
             <Text className="text-sm font-bold text-slate-400 mt-1">
               / {target} Steps
             </Text>
-            <View className="mt-3 px-3 py-1 rounded-full bg-[#EEF4FF]">
-              <Text className="text-xs font-black text-[#1652E6]">
+            <View className="mt-3 px-3 py-1 rounded-full bg-ice">
+              <Text className="text-xs font-black text-primary">
                 {progressPct}% Walked
               </Text>
             </View>
@@ -149,7 +149,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
         {/* Step Button / Walking Sensor Trigger */}
         <View className="items-center mb-4 px-2">
-          <Text className="text-xs font-bold text-[#556889] text-center">
+          <Text className="text-xs font-bold text-subtext text-center">
             {sensorMissing
               ? 'This phone has no step counter. The mission cannot be completed by tapping.'
               : 'Walk with the phone. Steps come from the step counter sensor.'}

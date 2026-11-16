@@ -56,7 +56,7 @@ const Card = React.memo(function WallpaperCard({
       onPress={() => onPress(id)}
       style={{ width: '48%', height: 224, marginBottom: 16 }}
       className={`rounded-3xl overflow-hidden border-2 ${
-        selected ? 'border-[#1652E6]' : 'border-slate-200'
+        selected ? 'border-primary' : 'border-slate-200'
       }`}
     >
       <Image
@@ -182,7 +182,7 @@ export function WallpaperGalleryScreen() {
   );
 
   return (
-    <View className="flex-1 bg-[#F8FAFC]">
+    <View className="flex-1 bg-background">
       <View
         style={{ paddingTop: Math.max(insets.top, 14) }}
         className="px-5 pb-3 border-b border-slate-100 bg-white"
@@ -194,12 +194,12 @@ export function WallpaperGalleryScreen() {
           >
             <Text className="text-slate-800 text-lg font-bold">←</Text>
           </TouchableOpacity>
-          <Text className="text-[10px] font-black text-[#1652E6] uppercase tracking-widest">
+          <Text className="text-[10px] font-black text-primary uppercase tracking-widest">
             Wallpapers
           </Text>
         </View>
-        <Text className="text-2xl font-black text-[#08173E]">Choose alarm wallpaper</Text>
-        <Text className="text-xs text-[#556889] mt-0.5">
+        <Text className="text-2xl font-black text-navy">Choose alarm wallpaper</Text>
+        <Text className="text-xs text-subtext mt-0.5">
           The grid stays still. A GIF plays on the alarm. A video plays muted in preview.
         </Text>
         <TextInput
@@ -207,7 +207,7 @@ export function WallpaperGalleryScreen() {
           onChangeText={setQuery}
           placeholder="Search wallpapers"
           placeholderTextColor="#556889"
-          className="mt-3 bg-[#F8FAFC] border border-slate-200 rounded-xl px-3 py-2 text-sm text-[#08173E]"
+          className="mt-3 bg-background border border-slate-200 rounded-xl px-3 py-2 text-sm text-navy"
         />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
           {GROUPS.map(tab => (
@@ -215,10 +215,10 @@ export function WallpaperGalleryScreen() {
               key={tab}
               onPress={() => setSelectedGroup(tab)}
               className={`mr-2 px-3.5 py-1.5 rounded-xl border ${
-                selectedGroup === tab ? 'bg-[#08173E] border-[#08173E]' : 'bg-white border-slate-200'
+                selectedGroup === tab ? 'bg-navy border-navy' : 'bg-white border-slate-200'
               }`}
             >
-              <Text className={`text-xs font-bold ${selectedGroup === tab ? 'text-white' : 'text-[#556889]'}`}>
+              <Text className={`text-xs font-bold ${selectedGroup === tab ? 'text-white' : 'text-subtext'}`}>
                 {tab}
               </Text>
             </TouchableOpacity>
@@ -241,7 +241,7 @@ export function WallpaperGalleryScreen() {
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handlePickCustomPhoto}
-                className="w-full bg-[#1652E6] py-3.5 rounded-2xl items-center shadow-sm flex-row justify-center active:bg-[#0B45C4]"
+                className="w-full bg-primary py-3.5 rounded-2xl items-center shadow-sm flex-row justify-center active:bg-primary-dark"
               >
                 <Text className="text-white text-sm font-black mr-2">📷</Text>
                 <Text className="text-white text-sm font-black">
@@ -256,16 +256,16 @@ export function WallpaperGalleryScreen() {
           : {})}
         ListEmptyComponent={
           <View className="items-center py-20 px-6">
-            <Text className="text-sm font-bold text-[#08173E]">Nothing in this category yet</Text>
+            <Text className="text-sm font-bold text-navy">Nothing in this category yet</Text>
             {selectedGroup === 'Custom' ? (
               <TouchableOpacity
                 onPress={handlePickCustomPhoto}
-                className="mt-4 bg-[#1652E6] px-4 py-3 rounded-2xl active:bg-[#0B45C4]"
+                className="mt-4 bg-primary px-4 py-3 rounded-2xl active:bg-primary-dark"
               >
                 <Text className="text-white font-bold">Import a photo</Text>
               </TouchableOpacity>
             ) : (
-              <Text className="text-xs text-[#556889] mt-1 text-center">
+              <Text className="text-xs text-subtext mt-1 text-center">
                 Mark wallpapers from the preview screen.
               </Text>
             )}

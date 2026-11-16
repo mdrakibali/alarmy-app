@@ -111,14 +111,14 @@ const SleepSoundCard = React.memo(
             <View
               className={`h-12 w-12 rounded-2xl items-center justify-center border ${
                 isPlaying
-                  ? 'bg-white border-[#1652E6]'
+                  ? 'bg-white border-primary'
                   : 'bg-slate-100 border-transparent'
               }`}
             >
               <Text className="text-2xl">{sound.icon}</Text>
             </View>
             {isPlaying && (
-              <View className="absolute -bottom-1 -right-1 bg-[#1652E6] rounded-full h-5 w-5 items-center justify-center border-2 border-white">
+              <View className="absolute -bottom-1 -right-1 bg-primary rounded-full h-5 w-5 items-center justify-center border-2 border-white">
                 <Text className="text-[10px]">🔊</Text>
               </View>
             )}
@@ -127,13 +127,13 @@ const SleepSoundCard = React.memo(
             <View className="flex-row items-center mb-0.5">
               <Text
                 className={`text-sm font-extrabold ${
-                  isPlaying ? 'text-[#1652E6]' : 'text-slate-900'
+                  isPlaying ? 'text-primary' : 'text-slate-900'
                 }`}
               >
                 {sound.title}
               </Text>
               {isPlaying ? (
-                <View className="ml-2 rounded-full bg-[#1652E6] px-2 py-0.5 flex-row items-center">
+                <View className="ml-2 rounded-full bg-primary px-2 py-0.5 flex-row items-center">
                   <AnimatedEqualizer color="#FFFFFF" />
                   <Text className="text-[9px] font-black text-white ml-1 tracking-wider uppercase">
                     PLAYING
@@ -159,7 +159,7 @@ const SleepSoundCard = React.memo(
         {/* Direct Play / Stop Button on the Card */}
         <View
           className={`px-3.5 py-2 rounded-xl flex-row items-center ${
-            isPlaying ? 'bg-rose-500' : 'bg-[#1652E6]'
+            isPlaying ? 'bg-rose-500' : 'bg-primary'
           }`}
         >
           <Text className="text-white text-xs font-black mr-1">
@@ -269,7 +269,7 @@ export function SleepScreen() {
 
   return (
     <Screen padded={false}>
-      <View className="flex-1 bg-[#F5F6F8]">
+      <View className="flex-1 bg-background">
         <ScrollView
           className="flex-1"
           contentContainerStyle={{
@@ -308,7 +308,7 @@ export function SleepScreen() {
                     onPress={() => handleTimerChange(opt.minutes)}
                     className={`px-2.5 py-1 rounded-lg ml-1.5 border ${
                       timerMinutes === opt.minutes
-                        ? 'bg-[#1652E6] border-[#1652E6]'
+                        ? 'bg-primary border-primary'
                         : 'bg-slate-100 border-slate-100'
                     }`}
                   >
@@ -336,7 +336,7 @@ export function SleepScreen() {
                     onPress={() => handleVolumeChange(vol)}
                     className={`px-3 py-1 rounded-lg ml-1.5 border ${
                       volume === vol
-                        ? 'bg-[#1652E6] border-[#1652E6]'
+                        ? 'bg-primary border-primary'
                         : 'bg-slate-100 border-slate-100'
                     }`}
                   >
@@ -358,7 +358,7 @@ export function SleepScreen() {
             onChangeText={setQuery}
             placeholder="Search sleep sounds"
             placeholderTextColor="#556889"
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3 text-sm text-[#08173E]"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3 text-sm text-navy"
           />
           {/* Category Filter Pills */}
           <ScrollView
@@ -374,7 +374,7 @@ export function SleepScreen() {
                 onPress={() => setSelectedCategory(cat)}
                 className={`mr-2 px-4 py-2 rounded-2xl border ${
                   selectedCategory === cat
-                    ? 'bg-[#08173E] border-[#08173E]'
+                    ? 'bg-navy border-navy'
                     : 'bg-white border-slate-200/80'
                 }`}
               >

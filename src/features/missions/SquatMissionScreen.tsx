@@ -24,7 +24,8 @@ export function SquatMissionScreen({ navigation, route }: Props) {
 
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
-  const allMissions = route.params?.missions ?? [];
+  const missionsParam = route.params?.missions;
+  const allMissions = useMemo(() => missionsParam ?? [], [missionsParam]);
 
   const [squatsDone, setSquatsDone] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);

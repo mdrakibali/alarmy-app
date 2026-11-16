@@ -190,7 +190,7 @@ export function WallpaperPreviewModal({
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => setShowApplySheet(true)}
-              className="flex-1 bg-[#1652E6] py-4 rounded-2xl items-center shadow-lg mr-2 active:bg-[#0B45C4]"
+              className="flex-1 bg-primary py-4 rounded-2xl items-center shadow-lg mr-2 active:bg-primary-dark"
             >
               <Text className="text-white text-base font-black tracking-wide">
                 Apply Wallpaper ✨

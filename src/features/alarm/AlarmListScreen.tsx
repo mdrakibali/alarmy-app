@@ -38,7 +38,7 @@ export function AlarmListScreen() {
     const enabledAlarms = alarms.filter(a => a.enabled);
     if (enabledAlarms.length === 0) return null;
 
-    const now = new Date();
+    const now = new Date(nowTimestamp);
     let earliestMs = Infinity;
 
     for (const alarm of enabledAlarms) {

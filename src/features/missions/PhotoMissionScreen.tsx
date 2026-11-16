@@ -30,7 +30,8 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
 
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
-  const allMissions = route.params?.missions ?? [];
+  const missionsParam = route.params?.missions;
+  const allMissions = useMemo(() => missionsParam ?? [], [missionsParam]);
   const referencePath = route.params?.referencePath;
   const matchThreshold = route.params?.matchThreshold ?? 72;
 
