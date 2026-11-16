@@ -172,3 +172,4 @@ class SquatCounter {
         calibration.clear()
     }
 }
+

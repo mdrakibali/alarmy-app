@@ -129,3 +129,4 @@ class WalkCounter {
         return 1
     }
 }
+
