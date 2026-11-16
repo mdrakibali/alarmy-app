@@ -167,6 +167,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
     // Mark welcome as completed
     storage.set('hasCompletedWelcome', true);
 
+    setShowMissionModal(false);
     setShowActivatedModal(true);
   };
 

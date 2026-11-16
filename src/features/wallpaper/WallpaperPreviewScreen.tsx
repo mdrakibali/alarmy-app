@@ -60,15 +60,19 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
     setBackground('alarm', wallpaperId);
     setBackground('ringing', wallpaperId);
     toast.showToast({
-      title: 'Wallpaper selected',
+      title: 'Wallpaper selected ✨',
       message: `${name} will show when this alarm rings.`,
       type: 'success',
       icon: '🖼️',
     });
-    try {
-      navigation.navigate('AlarmEdit');
-    } catch {
-      if (navigation.canGoBack()) navigation.goBack();
+    if (pickForAlarm) {
+      navigation.navigate({ name: 'AlarmEdit', merge: true } as any);
+    } else {
+      try {
+        navigation.navigate('AlarmEdit');
+      } catch {
+        if (navigation.canGoBack()) navigation.goBack();
+      }
     }
   };
 

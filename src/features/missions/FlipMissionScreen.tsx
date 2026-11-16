@@ -198,7 +198,10 @@ export function FlipMissionScreen({ navigation, route }: Props) {
           setShowSuccessModal(false);
           navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
         }}
-        onCancel={() => {}}
+        onCancel={() => {
+          setShowSuccessModal(false);
+          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        }}
       />
     </AppBackground>
   );

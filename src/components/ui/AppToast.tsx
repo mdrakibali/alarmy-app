@@ -12,10 +12,12 @@ export interface ToastOptions {
 
 interface ToastContextType {
   showToast: (options: ToastOptions) => void;
+  hideToast: () => void;
 }
 
 const ToastContext = createContext<ToastContextType>({
   showToast: () => {},
+  hideToast: () => {},
 });
 
 export function useToast() {
@@ -30,19 +32,25 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const timerRef = useRef<any>(null);
 
   const hideToast = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 250,
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: -60,
-        duration: 250,
+        duration: 200,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      setToast(null);
+    ]).start(({ finished }) => {
+      if (finished) {
+        setToast(null);
+      }
     });
   }, [fadeAnim, slideAnim]);
 
@@ -50,13 +58,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     (options: ToastOptions) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
+      fadeAnim.stopAnimation();
+      slideAnim.stopAnimation();
       setToast(options);
 
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 250,
           useNativeDriver: true,
         }),
         Animated.spring(slideAnim, {
@@ -67,7 +78,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         }),
       ]).start();
 
-      const duration = options.duration || 3500;
+      const duration = options.duration || 3000;
       timerRef.current = setTimeout(() => {
         hideToast();
       }, duration);
@@ -76,7 +87,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
       {toast && (
         <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
@@ -90,7 +101,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           className="absolute left-4 right-4 z-50"
         >
           <Pressable
-            onPress={hideToast}
+            onPress={() => {
+              if (timerRef.current) clearTimeout(timerRef.current);
+              setToast(null);
+            }}
             className="bg-white rounded-2xl py-3 px-4 flex-row items-center justify-between border border-slate-200 shadow-2xl"
           >
             <View className="flex-row items-center flex-1 pr-3">

@@ -440,7 +440,18 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       setShowDiscardModal(true);
     } else {
       NativeAlarm.stopSoundPreview().catch(() => {});
-      navigation.goBack();
+      if (navigation.canGoBack()) {
+        const state = navigation.getState();
+        const routes = state?.routes || [];
+        const prevRoute = routes.length > 1 ? routes[routes.length - 2]?.name : null;
+        if (prevRoute === 'WallpaperPreview' || prevRoute === 'WallpaperGallery') {
+          navigation.navigate('Tabs');
+        } else {
+          navigation.goBack();
+        }
+      } else {
+        navigation.navigate('Tabs');
+      }
     }
   };
 
@@ -648,7 +659,18 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         icon: '⏰',
       });
     }
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      const state = navigation.getState();
+      const routes = state?.routes || [];
+      const prevRoute = routes.length > 1 ? routes[routes.length - 2]?.name : null;
+      if (prevRoute === 'WallpaperPreview' || prevRoute === 'WallpaperGallery') {
+        navigation.navigate('Tabs');
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      navigation.navigate('Tabs');
+    }
   };
 
   const confirmDelete = () => {
@@ -666,7 +688,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       icon: '🗑️',
       type: 'info',
     });
-    navigation.goBack();
+    navigation.navigate('Tabs');
   };
 
   const bottomInset = insets.bottom + 8;
@@ -1770,7 +1792,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         onConfirm={() => {
           setShowDiscardModal(false);
           NativeAlarm.stopSoundPreview().catch(() => {});
-          navigation.goBack();
+          navigation.navigate('Tabs');
         }}
         onCancel={() => setShowDiscardModal(false)}
       />
