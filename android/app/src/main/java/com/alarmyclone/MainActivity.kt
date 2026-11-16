@@ -18,6 +18,7 @@ class MainActivity : ReactActivity() {
     super.onCreate(savedInstanceState)
     turnScreenOnAndShowWhenLocked()
     disableShakeDevMenu()
+    handleIntent(intent)
   }
 
   override fun onResume() {
@@ -44,6 +45,21 @@ class MainActivity : ReactActivity() {
     super.onNewIntent(intent)
     setIntent(intent)
     turnScreenOnAndShowWhenLocked()
+    handleIntent(intent)
+  }
+
+  private fun handleIntent(intent: Intent?) {
+    if (intent?.action == com.alarmyclone.alarm.AlarmScheduler.ACTION_OPEN_SNOOZE) {
+      val alarmId = intent.getStringExtra(com.alarmyclone.alarm.AlarmScheduler.EXTRA_ALARM_ID)
+      val intervalMin = intent.getIntExtra(com.alarmyclone.alarm.AlarmScheduler.EXTRA_SNOOZE_INTERVAL, 5)
+      if (alarmId != null) {
+        val map = com.facebook.react.bridge.Arguments.createMap().apply {
+          putString("alarmId", alarmId)
+          putInt("intervalMin", intervalMin)
+        }
+        com.alarmyclone.alarm.AlarmModule.instance?.sendEvent("onOpenSnooze", map)
+      }
+    }
   }
 
   private fun turnScreenOnAndShowWhenLocked() {

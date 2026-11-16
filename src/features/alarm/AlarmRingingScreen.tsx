@@ -1,3 +1,12 @@
+import { AppBackground } from '@/components/ui/AppBackground';
+import { navigateToMission } from '@/features/missions/missionNavigation';
+import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
+import type { RootStackParamList } from '@/navigation/types';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
+import { useReportStore } from '@/storage/reportStore';
+import { useThemeStore } from '@/storage/themeStore';
+import { useAppInsets } from '@/utils/safeArea';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
   BackHandler,
@@ -6,15 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AppBackground } from '@/components/ui/AppBackground';
-import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
-import type { RootStackParamList } from '@/navigation/types';
-import { useReportStore } from '@/storage/reportStore';
-import { useAppInsets } from '@/utils/safeArea';
-import { useThemeStore } from '@/storage/themeStore';
-import { useActiveMissionStore } from '@/storage/activeMissionStore';
-import { navigateToMission } from '@/features/missions/missionNavigation';
 import { useAlarmStore } from './alarmStore';
 import { formatAlarmyClock, formatAlarmyDate, formatTime } from './format';
 
@@ -105,7 +105,9 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     const id = currentAlarmId;
     if (missions.length > 0) {
       if (!activeSession) {
-        useActiveMissionStore.getState().startSession(id || 'default', missions, 0);
+        useActiveMissionStore
+          .getState()
+          .startSession(id || 'default', missions, 0);
       }
       const targetIndex = activeSession ? activeSession.currentIndex : 0;
       const targetMissionKey = missions[targetIndex] || missions[0];
@@ -132,7 +134,9 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
     // No mission: direct dismiss
     useActiveMissionStore.getState().clearSession();
     const now = new Date();
-    const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+    const timeStr = `${now.getHours() % 12 || 12}:${String(
+      now.getMinutes(),
+    ).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
     useReportStore.getState().logAlarmDismissed({
       label: label || 'Morning Alarm',
       scheduledTime: `${time} ${period}`,
@@ -224,12 +228,16 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleDismissOrMission}
-            className={`w-full ${isInProgress ? 'bg-primary' : 'bg-danger'} py-4.5 rounded-3xl items-center justify-center shadow-2xl`}
+            className={`w-full ${
+              isInProgress ? 'bg-primary' : 'bg-danger'
+            } h-16 rounded-3xl items-center justify-center shadow-2xl`}
           >
             <Text className="text-white text-lg font-black tracking-wider text-center">
               {hasMission
                 ? isInProgress
-                  ? `Continue Mission (${currentMissionKey.toUpperCase()} • ${activeMissionIndex + 1}/${missions.length})`
+                  ? `Continue Mission (${currentMissionKey.toUpperCase()} • ${
+                      activeMissionIndex + 1
+                    }/${missions.length})`
                   : missions.length > 1
                   ? `Start Missions (1/${missions.length})`
                   : 'Start Mission'

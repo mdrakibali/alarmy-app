@@ -138,6 +138,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     fun cancelAlarm(alarmId: String, promise: Promise) {
         try {
             AlarmScheduler.cancel(reactContext, alarmId)
+            AlarmScheduler.cancelSnoozeNotification(reactContext)
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("CANCEL_ERROR", e.message, e)
@@ -167,6 +168,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             val ringingId = AlarmService.currentAlarmId
             val alarm = ringingId?.let { AlarmStorage.getAlarm(reactContext, it) }
             AlarmService.stop(reactContext)
+            AlarmScheduler.cancelSnoozeNotification(reactContext)
             if (alarm != null && alarm.wakeUpCheckMin > 0) {
                 val whenMs = System.currentTimeMillis() + alarm.wakeUpCheckMin * 60_000L
                 AlarmScheduler.schedule(
@@ -190,6 +192,31 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(success)
         } catch (e: Exception) {
             promise.reject("SNOOZE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun getActiveSnoozedAlarm(promise: Promise) {
+        try {
+            val alarms = AlarmStorage.getAllAlarms(reactContext)
+            val now = System.currentTimeMillis()
+            val snoozed = alarms.firstOrNull { it.snoozeUsed > 0 && it.triggerTimeMs > now }
+            if (snoozed == null) {
+                promise.resolve(null)
+                return
+            }
+            val map = Arguments.createMap().apply {
+                putString("id", snoozed.id)
+                putString("label", snoozed.label)
+                putDouble("triggerTimeMs", snoozed.triggerTimeMs.toDouble())
+                putInt("snoozeIntervalMin", snoozed.snoozeIntervalMin)
+                putInt("snoozeUsed", snoozed.snoozeUsed)
+                putInt("snoozeMaxCount", snoozed.snoozeMaxCount)
+                putString("wallpaper", snoozed.wallpaper)
+            }
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("SNOOZE_CHECK_ERROR", e.message, e)
         }
     }
 

@@ -149,23 +149,49 @@ export function StepMissionScreen({ navigation, route }: Props) {
 
         {/* Center Progress Circle */}
         <View className="items-center justify-center my-6">
-          <View className="h-56 w-56 rounded-full border-8 border-primary/20 bg-white items-center justify-center shadow-xl">
-            <Text className="text-5xl font-black text-slate-900">
+          <View
+            className={`h-56 w-56 rounded-full border-8 ${
+              stepsWalked >= target
+                ? 'border-emerald-500 bg-emerald-50/90'
+                : stepsWalked > 0
+                ? 'border-emerald-400 bg-white'
+                : 'border-primary/20 bg-white'
+            } items-center justify-center shadow-xl`}
+          >
+            <Text
+              className={`text-5xl font-black ${
+                stepsWalked >= target ? 'text-emerald-600' : 'text-slate-900'
+              }`}
+            >
               {stepsWalked}
             </Text>
             <Text className="text-sm font-bold text-slate-400 mt-1">
               / {target} Steps
             </Text>
-            <View className="mt-3 px-3 py-1 rounded-full bg-ice">
-              <Text className="text-xs font-black text-primary">
-                {progressPct}% Walked
+            <View
+              className={`mt-3 px-3 py-1 rounded-full ${
+                stepsWalked >= target ? 'bg-emerald-100' : 'bg-ice'
+              }`}
+            >
+              <Text
+                className={`text-xs font-black ${
+                  stepsWalked >= target ? 'text-emerald-700' : 'text-primary'
+                }`}
+              >
+                {stepsWalked >= target ? 'DONE ✓' : `${progressPct}% Walked`}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Step Button / Walking Sensor Trigger */}
+        {/* Step Guide & Quick Test Trigger */}
         <View className="items-center w-full mb-4 px-2">
+          <View className="bg-white/90 rounded-2xl p-4 w-full border border-slate-200 mb-3 shadow-xs">
+            <Text className="text-xs font-bold text-navy text-center">
+              💡 Hold your phone and walk {target} steps around your room. Motion sensors detect every physical step.
+            </Text>
+          </View>
+
           <Pressable
             onPress={handleSimulateStep}
             className="w-full bg-emerald-600 py-3 rounded-2xl items-center shadow-xs mb-3 active:bg-emerald-700"

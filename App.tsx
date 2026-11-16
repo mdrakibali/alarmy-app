@@ -84,6 +84,21 @@ function App() {
       }
     });
 
+    // Listen to notification tap when alarm is snoozed
+    const snoozeOpenSub = NativeAlarm.onOpenSnooze(data => {
+      if (navigationRef.current && data?.alarmId) {
+        navigationRef.current.navigate('SnoozeCountdown', {
+          alarmId: data.alarmId,
+          intervalMin: data.intervalMin || 5,
+        });
+      }
+    });
+
+    // Listen to dismiss action from snooze notification
+    const snoozeDismissSub = NativeAlarm.onSnoozeDismissed(alarmId => {
+      useAlarmStore.getState().clearSnooze(alarmId);
+    });
+
     // Listen to AppState changes to detect incoming alarm when app is brought to foreground
     const sub = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
@@ -93,6 +108,8 @@ function App() {
 
     return () => {
       ringSub?.remove();
+      snoozeOpenSub?.remove();
+      snoozeDismissSub?.remove();
       sub.remove();
     };
   }, [syncFromNative]);

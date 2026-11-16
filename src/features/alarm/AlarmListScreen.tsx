@@ -4,12 +4,14 @@ import {
   Pressable,
   Switch,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppInsets } from '@/utils/safeArea';
 import { Screen } from '@/components/ui/Screen';
+import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAlarmStore } from './alarmStore';
 import { formatTime, sortAlarms } from './format';
@@ -25,8 +27,43 @@ export function AlarmListScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const alarms = useAlarmStore(s => s.alarms);
   const toggleAlarm = useAlarmStore(s => s.toggleAlarm);
+  const clearSnooze = useAlarmStore(s => s.clearSnooze);
   const sorted = sortAlarms(alarms);
   const [nowTimestamp, setNowTimestamp] = useState(Date.now());
+  const [snoozeSeconds, setSnoozeSeconds] = useState<number>(0);
+  const [activeSnoozeAlarm, setActiveSnoozeAlarm] = useState<any>(null);
+
+  useEffect(() => {
+    const checkSnooze = () => {
+      const now = Date.now();
+      const snoozed = alarms.find(a => (a.snoozedUntil ?? 0) > now);
+      if (snoozed && snoozed.snoozedUntil) {
+        setActiveSnoozeAlarm(snoozed);
+        setSnoozeSeconds(Math.max(0, Math.ceil((snoozed.snoozedUntil - now) / 1000)));
+      } else {
+        NativeAlarm.getActiveSnoozedAlarm().then(nativeSnoozed => {
+          if (nativeSnoozed && nativeSnoozed.triggerTimeMs > now) {
+            setActiveSnoozeAlarm({
+              ...nativeSnoozed,
+              snooze: { intervalMin: nativeSnoozed.snoozeIntervalMin },
+            });
+            setSnoozeSeconds(Math.max(0, Math.ceil((nativeSnoozed.triggerTimeMs - now) / 1000)));
+          } else {
+            setActiveSnoozeAlarm(null);
+            setSnoozeSeconds(0);
+          }
+        });
+      }
+    };
+
+    checkSnooze();
+    const interval = setInterval(checkSnooze, 1000);
+    return () => clearInterval(interval);
+  }, [alarms]);
+
+  const snoozeMin = Math.floor(snoozeSeconds / 60);
+  const snoozeSec = snoozeSeconds % 60;
+  const formattedSnoozeCountdown = `${String(snoozeMin).padStart(2, '0')}:${String(snoozeSec).padStart(2, '0')}`;
 
   useEffect(() => {
     const timer = setInterval(() => setNowTimestamp(Date.now()), 30000);
@@ -85,6 +122,64 @@ export function AlarmListScreen() {
           </View>
           <Text className="text-lg font-bold text-slate-400">›</Text>
         </Pressable>
+
+        {/* Active Snooze Floating Banner */}
+        {activeSnoozeAlarm && snoozeSeconds > 0 && (
+          <View className="mx-4 mb-3 p-4 rounded-3xl bg-indigo-950 border border-indigo-400/40 shadow-xl">
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-2xl mr-2.5">😴</Text>
+                <View className="flex-1">
+                  <View className="flex-row items-center">
+                    <Text className="text-amber-400 text-xs font-black uppercase tracking-wider mr-2">
+                      Snooze Active
+                    </Text>
+                    <View className="h-2 w-2 rounded-full bg-amber-400" />
+                  </View>
+                  <Text className="text-white text-sm font-bold mt-0.5" numberOfLines={1}>
+                    {activeSnoozeAlarm.label || 'Morning Alarm'}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="bg-black/60 px-3.5 py-1.5 rounded-2xl border border-white/20 items-center justify-center">
+                <Text className="text-amber-300 font-black text-xl tracking-widest">
+                  {formattedSnoozeCountdown}
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex-row items-center">
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('SnoozeCountdown', {
+                    alarmId: activeSnoozeAlarm.id,
+                    intervalMin: activeSnoozeAlarm.snooze?.intervalMin || 5,
+                    wallpaper: activeSnoozeAlarm.wallpaper,
+                  });
+                }}
+                className="flex-1 bg-primary py-2.5 rounded-xl items-center shadow-xs active:bg-primary-dark mr-2"
+              >
+                <Text className="text-white font-extrabold text-xs">
+                  View Full Screen ⏱️
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={async () => {
+                  clearSnooze(activeSnoozeAlarm.id);
+                  await NativeAlarm.cancelAlarm(activeSnoozeAlarm.id);
+                  setActiveSnoozeAlarm(null);
+                }}
+                className="bg-danger/90 px-4 py-2.5 rounded-xl items-center active:bg-danger"
+              >
+                <Text className="text-white font-extrabold text-xs">
+                  Dismiss ✕
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         <View className="flex-row items-center justify-between px-5 py-2">
           <Text className="text-sm font-bold text-slate-700">

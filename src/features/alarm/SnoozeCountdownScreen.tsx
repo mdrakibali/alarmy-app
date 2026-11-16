@@ -70,6 +70,17 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
     navigation.replace('AlarmRinging', { id: alarmId });
   };
 
+  const handleMinimizeToHome = () => {
+    navigation.navigate('Tabs');
+  };
+
+  const handleDismissAlarm = async () => {
+    clearSnooze(alarmId);
+    await NativeAlarm.cancelAlarm(alarmId);
+    await NativeAlarm.stopAlarm();
+    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+  };
+
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
   const formattedCountdown = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -84,7 +95,15 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
           paddingBottom: Math.max(insets.bottom + 12, 32),
         }}
       >
-        <View className="items-center mt-2">
+        {/* Top Header with Minimize Option */}
+        <View className="items-center mt-2 relative w-full">
+          <TouchableOpacity
+            onPress={handleMinimizeToHome}
+            className="absolute right-0 top-0 bg-white/20 px-3 py-1.5 rounded-full flex-row items-center border border-white/30"
+          >
+            <Text className="text-white text-xs font-bold">✕ Minimize</Text>
+          </TouchableOpacity>
+
           <View className="bg-black/50 border border-white/20 px-4 py-1.5 rounded-full mb-2">
             <Text className="text-white text-xs font-black tracking-widest uppercase">Snooze</Text>
           </View>
@@ -105,12 +124,21 @@ export function SnoozeCountdownScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        <TouchableOpacity
-          onPress={handleSolveMissionNow}
-          className="w-full bg-primary py-4 rounded-2xl items-center active:bg-primary-dark"
-        >
-          <Text className="text-white text-base font-black">I'm awake. Start mission</Text>
-        </TouchableOpacity>
+        <View className="w-full space-y-3">
+          <TouchableOpacity
+            onPress={handleSolveMissionNow}
+            className="w-full bg-primary py-4 rounded-2xl items-center shadow-lg active:bg-primary-dark"
+          >
+            <Text className="text-white text-base font-black">I'm awake. Start mission ⚡</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleDismissAlarm}
+            className="w-full bg-black/40 border border-white/25 py-3 rounded-2xl items-center active:bg-black/60"
+          >
+            <Text className="text-white/90 text-sm font-bold">Dismiss Alarm ✕</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </AppBackground>
   );

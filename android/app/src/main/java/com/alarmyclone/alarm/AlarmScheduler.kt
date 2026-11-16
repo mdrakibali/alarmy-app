@@ -1,17 +1,26 @@
 package com.alarmyclone.alarm
 
 import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.alarmyclone.MainActivity
+import com.alarmyclone.R
 import java.util.Calendar
 
 object AlarmScheduler {
     private const val TAG = "AlarmScheduler"
     const val EXTRA_ALARM_ID = "extra_alarm_id"
+    const val SNOOZE_NOTIFICATION_ID = 1002
+    const val SNOOZE_CHANNEL_ID = "alarmy_snooze_channel"
+    const val ACTION_OPEN_SNOOZE = "com.alarmyclone.OPEN_SNOOZE"
+    const val EXTRA_SNOOZE_TRIGGER_MS = "snoozeTriggerMs"
+    const val EXTRA_SNOOZE_INTERVAL = "snoozeInterval"
 
     fun canScheduleExactAlarms(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -86,6 +95,7 @@ object AlarmScheduler {
     fun cancel(context: Context, alarmId: String) {
         val existing = AlarmStorage.getAlarm(context, alarmId)
         cancelPending(context, alarmId, existing?.requestCode ?: 0)
+        cancelSnoozeNotification(context)
         AlarmStorage.removeAlarm(context, alarmId)
         Log.d(TAG, "Cancelled alarm $alarmId")
     }
@@ -124,8 +134,88 @@ object AlarmScheduler {
         val snoozeTriggerTime = System.currentTimeMillis() + delayMs
         val snoozed = alarm.copy(snoozeUsed = alarm.snoozeUsed + 1, triggerTimeMs = snoozeTriggerTime)
         val ok = schedule(context, snoozed, explicitTriggerTimeMs = snoozeTriggerTime)
+        if (ok) {
+            showSnoozeNotification(context, snoozed, snoozeTriggerTime, intervalMin)
+        }
         Log.d(TAG, "Snooze $alarmId result=$ok used=${snoozed.snoozeUsed}")
         return ok
+    }
+
+    fun showSnoozeNotification(
+        context: Context,
+        alarm: AlarmModel,
+        snoozeTriggerTimeMs: Long,
+        intervalMin: Int
+    ) {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                SNOOZE_CHANNEL_ID,
+                "Snoozed Alarms",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notification shown when an alarm is snoozed"
+                enableVibration(false)
+                setSound(null, null)
+            }
+            nm.createNotificationChannel(channel)
+        }
+
+        // Tapping this notification opens MainActivity directly to SnoozeCountdown
+        val openIntent = Intent(context, MainActivity::class.java).apply {
+            action = ACTION_OPEN_SNOOZE
+            putExtra(EXTRA_ALARM_ID, alarm.id)
+            putExtra(EXTRA_SNOOZE_INTERVAL, intervalMin)
+            putExtra(EXTRA_SNOOZE_TRIGGER_MS, snoozeTriggerTimeMs)
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+            )
+        }
+        val openPendingIntent = PendingIntent.getActivity(
+            context,
+            SNOOZE_NOTIFICATION_ID,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Dismiss action button (cancels snooze)
+        val dismissIntent = Intent(context, AlarmActionReceiver::class.java).apply {
+            action = AlarmActionReceiver.ACTION_DISMISS_SNOOZE
+            putExtra(EXTRA_ALARM_ID, alarm.id)
+        }
+        val dismissPendingIntent = PendingIntent.getBroadcast(
+            context,
+            alarm.requestCode + 200,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val cal = Calendar.getInstance().apply { timeInMillis = snoozeTriggerTimeMs }
+        val hours = cal.get(Calendar.HOUR_OF_DAY)
+        val mins = cal.get(Calendar.MINUTE)
+        val amPm = if (hours >= 12) "PM" else "AM"
+        val hour12 = if (hours % 12 == 0) 12 else hours % 12
+        val timeStr = String.format("%02d:%02d %s", hour12, mins, amPm)
+
+        val notification = NotificationCompat.Builder(context, SNOOZE_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("Alba - Snoozed 😴")
+            .setContentText("Rings again at $timeStr (${alarm.label})")
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setContentIntent(openPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Dismiss Alarm", dismissPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        nm.notify(SNOOZE_NOTIFICATION_ID, notification)
+    }
+
+    fun cancelSnoozeNotification(context: Context) {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        nm?.cancel(SNOOZE_NOTIFICATION_ID)
     }
 
     fun rescheduleAll(context: Context, recalculateWallClock: Boolean = false) {

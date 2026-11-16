@@ -46,6 +46,9 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val alarm = AlarmStorage.getAlarm(context, alarmId)
 
+        // Cancel any active snooze notification since the alarm is now actively ringing
+        AlarmScheduler.cancelSnoozeNotification(context)
+
         // Start Foreground Service that plays sound & vibration
         val serviceIntent = Intent(context, AlarmService::class.java).apply {
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)

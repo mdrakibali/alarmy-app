@@ -133,6 +133,25 @@ class AlarmModuleBridge {
     }
   }
 
+  async getActiveSnoozedAlarm(): Promise<{
+    id: string;
+    label: string;
+    triggerTimeMs: number;
+    snoozeIntervalMin: number;
+    snoozeUsed: number;
+    snoozeMaxCount: number;
+    wallpaper?: string;
+  } | null> {
+    if (Platform.OS !== 'android' || !AlarmModule?.getActiveSnoozedAlarm) {
+      return null;
+    }
+    try {
+      return await AlarmModule.getActiveSnoozedAlarm();
+    } catch {
+      return null;
+    }
+  }
+
   async listAlarms(): Promise<NativeAlarmRecord[]> {
     if (Platform.OS !== 'android' || !AlarmModule) {
       return [];
@@ -523,6 +542,20 @@ class AlarmModuleBridge {
       return null;
     }
     return this.emitter.addListener('onAlarmDismissed', listener);
+  }
+
+  onOpenSnooze(listener: (data: { alarmId: string; intervalMin: number }) => void): EmitterSubscription | null {
+    if (!this.emitter) {
+      return null;
+    }
+    return this.emitter.addListener('onOpenSnooze', (data: any) => listener(data));
+  }
+
+  onSnoozeDismissed(listener: (alarmId: string) => void): EmitterSubscription | null {
+    if (!this.emitter) {
+      return null;
+    }
+    return this.emitter.addListener('onSnoozeDismissed', (data: any) => listener(data as string));
   }
 }
 

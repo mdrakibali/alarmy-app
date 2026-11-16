@@ -9,6 +9,7 @@ class AlarmActionReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_DISMISS = "com.alarmyclone.ACTION_DISMISS"
         const val ACTION_SNOOZE = "com.alarmyclone.ACTION_SNOOZE"
+        const val ACTION_DISMISS_SNOOZE = "com.alarmyclone.ACTION_DISMISS_SNOOZE"
         private const val TAG = "AlarmActionReceiver"
     }
 
@@ -25,6 +26,18 @@ class AlarmActionReceiver : BroadcastReceiver() {
                 val intervalMin = alarm?.snoozeIntervalMin ?: 5
                 AlarmScheduler.scheduleSnooze(context, alarmId, intervalMin)
                 AlarmService.stop(context)
+            }
+            ACTION_DISMISS_SNOOZE -> {
+                AlarmScheduler.cancelSnoozeNotification(context)
+                val alarm = AlarmStorage.getAlarm(context, alarmId)
+                if (alarm != null) {
+                    if (alarm.repeatDays.isNotEmpty()) {
+                        AlarmScheduler.schedule(context, alarm.copy(snoozeUsed = 0), recalculateWallClock = true)
+                    } else {
+                        AlarmStorage.saveAlarm(context, alarm.copy(enabled = false, snoozeUsed = 0))
+                    }
+                }
+                AlarmModule.instance?.sendEvent("onSnoozeDismissed", alarmId)
             }
         }
     }

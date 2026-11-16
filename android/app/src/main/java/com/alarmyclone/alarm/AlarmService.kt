@@ -39,6 +39,10 @@ class AlarmService : Service() {
         fun stop(context: Context) {
             val intent = Intent(context, AlarmService::class.java)
             context.stopService(intent)
+            try {
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                nm?.cancel(NOTIFICATION_ID)
+            } catch (_: Exception) {}
         }
     }
 
@@ -303,6 +307,19 @@ class AlarmService : Service() {
             vibrator = null
         } catch (e: Exception) {
             Log.e(TAG, "Error cancelling Vibrator", e)
+        }
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                @Suppress("DEPRECATION")
+                stopForeground(true)
+            }
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            nm?.cancel(NOTIFICATION_ID)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing notification on destroy", e)
         }
 
         AlarmReceiver.releaseWakeLock()
