@@ -48,7 +48,7 @@ export function navigateToMission(
   const matchThreshold =
     params.matchThreshold ?? alarm?.photoMatchThreshold ?? 72;
   const registeredCode = params.registeredCode ?? alarm?.barcodeValue;
-  const mathCount = params.mathCount ?? alarm?.mathCount ?? 2;
+  const mathCount = params.mathCount ?? alarm?.mathCount ?? 3;
   const mathDifficulty = params.mathDifficulty ?? alarm?.mathDifficulty ?? 'normal';
   const memoryPairs = params.memoryPairs ?? alarm?.memoryPairs ?? 6;
   const typingPhrase = params.typingPhrase ?? alarm?.typingPhrase;
@@ -59,7 +59,10 @@ export function navigateToMission(
     missions: params.missions,
   };
 
-  const navFn = action === 'navigate' ? navigation.navigate : navigation.replace;
+  const navFn = (screen: any, params: any) =>
+    action === 'navigate'
+      ? navigation.navigate(screen, params)
+      : navigation.replace(screen, params);
 
   switch (missionKey) {
     case 'math':

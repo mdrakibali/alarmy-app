@@ -91,7 +91,6 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   const isInProgress = Boolean(
     activeSession &&
       activeSession.isInProgress &&
-      activeSession.currentIndex > 0 &&
       activeSession.currentIndex < missions.length,
   );
   const activeMissionIndex = activeSession?.currentIndex ?? 0;

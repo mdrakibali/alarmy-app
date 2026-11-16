@@ -146,7 +146,7 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
           {referencePath ? (
             <View className="h-16 w-16 rounded-2xl overflow-hidden border-2 border-primary shadow-xs">
               <Image
-                source={{ uri: `file://${referencePath}` }}
+                source={{ uri: referencePath?.startsWith('file://') ? referencePath : `file://${referencePath}` }}
                 className="h-full w-full"
                 resizeMode="cover"
               />
@@ -199,18 +199,8 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
           ) : null}
         </View>
 
-        {/* Bottom Actions */}
-        <View className="w-full items-center mb-2">
-          <Pressable
-            onPress={handleCapture}
-            disabled={isCapturing}
-            className="w-full bg-primary py-4 rounded-2xl items-center mb-2 active:bg-primary-dark shadow-md"
-          >
-            <Text className="text-white font-extrabold text-base tracking-wide">
-              📸 Open Camera to Capture Photo
-            </Text>
-          </Pressable>
-        </View>
+        {/* Bottom spacer */}
+        <View className="w-full mb-2" />
       </View>
 
       {/* Completion Modal */}

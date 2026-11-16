@@ -170,7 +170,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
   const matchedPairs = cards.filter(c => c.isMatched).length / 2;
 
   return (
-    <AppBackground target="ringing">
+    <AppBackground target="mission">
       <View
         style={{
           paddingTop: Math.max(insets.top, 16),

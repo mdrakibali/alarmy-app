@@ -213,17 +213,8 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
           </View>
         )}
 
-        {/* Bottom Actions */}
+        {/* Bottom: manual input toggle only */}
         <View className="w-full items-center mb-2">
-          <Pressable
-            onPress={startRealCameraScan}
-            className="w-full bg-primary py-4 rounded-2xl items-center mb-2 active:bg-primary-dark shadow-md"
-          >
-            <Text className="text-white font-extrabold text-base">
-              📷 Open Camera to Scan Barcode
-            </Text>
-          </Pressable>
-
           <Pressable
             onPress={() => setShowManualInput(prev => !prev)}
             className="py-1"
