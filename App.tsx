@@ -32,7 +32,15 @@ function App() {
     const checkRingingAlarm = async () => {
       const ringing = await NativeAlarm.getCurrentlyRingingAlarm();
       if (ringing && navigationRef.current) {
-        navigationRef.current.navigate('AlarmRinging', { id: ringing.id });
+        const currentRoute = navigationRef.current.getCurrentRoute();
+        // Prevent disrupting the user if they are already on AlarmRinging, a Mission, or Snooze
+        if (
+          currentRoute?.name !== 'AlarmRinging' &&
+          !currentRoute?.name?.endsWith('Mission') &&
+          currentRoute?.name !== 'SnoozeCountdown'
+        ) {
+          navigationRef.current.navigate('AlarmRinging', { id: ringing.id });
+        }
       }
     };
 

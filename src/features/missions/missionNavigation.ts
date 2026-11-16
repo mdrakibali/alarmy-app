@@ -1,75 +1,121 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
 
-export function proceedToNextMission(
-  navigation: NativeStackNavigationProp<RootStackParamList, any>,
-  currentMissionIndex: number,
-  allMissions: string[],
-  alarmId?: string,
-  extraParams?: {
+export interface MissionNavigationExtraParams {
+  squatTarget?: number;
+  stepTarget?: number;
+  shakeTarget?: number;
+  referencePath?: string;
+  matchThreshold?: number;
+  registeredCode?: string;
+}
+
+export function navigateToMission(
+  navigation: NativeStackNavigationProp<RootStackParamList, any> | any,
+  missionKey: string,
+  params: {
+    alarmId?: string;
+    missionIndex: number;
+    missions: string[];
     squatTarget?: number;
     stepTarget?: number;
+    shakeTarget?: number;
     referencePath?: string;
     matchThreshold?: number;
     registeredCode?: string;
   },
+  action: 'replace' | 'navigate' = 'replace',
 ): boolean {
-  const nextMissionIdx = currentMissionIndex + 1;
-  if (nextMissionIdx >= allMissions.length) {
-    return false; // No more missions left
-  }
-
-  const nextMissionKey = allMissions[nextMissionIdx];
-  const alarm = alarmId
-    ? useAlarmStore.getState().alarms.find(a => a.id === alarmId)
+  const alarm = params.alarmId
+    ? useAlarmStore.getState().alarms.find(a => a.id === params.alarmId)
     : undefined;
 
-  const squatTarget = extraParams?.squatTarget ?? alarm?.squatTarget ?? 10;
-  const stepTarget = extraParams?.stepTarget ?? alarm?.stepTarget ?? 20;
+  const squatTarget = params.squatTarget ?? alarm?.squatTarget ?? 3;
+  const stepTarget = params.stepTarget ?? alarm?.stepTarget ?? 5;
+  const shakeTarget = params.shakeTarget ?? alarm?.shakeTarget ?? 5;
   const referencePath =
-    extraParams?.referencePath ?? alarm?.photoReferencePath;
+    params.referencePath ?? alarm?.photoReferencePath;
   const matchThreshold =
-    extraParams?.matchThreshold ?? alarm?.photoMatchThreshold ?? 72;
-  const registeredCode = extraParams?.registeredCode ?? alarm?.barcodeValue;
+    params.matchThreshold ?? alarm?.photoMatchThreshold ?? 72;
+  const registeredCode = params.registeredCode ?? alarm?.barcodeValue;
 
   const baseParams = {
-    alarmId,
-    missionIndex: nextMissionIdx,
-    missions: allMissions,
+    alarmId: params.alarmId,
+    missionIndex: params.missionIndex,
+    missions: params.missions,
   };
 
-  switch (nextMissionKey) {
+  const navFn = action === 'navigate' ? navigation.navigate : navigation.replace;
+
+  switch (missionKey) {
     case 'math':
-      navigation.replace('MathMission', baseParams);
+      navFn('MathMission', baseParams);
       return true;
     case 'shake':
-      navigation.replace('ShakeMission', baseParams);
+      navFn('ShakeMission', { ...baseParams, shakeTarget });
       return true;
     case 'qr':
-      navigation.replace('BarcodeMission', { ...baseParams, registeredCode });
+      navFn('BarcodeMission', { ...baseParams, registeredCode });
       return true;
     case 'typing':
-      navigation.replace('TypingMission', baseParams);
+      navFn('TypingMission', baseParams);
       return true;
     case 'memory':
-      navigation.replace('MemoryMission', baseParams);
+      navFn('MemoryMission', baseParams);
       return true;
     case 'step':
-      navigation.replace('StepMission', { ...baseParams, stepTarget });
+      navFn('StepMission', { ...baseParams, stepTarget });
       return true;
     case 'photo':
-      navigation.replace('PhotoMission', {
+      navFn('PhotoMission', {
         ...baseParams,
         referencePath,
         matchThreshold,
       });
       return true;
     case 'squat':
-      navigation.replace('SquatMission', { ...baseParams, squatTarget });
+      navFn('SquatMission', { ...baseParams, squatTarget });
       return true;
     default:
       return false;
   }
 }
 
+export function proceedToNextMission(
+  navigation: NativeStackNavigationProp<RootStackParamList, any>,
+  currentMissionIndex: number,
+  allMissions: string[],
+  alarmId?: string,
+  extraParams?: MissionNavigationExtraParams,
+): boolean {
+  const currentMissionKey = allMissions[currentMissionIndex] || '';
+
+  // Record completed mission in persistent active store
+  let nextMissionIdx = currentMissionIndex + 1;
+  if (alarmId) {
+    nextMissionIdx = useActiveMissionStore
+      .getState()
+      .recordMissionCompleted(alarmId, currentMissionIndex, currentMissionKey);
+  }
+
+  if (nextMissionIdx >= allMissions.length) {
+    // All chained missions successfully completed!
+    useActiveMissionStore.getState().clearSession();
+    return false; // No more missions left
+  }
+
+  const nextMissionKey = allMissions[nextMissionIdx];
+  return navigateToMission(
+    navigation,
+    nextMissionKey,
+    {
+      alarmId,
+      missionIndex: nextMissionIdx,
+      missions: allMissions,
+      ...extraParams,
+    },
+    'replace',
+  );
+}

@@ -13,6 +13,8 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { useThemeStore } from '@/storage/themeStore';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
+import { navigateToMission } from '@/features/missions/missionNavigation';
 import { useAlarmStore } from './alarmStore';
 import { formatAlarmyClock, formatAlarmyDate, formatTime } from './format';
 
@@ -68,8 +70,22 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
 
   const snoozeAlarmInStore = useAlarmStore(s => s.snoozeAlarm);
 
+  const currentAlarmId = alarmId || activeInfo?.id;
+  const activeSession = useActiveMissionStore(s =>
+    s.getActiveSession(currentAlarmId),
+  );
+  const isInProgress = Boolean(
+    activeSession &&
+      activeSession.isInProgress &&
+      activeSession.currentIndex > 0 &&
+      activeSession.currentIndex < missions.length,
+  );
+  const activeMissionIndex = activeSession?.currentIndex ?? 0;
+  const currentMissionKey = missions[activeMissionIndex] || missions[0];
+
   const handleSnooze = async () => {
-    const id = alarmId || activeInfo?.id;
+    const id = currentAlarmId;
+    useActiveMissionStore.getState().clearSession();
     if (id) {
       const ok = await NativeAlarm.snoozeAlarm(id, snoozeInterval);
       if (!ok) return;
@@ -86,65 +102,35 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   };
 
   const handleDismissOrMission = async () => {
-    const id = alarmId || activeInfo?.id;
+    const id = currentAlarmId;
     if (missions.length > 0) {
-      const firstMission = missions[0];
-      if (firstMission === 'math') {
-        navigation.navigate('MathMission', { alarmId: id, missionIndex: 0, missions });
-        return;
+      if (!activeSession) {
+        useActiveMissionStore.getState().startSession(id || 'default', missions, 0);
       }
-      if (firstMission === 'shake') {
-        navigation.navigate('ShakeMission', { alarmId: id, missionIndex: 0, missions });
-        return;
-      }
-      if (firstMission === 'step') {
-        navigation.navigate('StepMission', {
+      const targetIndex = activeSession ? activeSession.currentIndex : 0;
+      const targetMissionKey = missions[targetIndex] || missions[0];
+
+      navigateToMission(
+        navigation,
+        targetMissionKey,
+        {
           alarmId: id,
-          missionIndex: 0,
+          missionIndex: targetIndex,
           missions,
-          stepTarget: alarmFromStore?.stepTarget ?? 20,
-        });
-        return;
-      }
-      if (firstMission === 'photo') {
-        navigation.navigate('PhotoMission', {
-          alarmId: id,
-          missionIndex: 0,
-          missions,
+          stepTarget: alarmFromStore?.stepTarget ?? 5,
+          squatTarget: alarmFromStore?.squatTarget ?? 3,
+          shakeTarget: alarmFromStore?.shakeTarget ?? 5,
           referencePath: alarmFromStore?.photoReferencePath,
           matchThreshold: alarmFromStore?.photoMatchThreshold ?? 72,
-        });
-        return;
-      }
-      if (firstMission === 'qr') {
-        navigation.navigate('BarcodeMission', {
-          alarmId: id,
-          missionIndex: 0,
-          missions,
           registeredCode: alarmFromStore?.barcodeValue,
-        });
-        return;
-      }
-      if (firstMission === 'squat') {
-        navigation.navigate('SquatMission', {
-          alarmId: id,
-          missionIndex: 0,
-          missions,
-          squatTarget: alarmFromStore?.squatTarget ?? 10,
-        });
-        return;
-      }
-      if (firstMission === 'typing') {
-        navigation.navigate('TypingMission', { alarmId: id, missionIndex: 0, missions });
-        return;
-      }
-      if (firstMission === 'memory') {
-        navigation.navigate('MemoryMission', { alarmId: id, missionIndex: 0, missions });
-        return;
-      }
+        },
+        'navigate',
+      );
+      return;
     }
 
     // No mission: direct dismiss
+    useActiveMissionStore.getState().clearSession();
     const now = new Date();
     const timeStr = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
     useReportStore.getState().logAlarmDismissed({
@@ -208,6 +194,14 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
 
         {/* Bottom Section: Floating Snooze Pill & Coral Action Button */}
         <View className="w-full items-center">
+          {isInProgress && (
+            <View className="bg-emerald-500/90 border border-white/20 px-4 py-1.5 rounded-full mb-3 shadow-md flex-row items-center">
+              <Text className="text-white text-xs font-black uppercase tracking-wider">
+                ⚡ Resuming: {activeMissionIndex} of {missions.length} Finished
+              </Text>
+            </View>
+          )}
+
           {/* Snooze Button: ❸ Snooze floating white pill */}
           {snoozeEnabled && (
             <TouchableOpacity
@@ -230,10 +224,16 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleDismissOrMission}
-            className="w-full bg-danger py-4.5 rounded-3xl items-center justify-center shadow-2xl"
+            className={`w-full ${isInProgress ? 'bg-primary' : 'bg-danger'} py-4.5 rounded-3xl items-center justify-center shadow-2xl`}
           >
-            <Text className="text-white text-xl font-black tracking-wider">
-              {hasMission ? 'Start Mission' : 'Dismiss'}
+            <Text className="text-white text-lg font-black tracking-wider text-center">
+              {hasMission
+                ? isInProgress
+                  ? `Continue Mission (${currentMissionKey.toUpperCase()} • ${activeMissionIndex + 1}/${missions.length})`
+                  : missions.length > 1
+                  ? `Start Missions (1/${missions.length})`
+                  : 'Start Mission'
+                : 'Dismiss'}
             </Text>
           </TouchableOpacity>
         </View>

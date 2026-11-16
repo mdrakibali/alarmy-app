@@ -1090,25 +1090,76 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           ) : null}
         </View>
       ) : null}
-      {draft.missions.includes('step') || draft.missions.includes('squat') ? (
-        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
-          <Text className="text-sm font-bold text-navy mb-2">Mission targets</Text>
+      {draft.missions.includes('step') || draft.missions.includes('squat') || draft.missions.includes('shake') ? (
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
+          <Text className="text-sm font-bold text-navy mb-2">Mission targets (Quick testing & settings)</Text>
           {draft.missions.includes('step') ? (
-            <View className="flex-row mb-2">
-              {[20, 30, 50].map(value => (
-                <TouchableOpacity key={value} onPress={() => patch({ stepTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-background border border-primary/40">
-                  <Text className="text-xs font-bold text-navy">{value} steps</Text>
-                </TouchableOpacity>
-              ))}
+            <View className="mb-2">
+              <Text className="text-xs font-semibold text-subtext mb-1">Step target:</Text>
+              <View className="flex-row flex-wrap">
+                {[5, 10, 20, 30].map(value => {
+                  const isSel = (draft.stepTarget ?? 5) === value;
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      onPress={() => patch({ stepTarget: value })}
+                      className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                        isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                      } border`}
+                    >
+                      <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                        {value} steps {value <= 5 ? '⚡' : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           ) : null}
           {draft.missions.includes('squat') ? (
-            <View className="flex-row">
-              {[5, 10, 15].map(value => (
-                <TouchableOpacity key={value} onPress={() => patch({ squatTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-background border border-primary/40">
-                  <Text className="text-xs font-bold text-navy">{value} squats</Text>
-                </TouchableOpacity>
-              ))}
+            <View className="mb-2">
+              <Text className="text-xs font-semibold text-subtext mb-1">Squat target:</Text>
+              <View className="flex-row flex-wrap">
+                {[2, 3, 5, 10].map(value => {
+                  const isSel = (draft.squatTarget ?? 3) === value;
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      onPress={() => patch({ squatTarget: value })}
+                      className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                        isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                      } border`}
+                    >
+                      <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                        {value} squats {value <= 3 ? '⚡' : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+          {draft.missions.includes('shake') ? (
+            <View>
+              <Text className="text-xs font-semibold text-subtext mb-1">Shake target:</Text>
+              <View className="flex-row flex-wrap">
+                {[5, 10, 20, 30].map(value => {
+                  const isSel = (draft.shakeTarget ?? 5) === value;
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      onPress={() => patch({ shakeTarget: value })}
+                      className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                        isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                      } border`}
+                    >
+                      <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                        {value} shakes {value <= 5 ? '⚡' : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           ) : null}
         </View>

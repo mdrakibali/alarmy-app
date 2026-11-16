@@ -6,9 +6,15 @@ import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
+import android.view.Gravity
 import android.view.View
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -166,6 +172,25 @@ class CameraMissionActivity : ComponentActivity() {
         provider.bindToLifecycle(this, selector, preview, analysis)
     }
 
+    private fun triggerHapticFeedback(longBuzz: Boolean = false) {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vm?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+            val duration = if (longBuzz) 140L else 60L
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(duration)
+            }
+        } catch (_: Throwable) {}
+    }
+
     private fun bindSquat(
         provider: ProcessCameraProvider,
         preview: Preview,
@@ -175,7 +200,53 @@ class CameraMissionActivity : ComponentActivity() {
     ) {
         label.visibility = View.GONE
         val isFront = (selector == CameraSelector.DEFAULT_FRONT_CAMERA)
-        val target = intent.getIntExtra(EXTRA_TARGET, 10).coerceAtLeast(1)
+        val target = intent.getIntExtra(EXTRA_TARGET, 3).coerceAtLeast(1)
+
+        // Quick Test button so developer/user can simulate squats easily during testing
+        val testButton = Button(this).apply {
+            text = "⚡ +1 Squat (Test)"
+            setBackgroundColor(0xCC1652E6.toInt())
+            setTextColor(0xFFFFFFFF.toInt())
+            textSize = 14f
+            val lp = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            ).apply {
+                bottomMargin = 64
+            }
+            layoutParams = lp
+            setOnClickListener {
+                runOnUiThread {
+                    if (finished) return@runOnUiThread
+                    squatReps += 1
+                    triggerHapticFeedback(squatReps >= target)
+                    overlay.updatePose(
+                        pose = overlay.getCurrentPose(),
+                        imgWidth = overlay.getImageWidth(),
+                        imgHeight = overlay.getImageHeight(),
+                        isFront = isFront,
+                        phase = "Good Squat ✓",
+                        reps = squatReps,
+                        target = target,
+                        kneeAngle = 80.0,
+                        isUserDetected = true,
+                        isSquatSuccess = true
+                    )
+                    if (squatReps >= target) {
+                        finished = true
+                        val data = intent.apply {
+                            putExtra(EXTRA_COUNT, squatReps)
+                            putExtra(EXTRA_COMPLETED, true)
+                        }
+                        setResult(RESULT_OK, data)
+                        finish()
+                    }
+                }
+            }
+        }
+        (findViewById<FrameLayout>(android.R.id.content).getChildAt(0) as? FrameLayout)?.addView(testButton)
+
         val options = AccuratePoseDetectorOptions.Builder()
             .setDetectorMode(AccuratePoseDetectorOptions.STREAM_MODE)
             .build()
@@ -195,19 +266,37 @@ class CameraMissionActivity : ComponentActivity() {
             val image = InputImage.fromMediaImage(media, rotationDegrees)
             detector.process(image)
                 .addOnSuccessListener { pose ->
+                    val leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
+                    val rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP)
+                    val nose = pose.getPoseLandmark(PoseLandmark.NOSE)
+                    val leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+                    val rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
+
+                    val isUserDetected = (nose?.inFrameLikelihood ?: 0f) > 0.35f ||
+                            (leftShoulder?.inFrameLikelihood ?: 0f) > 0.35f ||
+                            (rightShoulder?.inFrameLikelihood ?: 0f) > 0.35f ||
+                            (leftHip?.inFrameLikelihood ?: 0f) > 0.35f ||
+                            (rightHip?.inFrameLikelihood ?: 0f) > 0.35f
+
                     val knee = kneeAngle(
-                        pose.getPoseLandmark(PoseLandmark.LEFT_HIP),
+                        leftHip,
                         pose.getPoseLandmark(PoseLandmark.LEFT_KNEE),
                         pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE),
                     ) ?: kneeAngle(
-                        pose.getPoseLandmark(PoseLandmark.RIGHT_HIP),
+                        rightHip,
                         pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE),
                         pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE),
                     )
                     if (finished) return@addOnSuccessListener
                     if (knee == null) {
                         missing += 1
-                        val msg = if (missing > 15) "Step back & face camera" else "Detecting..."
+                        val msg = if (!isUserDetected) {
+                            "Step into camera frame"
+                        } else if (missing > 15) {
+                            "Step back to show legs"
+                        } else {
+                            "Detecting legs..."
+                        }
                         overlay.updatePose(
                             pose = pose,
                             imgWidth = image.width,
@@ -216,21 +305,32 @@ class CameraMissionActivity : ComponentActivity() {
                             phase = msg,
                             reps = squatReps,
                             target = target,
-                            kneeAngle = null
+                            kneeAngle = null,
+                            isUserDetected = isUserDetected,
+                            isSquatSuccess = false
                         )
                         return@addOnSuccessListener
                     }
                     missing = 0
+                    var isSquatSuccess = false
                     when (phase) {
-                        "Standing" -> if (knee < 150) phase = "Descending"
+                        "Standing" -> if (knee < 145) phase = "Descending"
                         "Descending" -> when {
-                            knee < 95 -> phase = "Good Squat ✓"
+                            knee < 100 -> {
+                                phase = "Good Squat ✓"
+                                isSquatSuccess = true
+                                triggerHapticFeedback(false)
+                            }
                             knee > 165 -> phase = "Standing"
                         }
-                        "Good Squat ✓" -> if (knee > 120) phase = "Ascending"
-                        "Ascending" -> if (knee > 160) {
+                        "Good Squat ✓" -> {
+                            isSquatSuccess = true
+                            if (knee > 120) phase = "Ascending"
+                        }
+                        "Ascending" -> if (knee > 155) {
                             phase = "Standing"
                             squatReps += 1
+                            triggerHapticFeedback(squatReps >= target)
                         }
                     }
 
@@ -242,7 +342,9 @@ class CameraMissionActivity : ComponentActivity() {
                         phase = phase,
                         reps = squatReps,
                         target = target,
-                        kneeAngle = knee
+                        kneeAngle = knee,
+                        isUserDetected = isUserDetected,
+                        isSquatSuccess = isSquatSuccess
                     )
 
                     if (squatReps >= target) {
@@ -261,18 +363,30 @@ class CameraMissionActivity : ComponentActivity() {
     }
 
     private fun kneeAngle(hip: PoseLandmark?, knee: PoseLandmark?, ankle: PoseLandmark?): Double? {
-        if (hip == null || knee == null || ankle == null) return null
-        if (min(hip.inFrameLikelihood, min(knee.inFrameLikelihood, ankle.inFrameLikelihood)) < 0.45f) {
+        if (hip == null || knee == null) return null
+        if (min(hip.inFrameLikelihood, knee.inFrameLikelihood) < 0.30f) {
             return null
         }
-        val abx = hip.position.x - knee.position.x
-        val aby = hip.position.y - knee.position.y
-        val cbx = ankle.position.x - knee.position.x
-        val cby = ankle.position.y - knee.position.y
-        val mag = hypot(abx.toDouble(), aby.toDouble()) * hypot(cbx.toDouble(), cby.toDouble())
-        if (mag == 0.0) return null
-        val dot = abx * cbx + aby * cby
-        return Math.toDegrees(acos((dot / mag).coerceIn(-1.0, 1.0)))
+        if (ankle != null && ankle.inFrameLikelihood >= 0.30f) {
+            val abx = hip.position.x - knee.position.x
+            val aby = hip.position.y - knee.position.y
+            val cbx = ankle.position.x - knee.position.x
+            val cby = ankle.position.y - knee.position.y
+            val mag = hypot(abx.toDouble(), aby.toDouble()) * hypot(cbx.toDouble(), cby.toDouble())
+            if (mag > 0.0) {
+                val dot = abx * cbx + aby * cby
+                return Math.toDegrees(acos((dot / mag).coerceIn(-1.0, 1.0)))
+            }
+        }
+        // Fallback when ankles/feet are below camera frame: use thigh vertical angle
+        val dx = (knee.position.x - hip.position.x).toDouble()
+        val dy = (knee.position.y - hip.position.y).toDouble()
+        if (dy != 0.0) {
+            val angleFromVertical = Math.toDegrees(kotlin.math.atan2(kotlin.math.abs(dx), dy))
+            val approxKnee = 180.0 - (angleFromVertical * 1.3).coerceIn(0.0, 95.0)
+            return approxKnee
+        }
+        return null
     }
 
     private fun finishCancelled(reason: String) {
@@ -308,13 +422,19 @@ class PoseGraphicOverlay(context: Context) : View(context) {
     private var isFrontFacing: Boolean = true
     private var phaseText: String = "Standing"
     private var repCount: Int = 0
-    private var targetReps: Int = 10
+    private var targetReps: Int = 3
     private var kneeAngleDeg: Double? = null
+    private var userDetected: Boolean = false
+    private var squatSuccess: Boolean = false
 
-    // Bright Cyan Lines matching user reference image
+    fun getCurrentPose(): Pose? = synchronized(lock) { currentPose }
+    fun getImageWidth(): Int = synchronized(lock) { imageWidth }
+    fun getImageHeight(): Int = synchronized(lock) { imageHeight }
+
+    // Dynamic Lines matching user reference image
     private val linePaint = Paint().apply {
         color = 0xFF00E5FF.toInt()
-        strokeWidth = 12f
+        strokeWidth = 14f
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
@@ -328,10 +448,10 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         isAntiAlias = true
     }
 
-    // Cyan Border around Yellow Dots
+    // Cyan/Green Border around Yellow Dots
     private val dotBorderPaint = Paint().apply {
         color = 0xFF00E5FF.toInt()
-        strokeWidth = 4f
+        strokeWidth = 5f
         style = Paint.Style.STROKE
         isAntiAlias = true
     }
@@ -339,7 +459,7 @@ class PoseGraphicOverlay(context: Context) : View(context) {
     // Top Title Paint matching "Output: Squat"
     private val hudTitlePaint = Paint().apply {
         color = 0xFF00E5FF.toInt()
-        textSize = 58f
+        textSize = 54f
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         isAntiAlias = true
         setShadowLayer(8f, 2f, 2f, 0xFF000000.toInt())
@@ -348,32 +468,53 @@ class PoseGraphicOverlay(context: Context) : View(context) {
     // Subtitle Text Paint
     private val hudSubtitlePaint = Paint().apply {
         color = 0xFFFFFFFF.toInt()
-        textSize = 40f
+        textSize = 38f
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         isAntiAlias = true
         setShadowLayer(6f, 2f, 2f, 0xFF000000.toInt())
     }
 
-    // Angle Annotation Paint (red pen style as user drew)
-    private val anglePaint = Paint().apply {
-        color = 0xFFFF1744.toInt()
-        textSize = 34f
+    // Status Indicator Paint
+    private val hudStatusPaint = Paint().apply {
+        color = 0xFF00E676.toInt()
+        textSize = 32f
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         isAntiAlias = true
         setShadowLayer(4f, 1f, 1f, 0xFF000000.toInt())
     }
 
+    // Angle Annotation Paint (green when squatting, red when standing)
+    private val anglePaint = Paint().apply {
+        color = 0xFFFF1744.toInt()
+        textSize = 36f
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        isAntiAlias = true
+        setShadowLayer(6f, 1f, 1f, 0xFF000000.toInt())
+    }
+
     // Frosted Card Background
     private val hudCardPaint = Paint().apply {
-        color = 0xAA000000.toInt()
+        color = 0xBB000000.toInt()
         style = Paint.Style.FILL
         isAntiAlias = true
     }
 
     private val hudCardBorder = Paint().apply {
-        color = 0x5500E5FF.toInt()
-        strokeWidth = 3f
+        color = 0x6600E5FF.toInt()
+        strokeWidth = 4f
         style = Paint.Style.STROKE
+        isAntiAlias = true
+    }
+
+    private val hudProgressBarBg = Paint().apply {
+        color = 0x44FFFFFF.toInt()
+        style = Paint.Style.FILL
+        isAntiAlias = true
+    }
+
+    private val hudProgressBarFill = Paint().apply {
+        color = 0xFF00E676.toInt()
+        style = Paint.Style.FILL
         isAntiAlias = true
     }
 
@@ -385,7 +526,9 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         phase: String,
         reps: Int,
         target: Int,
-        kneeAngle: Double?
+        kneeAngle: Double?,
+        isUserDetected: Boolean = false,
+        isSquatSuccess: Boolean = false,
     ) {
         synchronized(lock) {
             currentPose = pose
@@ -396,6 +539,8 @@ class PoseGraphicOverlay(context: Context) : View(context) {
             repCount = reps
             targetReps = target
             kneeAngleDeg = kneeAngle
+            userDetected = isUserDetected
+            squatSuccess = isSquatSuccess
         }
         postInvalidate()
     }
@@ -410,6 +555,8 @@ class PoseGraphicOverlay(context: Context) : View(context) {
         val reps: Int
         val target: Int
         val angle: Double?
+        val isDetected: Boolean
+        val isSuccess: Boolean
 
         synchronized(lock) {
             pose = currentPose
@@ -420,19 +567,56 @@ class PoseGraphicOverlay(context: Context) : View(context) {
             reps = repCount
             target = targetReps
             angle = kneeAngleDeg
+            isDetected = userDetected
+            isSuccess = squatSuccess
         }
 
-        // Draw HUD Header Badge ("Output: Squat" as in user screenshot)
-        val cardLeft = 36f
-        val cardTop = 80f
-        val cardRight = width - 36f
-        val cardBottom = 250f
+        val isSquatActive = isSuccess || phase == "Good Squat ✓"
+
+        // Dynamic Line & Border Colors: Turns neon green when user performs a squat
+        if (isSquatActive) {
+            linePaint.color = 0xFF00E676.toInt() // Neon Green
+            dotBorderPaint.color = 0xFF00E676.toInt()
+            hudCardBorder.color = 0xFF00E676.toInt()
+            hudTitlePaint.color = 0xFF00E676.toInt()
+            anglePaint.color = 0xFF00E676.toInt()
+        } else {
+            linePaint.color = 0xFF00E5FF.toInt() // Cyan
+            dotBorderPaint.color = 0xFF00E5FF.toInt()
+            hudCardBorder.color = 0x6600E5FF.toInt()
+            hudTitlePaint.color = 0xFF00E5FF.toInt()
+            anglePaint.color = 0xFFFF1744.toInt()
+        }
+
+        // Draw HUD Header Badge
+        val cardLeft = 32f
+        val cardTop = 70f
+        val cardRight = width - 32f
+        val cardBottom = 280f
         canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 32f, 32f, hudCardPaint)
         canvas.drawRoundRect(cardLeft, cardTop, cardRight, cardBottom, 32f, 32f, hudCardBorder)
 
-        canvas.drawText("Output: Squat", cardLeft + 32f, cardTop + 68f, hudTitlePaint)
+        val titleText = if (isSquatActive) "Output: Squat  ✅ SQUAT DETECTED!" else "Output: Squat"
+        canvas.drawText(titleText, cardLeft + 28f, cardTop + 58f, hudTitlePaint)
+
         val angleLabel = if (angle != null) " • Knee: ${angle.toInt()}°" else ""
-        canvas.drawText("Squats: $reps / $target ($phase)$angleLabel", cardLeft + 32f, cardTop + 132f, hudSubtitlePaint)
+        canvas.drawText("Squats: $reps / $target ($phase)$angleLabel", cardLeft + 28f, cardTop + 116f, hudSubtitlePaint)
+
+        val statusText = if (isDetected) "🟢 USER DETECTED" else "🟡 STEP INTO CAMERA FRAME"
+        hudStatusPaint.color = if (isDetected) 0xFF00E676.toInt() else 0xFFFFD54F.toInt()
+        canvas.drawText(statusText, cardLeft + 28f, cardTop + 162f, hudStatusPaint)
+
+        // Progress Bar
+        val barTop = cardBottom - 24f
+        val barBottom = cardBottom - 12f
+        val barLeft = cardLeft + 28f
+        val barRight = cardRight - 28f
+        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, 6f, 6f, hudProgressBarBg)
+        val progressPct = (reps.toFloat() / target.coerceAtLeast(1)).coerceIn(0f, 1f)
+        val fillRight = barLeft + (barRight - barLeft) * progressPct
+        if (progressPct > 0f) {
+            canvas.drawRoundRect(barLeft, barTop, fillRight, barBottom, 6f, 6f, hudProgressBarFill)
+        }
 
         if (pose == null || imgW <= 0 || imgH <= 0) return
 

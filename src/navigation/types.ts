@@ -32,7 +32,7 @@ export type RootStackParamList = {
   AlarmRinging: { id?: string } | undefined;
   SnoozeCountdown: { alarmId: string; intervalMin: number; wallpaper?: string };
   MathMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  ShakeMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  ShakeMission: { alarmId?: string; missionIndex?: number; missions?: string[]; shakeTarget?: number } | undefined;
   StepMission: { alarmId?: string; missionIndex?: number; missions?: string[]; stepTarget?: number } | undefined;
   PhotoMission: {
     alarmId?: string;

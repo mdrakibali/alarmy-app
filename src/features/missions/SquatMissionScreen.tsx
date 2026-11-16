@@ -18,7 +18,7 @@ import { proceedToNextMission } from './missionNavigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'SquatMission'>;
 
 export function SquatMissionScreen({ navigation, route }: Props) {
-  const target = route.params?.squatTarget ?? 10;
+  const target = route.params?.squatTarget ?? 3;
   const insets = useAppInsets();
   const logAlarmDismissed = useReportStore(s => s.logAlarmDismissed);
 
@@ -71,6 +71,22 @@ export function SquatMissionScreen({ navigation, route }: Props) {
 
   const [poseBlocked, setPoseBlocked] = useState(false);
 
+  const handleSimulateSquat = () => {
+    try {
+      Vibration.vibrate(60);
+    } catch {}
+    setSquatsDone(prev => {
+      const next = prev + 1;
+      if (next >= target) {
+        setTimeout(() => {
+          completeMission();
+        }, 150);
+        return target;
+      }
+      return next;
+    });
+  };
+
   const startPose = useCallback(async () => {
     const result = await NativeAlarm.openCameraMission({ mode: 'squat', target });
     if (result?.completed) {
@@ -115,16 +131,36 @@ export function SquatMissionScreen({ navigation, route }: Props) {
 
         {/* Center Progress Visual */}
         <View className="items-center justify-center my-6">
-          <View className="h-60 w-60 rounded-full border-8 border-primary/20 bg-white/95 items-center justify-center shadow-xl relative">
-            <Text className="text-6xl font-black text-navy">
+          <View
+            className={`h-60 w-60 rounded-full border-8 ${
+              squatsDone >= target
+                ? 'border-emerald-500 bg-emerald-50/90'
+                : squatsDone > 0
+                ? 'border-emerald-400 bg-white/95'
+                : 'border-primary/20 bg-white/95'
+            } items-center justify-center shadow-xl relative`}
+          >
+            <Text
+              className={`text-6xl font-black ${
+                squatsDone >= target ? 'text-emerald-600' : 'text-navy'
+              }`}
+            >
               {squatsDone}
             </Text>
             <Text className="text-sm font-bold text-subtext mt-1">
               / {target} SQUATS
             </Text>
-            <View className="mt-3 px-3 py-1 rounded-full bg-ice">
-              <Text className="text-xs font-black text-primary">
-                {progressPct}% Completed
+            <View
+              className={`mt-3 px-3 py-1 rounded-full ${
+                squatsDone >= target ? 'bg-emerald-100' : 'bg-ice'
+              }`}
+            >
+              <Text
+                className={`text-xs font-black ${
+                  squatsDone >= target ? 'text-emerald-700' : 'text-primary'
+                }`}
+              >
+                {squatsDone >= target ? 'DONE ✓' : `${progressPct}% Completed`}
               </Text>
             </View>
           </View>
@@ -140,10 +176,20 @@ export function SquatMissionScreen({ navigation, route }: Props) {
 
           <Pressable
             onPress={startPose}
-            className="w-full bg-primary py-4 rounded-2xl items-center shadow-md mb-3 active:bg-primary-dark"
+            className="w-full bg-primary py-4 rounded-2xl items-center shadow-md mb-2 active:bg-primary-dark"
           >
             <Text className="text-white text-base font-black tracking-wide">
               {poseBlocked ? 'Open front camera again' : 'Front camera is opening'}
+            </Text>
+          </Pressable>
+
+          {/* Quick simulation button for testing */}
+          <Pressable
+            onPress={handleSimulateSquat}
+            className="w-full bg-emerald-600 py-3 rounded-2xl items-center shadow-xs mb-3 active:bg-emerald-700"
+          >
+            <Text className="text-white text-xs font-black uppercase tracking-wider">
+              ⚡ +1 Squat (Quick Test)
             </Text>
           </Pressable>
           <Text className="text-xs font-bold text-subtext text-center">

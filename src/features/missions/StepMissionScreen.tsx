@@ -3,6 +3,7 @@ import {
   BackHandler,
   PermissionsAndroid,
   Platform,
+  Pressable,
   Text,
   Vibration,
   View,
@@ -18,13 +19,29 @@ import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StepMission'>;
 
-const DEFAULT_STEPS = 20;
+const DEFAULT_STEPS = 5;
 
 export function StepMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const target = route.params?.stepTarget ?? DEFAULT_STEPS;
   const [stepsWalked, setStepsWalked] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const handleSimulateStep = () => {
+    try {
+      Vibration.vibrate(50);
+    } catch {}
+    setStepsWalked(prev => {
+      const next = prev + 1;
+      if (next >= target) {
+        setTimeout(() => {
+          completeMission();
+        }, 150);
+        return target;
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
@@ -148,11 +165,19 @@ export function StepMissionScreen({ navigation, route }: Props) {
         </View>
 
         {/* Step Button / Walking Sensor Trigger */}
-        <View className="items-center mb-4 px-2">
+        <View className="items-center w-full mb-4 px-2">
+          <Pressable
+            onPress={handleSimulateStep}
+            className="w-full bg-emerald-600 py-3 rounded-2xl items-center shadow-xs mb-3 active:bg-emerald-700"
+          >
+            <Text className="text-white text-xs font-black uppercase tracking-wider">
+              ⚡ +1 Step (Quick Test)
+            </Text>
+          </Pressable>
           <Text className="text-xs font-bold text-subtext text-center">
             {sensorMissing
-              ? 'This phone has no step counter. The mission cannot be completed by tapping.'
-              : 'Walk with the phone. Steps come from the step counter sensor.'}
+              ? 'Sensor missing or disabled. Tap Quick Test above to step.'
+              : 'Walk with phone or tap Quick Test above for testing.'}
           </Text>
         </View>
       </View>
@@ -161,7 +186,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
       <CustomConfirmModal
         visible={showSuccessModal}
         title="Mission Complete! 🚶"
-        message="20 steps completed! You are up and out of bed. Great job!"
+        message={`${target} steps completed! You are up and out of bed. Great job!`}
         confirmText="Start My Day ☀️"
         icon="👟"
         onConfirm={() => {

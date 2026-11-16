@@ -66,7 +66,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
   const missionIndex = route.params?.missionIndex ?? 0;
   const allMissions = route.params?.missions ?? [];
 
-  const TOTAL_PROBLEMS = 3;
+  const TOTAL_PROBLEMS = 2;
   const [problemIndex, setProblemIndex] = useState(0);
   const [currentProblem, setCurrentProblem] = useState<MathProblem>(() =>
     generateProblem(),
