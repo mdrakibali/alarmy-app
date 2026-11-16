@@ -455,7 +455,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       <CustomConfirmModal
         visible={showActivatedModal}
         title="Alarm Activated! 🎉"
-        message={`Your smart alarm is scheduled for ${time} ${period}. Alarmy will wake you up reliably!`}
+        message={`Your smart alarm is scheduled for ${time} ${period}. Alba will wake you up reliably!`}
         icon="🚀"
         confirmText="Let's Go!"
         onConfirm={handleGoHome}

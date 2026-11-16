@@ -146,8 +146,8 @@ export function TypingMissionScreen({ navigation, route }: Props) {
         >
           {/* Header */}
           <View className="items-center">
-            <View className="px-3 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30 mb-2">
-              <Text className="text-[#4E7D5B] font-extrabold text-[11px] uppercase tracking-wider">
+            <View className="px-3 py-1 rounded-full bg-[#EEF4FF] border border-[#1652E6]/25 mb-2">
+              <Text className="text-[#1652E6] font-extrabold text-[11px] uppercase tracking-wider">
                 Typing Wake-up Mission ⌨️
               </Text>
             </View>
@@ -174,7 +174,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
                 <View
                   style={{ width: `${progressPercent}%` }}
                   className={`h-full ${
-                    isMatched ? 'bg-emerald-500' : 'bg-[#4E7D5B]'
+                    isMatched ? 'bg-emerald-500' : 'bg-[#1652E6]'
                   }`}
                 />
               </View>

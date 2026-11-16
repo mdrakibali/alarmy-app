@@ -115,11 +115,11 @@ export function DaypartHeader({
         </Animated.View>
       </View>
       <View className="px-4 pb-4 -mt-2">
-        <Text className="text-2xl font-black text-[#1A2E22]">{theme.title}</Text>
-        <Text className="text-sm text-[#5E7166] mt-0.5">
+        <Text className="text-2xl font-black text-[#08173E]">{theme.title}</Text>
+        <Text className="text-sm text-[#556889] mt-0.5">
           {dateLabel} · {clock}
         </Text>
-        <Text className="text-sm font-bold text-[#6B8F71] mt-2">
+        <Text className="text-sm font-bold text-[#1652E6] mt-2">
           {countdown ? `Next alarm in ${countdown}` : 'No upcoming alarm'}
         </Text>
       </View>
@@ -139,7 +139,7 @@ function Cloud({ cx, cy, fill }: { cx: number; cy: number; fill: string }) {
 
 function Birds() {
   return (
-    <G stroke="#1A2E22" strokeWidth="1.4" fill="none">
+    <G stroke="#08173E" strokeWidth="1.4" fill="none">
       <Path d="M150 58 q6 -6 12 0 q6 -6 12 0" />
       <Path d="M176 46 q5 -5 10 0 q5 -5 10 0" />
     </G>
