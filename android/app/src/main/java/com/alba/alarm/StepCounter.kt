@@ -1,150 +1,100 @@
 package com.alba.alarm
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import kotlin.math.sqrt
+import android.os.Build
+import android.os.SystemClock
 
 class StepCounter(
-    context: Context,
+    private val context: Context,
     private val onSteps: (Int) -> Unit,
     private val onUnavailable: () -> Unit,
 ) : SensorEventListener {
+
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
-    private val stepDetectorSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
-    private val stepCounterSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-    private val accelSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-
-    private var activeSensor: Sensor? = null
-    private var baseline: Float? = null
-    private var detectedSteps = 0
-
-    // Human walking gait analysis (filters out bed shaking, phone tilting, and casual hand movement)
-    private var gravityX = 0f
-    private var gravityY = 9.8f
-    private var gravityZ = 0f
-    private var hasGravityInit = false
-
-    private var isWaveHigh = false
-    private var lastStepTimeMs = 0L
-    private var consecutiveStrides = 0
+    private val walkCounter = WalkCounter()
+    private var isListening = false
+    private var totalSteps = 0
+    private var lastDetectorStep = -1L
+    private var listeningSince = 0L
 
     fun start(): Boolean {
         if (sensorManager == null) {
             onUnavailable()
             return false
         }
+        if (isListening) return true
 
-        // Prioritize real-time hardware walking detector: STEP_DETECTOR -> STEP_COUNTER -> ACCELEROMETER
-        val candidate = stepDetectorSensor ?: stepCounterSensor ?: accelSensor
-        if (candidate == null) {
+        walkCounter.resetAll()
+        totalSteps = 0
+        lastDetectorStep = -1L
+        listeningSince = SystemClock.elapsedRealtime()
+
+        val hasActivityPermission = Build.VERSION.SDK_INT < 29 ||
+                context.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED
+
+        val stepDetector = if (hasActivityPermission) {
+            sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
+        } else null
+
+        isListening = try {
+            stepDetector != null && sensorManager.registerListener(
+                this,
+                stepDetector,
+                SensorManager.SENSOR_DELAY_NORMAL,
+            )
+        } catch (_: SecurityException) {
+            false
+        }
+
+        if (!isListening) {
+            val accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            isListening = accel != null && sensorManager.registerListener(
+                this,
+                accel,
+                20_000, // 50 Hz
+            )
+        }
+
+        if (!isListening) {
             onUnavailable()
             return false
         }
-
-        activeSensor = candidate
-        val rate = if (candidate.type == Sensor.TYPE_ACCELEROMETER) {
-            SensorManager.SENSOR_DELAY_GAME
-        } else {
-            SensorManager.SENSOR_DELAY_FASTEST
-        }
-
-        val ok = sensorManager.registerListener(this, candidate, rate)
-        if (!ok) {
-            onUnavailable()
-        }
-        return ok
+        return true
     }
 
     fun stop() {
+        if (!isListening) return
         sensorManager?.unregisterListener(this)
-        hasGravityInit = false
-        consecutiveStrides = 0
-        isWaveHigh = false
+        isListening = false
+        walkCounter.resetMotion()
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        when (event.sensor.type) {
-            Sensor.TYPE_STEP_DETECTOR -> {
-                // Hardware step detector: ASIC calibrated by Android & chip manufacturer for true human walking steps
-                if (event.values.firstOrNull() == 1.0f) {
-                    detectedSteps += 1
-                    onSteps(detectedSteps)
-                }
+        if (!isListening) return
+        val now = event.timestamp / 1_000_000L
+        if (now < listeningSince) return
+
+        val isStep = if (event.sensor.type == Sensor.TYPE_STEP_DETECTOR) {
+            val val0 = event.values.firstOrNull() ?: 0f
+            if (val0 != 1f || (lastDetectorStep >= 0 && now - lastDetectorStep < 250L)) {
+                false
+            } else {
+                lastDetectorStep = now
+                true
             }
-            Sensor.TYPE_STEP_COUNTER -> {
-                val total = event.values.firstOrNull() ?: return
-                val start = baseline
-                if (start == null) {
-                    baseline = total
-                    onSteps(0)
-                    return
-                }
-                val count = (total - start).toInt().coerceAtLeast(0)
-                if (count > detectedSteps) {
-                    detectedSteps = count
-                    onSteps(detectedSteps)
-                }
-            }
-            Sensor.TYPE_ACCELEROMETER -> {
-                val x = event.values[0]
-                val y = event.values[1]
-                val z = event.values[2]
+        } else {
+            walkCounter.update(event.values[0], event.values[1], event.values[2], now) == 1
+        }
 
-                // 1. Separate Earth gravity vector from dynamic body movement using Low-Pass Filter
-                val alpha = 0.85f
-                if (!hasGravityInit) {
-                    gravityX = x
-                    gravityY = y
-                    gravityZ = z
-                    hasGravityInit = true
-                } else {
-                    gravityX = alpha * gravityX + (1f - alpha) * x
-                    gravityY = alpha * gravityY + (1f - alpha) * y
-                    gravityZ = alpha * gravityZ + (1f - alpha) * z
-                }
-
-                val gMag = sqrt((gravityX * gravityX + gravityY * gravityY + gravityZ * gravityZ).toDouble()).toFloat()
-                if (gMag < 1.0f) return
-
-                // 2. Linear acceleration (body motion without gravity)
-                val linX = x - gravityX
-                val linY = y - gravityY
-                val linZ = z - gravityZ
-
-                // 3. Project dynamic motion onto gravity vector -> True vertical acceleration (heel-strike ground reaction)
-                // Moving phone forward and backward in bed produces negligible vertical acceleration.
-                val verticalAcc = (linX * gravityX + linY * gravityY + linZ * gravityZ) / gMag
-
-                val now = System.currentTimeMillis()
-                val dt = now - lastStepTimeMs
-
-                // 4. Human walking gait cadence window (330ms to 1150ms per step, equivalent to 0.9Hz - 3.0Hz)
-                if (verticalAcc > 1.35f && !isWaveHigh) {
-                    if (dt in 330..1150) {
-                        consecutiveStrides++
-                        isWaveHigh = true
-                        lastStepTimeMs = now
-
-                        // Anti-cheat: Require at least 2 consecutive rhythmic strides before committing steps
-                        if (consecutiveStrides >= 2) {
-                            val add = if (consecutiveStrides == 2) 2 else 1
-                            detectedSteps += add
-                            onSteps(detectedSteps)
-                        }
-                    } else if (dt > 1150) {
-                        // User paused walking; reset consecutive stride counter
-                        consecutiveStrides = 1
-                        isWaveHigh = true
-                        lastStepTimeMs = now
-                    }
-                } else if (verticalAcc < -0.6f && isWaveHigh) {
-                    // Gait cycle trough (foot lift-off), ready for the next heel strike
-                    isWaveHigh = false
-                }
-            }
+        if (isStep) {
+            totalSteps++
+            onSteps(totalSteps)
         }
     }
 
