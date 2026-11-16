@@ -4,7 +4,8 @@ import { useAlarmStore } from '@/features/alarm/alarmStore';
 import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { NativeAlarm } from '@/native/AlarmModule';
 
-export async function dismissAlarmOnMissionSuccess(alarmId?: string) {
+export async function dismissAlarmOnMissionSuccess(alarmId?: string, isPreview?: boolean) {
+  if (isPreview) return;
   useActiveMissionStore.getState().clearSession();
   if (alarmId) {
     try {
@@ -32,6 +33,7 @@ export interface MissionNavigationExtraParams {
   mathDifficulty?: 'easy' | 'normal' | 'hard';
   memoryPairs?: number;
   typingPhrase?: string;
+  isPreview?: boolean;
 }
 
 export function navigateToMission(
@@ -53,6 +55,7 @@ export function navigateToMission(
     mathDifficulty?: 'easy' | 'normal' | 'hard';
     memoryPairs?: number;
     typingPhrase?: string;
+    isPreview?: boolean;
   },
   action: 'replace' | 'navigate' = 'replace',
 ): boolean {
@@ -72,11 +75,13 @@ export function navigateToMission(
   const mathDifficulty = params.mathDifficulty ?? alarm?.mathDifficulty ?? 'normal';
   const memoryPairs = params.memoryPairs ?? alarm?.memoryPairs ?? 6;
   const typingPhrase = params.typingPhrase ?? alarm?.typingPhrase;
+  const isPreview = Boolean(params.isPreview);
 
   const baseParams = {
     alarmId: params.alarmId,
     missionIndex: params.missionIndex,
     missions: params.missions,
+    isPreview,
   };
 
   const navFn = (screen: any, params: any) =>

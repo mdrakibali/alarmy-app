@@ -15,69 +15,128 @@ export const MISSION_LABEL: Record<MissionType, string> = {
   blink: 'Blink / Smile',
 };
 
-export const MISSION_DETAILS: Record<
-  MissionType,
-  { title: string; desc: string; icon: string; badge: string }
-> = {
+export interface MissionInfo {
+  title: string;
+  desc: string;
+  icon: string;
+  badge: string;
+  category: 'Cognitive' | 'Physical' | 'Out of Bed' | 'AI & Vision';
+  difficulty: number;
+  howItWorks: string;
+  whyItWorks: string;
+  recommendedFor: string;
+}
+
+export const MISSION_DETAILS: Record<MissionType, MissionInfo> = {
   math: {
     title: 'Math Mission',
-    desc: 'Solve simple to complex math problems to wake your brain up',
+    desc: 'Solve arithmetic equations to stimulate executive function and mental clarity.',
     icon: '🧠',
     badge: 'POPULAR',
-  },
-  flip: {
-    title: 'Flip Phone',
-    desc: 'Turn your phone upside down and back to dismiss',
-    icon: '🔄',
-    badge: 'ICONIC',
-  },
-  blink: {
-    title: 'Blink Eyes',
-    desc: 'Face the camera and blink 5 times to prove you are awake',
-    icon: '👁️',
-    badge: 'SMART AI',
+    category: 'Cognitive',
+    difficulty: 3,
+    howItWorks: 'Solve 1 to 10 randomly generated arithmetic problems (+, −, ×). Wrong answers generate a fresh problem.',
+    whyItWorks: 'Forces the prefrontal cortex out of sleep inertia through active numerical calculation.',
+    recommendedFor: 'Heavy sleepers with intense morning brain fog.',
   },
   shake: {
     title: 'Shake Mission',
-    desc: 'Shake your phone up to 50 times to get your blood flowing',
+    desc: 'Vigorously shake your phone 20–50 times to get adrenaline pumping.',
     icon: '📱',
     badge: 'ACTIVE',
-  },
-  qr: {
-    title: 'QR / Barcode',
-    desc: 'Leave bed and scan a barcode (e.g. toothpaste in bathroom)',
-    icon: '📷',
-    badge: 'UNBEATABLE',
-  },
-  memory: {
-    title: 'Memory Game',
-    desc: 'Flip and match card pairs to build morning focus',
-    icon: '🧩',
-    badge: 'BRAIN',
-  },
-  typing: {
-    title: 'Typing Mission',
-    desc: 'Type motivational affirmations accurately',
-    icon: '⌨️',
-    badge: 'EASY',
-  },
-  photo: {
-    title: 'Photo Mission',
-    desc: 'Take a photo of a registered place or object in your room',
-    icon: '📸',
-    badge: 'HARD',
-  },
-  squat: {
-    title: 'Squat Mission',
-    desc: 'Perform 10 morning squats to wake up your body',
-    icon: '🏋️',
-    badge: 'FITNESS',
+    category: 'Physical',
+    difficulty: 2,
+    howItWorks: 'Hold phone firmly and shake with rhythmic arm motion. Real-time accelerometer tracks shakes.',
+    whyItWorks: 'Rapid physical movement elevates heart rate and releases wakefulness hormones immediately.',
+    recommendedFor: 'Anyone who snoozes unconsciously with their eyes closed.',
   },
   step: {
     title: 'Step Mission',
-    desc: 'Walk 30 steps away from bed',
+    desc: 'Walk 10–50 steps to physically get out of your bed and onto your feet.',
     icon: '🚶',
-    badge: 'ACTIVE',
+    badge: 'MUST-HAVE',
+    category: 'Out of Bed',
+    difficulty: 3,
+    howItWorks: 'Step out of bed and walk. Accelerometer & step sensors count your natural paces in real time.',
+    whyItWorks: 'Walking 30 steps forces you out of your bedroom, breaking the physical comfort of your blanket.',
+    recommendedFor: 'People who fall right back asleep after turning off normal alarms.',
+  },
+  squat: {
+    title: 'Squat Mission',
+    desc: 'Perform 5–20 morning squats holding your phone for blood circulation.',
+    icon: '🏋️',
+    badge: 'FITNESS',
+    category: 'Physical',
+    difficulty: 4,
+    howItWorks: 'Stand upright, hold phone to chest, and perform deep squats. Accelerometer verifies vertical movement.',
+    whyItWorks: 'Activates large quad and glute muscles, pumping oxygenated blood directly to the brain.',
+    recommendedFor: 'Fitness enthusiasts and individuals seeking an instant burst of morning energy.',
+  },
+  photo: {
+    title: 'Photo Mission',
+    desc: 'Take a matching photograph of a registered object away from bed (e.g. bathroom sink).',
+    icon: '📸',
+    badge: 'HARD',
+    category: 'Out of Bed',
+    difficulty: 5,
+    howItWorks: 'Register a photo once (e.g. bathroom tap). In the morning, walk over and snap the exact same scene.',
+    whyItWorks: 'Impossible to cheat from bed. Requires standing up, turning on lights, and walking to another room.',
+    recommendedFor: 'Extreme deep sleepers who need a 100% foolproof wake-up method.',
+  },
+  qr: {
+    title: 'QR / Barcode',
+    desc: 'Scan a physical barcode or QR code on an object far from bed (toothpaste, book).',
+    icon: '📷',
+    badge: 'UNBEATABLE',
+    category: 'Out of Bed',
+    difficulty: 5,
+    howItWorks: 'Register any barcode (e.g. toothpaste tube). Scan that barcode in the morning to stop ringing.',
+    whyItWorks: 'Forces you to physically reach the bathroom or kitchen sink with eyes open and lights on.',
+    recommendedFor: 'Chronic snoozers who need a guaranteed trip to the bathroom sink.',
+  },
+  memory: {
+    title: 'Memory Game',
+    desc: 'Flip cards and find pairs to stimulate short-term memory and focus.',
+    icon: '🧩',
+    badge: 'BRAIN',
+    category: 'Cognitive',
+    difficulty: 3,
+    howItWorks: 'Grid of cards is displayed face down. Flip 2 at a time to find all matching symbols.',
+    whyItWorks: 'Engages working memory and visual pattern recognition, banishing morning drowsiness.',
+    recommendedFor: 'People who wake up groggy and need a gentle cognitive challenge.',
+  },
+  typing: {
+    title: 'Typing Mission',
+    desc: 'Type uplifting motivational morning affirmations accurately.',
+    icon: '⌨️',
+    badge: 'EASY',
+    category: 'Cognitive',
+    difficulty: 2,
+    howItWorks: 'Type an inspiring morning quote with zero typos. Mistakes require backspacing to correct.',
+    whyItWorks: 'Combines fine motor coordination with positive mindset priming for the day ahead.',
+    recommendedFor: 'Morning mindfulness practitioners and self-improvement focused risers.',
+  },
+  flip: {
+    title: 'Flip Phone',
+    desc: 'Flip phone face-down and face-up repeatedly to break sleep inertia.',
+    icon: '🔄',
+    badge: 'ICONIC',
+    category: 'Physical',
+    difficulty: 2,
+    howItWorks: 'Turn your phone upside-down on a flat surface and flip back up 3 to 15 times.',
+    whyItWorks: 'Simple tactile motor task requiring hand-eye coordination without excessive strain.',
+    recommendedFor: 'Users looking for a quick, intuitive tactile mission that is faster than math.',
+  },
+  blink: {
+    title: 'Blink Eyes',
+    desc: 'Face the front camera and blink repeatedly to alert your optical nerves.',
+    icon: '👁️',
+    badge: 'AI VISION',
+    category: 'AI & Vision',
+    difficulty: 3,
+    howItWorks: 'Look directly into front selfie camera. Optical AI tracks eye closure and counts verified blinks.',
+    whyItWorks: 'Direct light exposure to retina and intentional blinking triggers optical wake pathways.',
+    recommendedFor: 'Anyone whose primary struggle is opening their eyes in the dark.',
   },
 };
 
