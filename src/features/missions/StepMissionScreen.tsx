@@ -95,11 +95,11 @@ export function StepMissionScreen({ navigation, route }: Props) {
     setStepsWalked(prev => {
       const next = Math.max(prev, count);
       useActiveMissionStore.getState().updateSubProgress(next);
-      if (next >= target) {
-        completeMission();
-      }
       return next;
     });
+    if (count >= target) {
+      completeMission();
+    }
   }, [completeMission, target]);
 
   const [sensorMissing, setSensorMissing] = useState(false);

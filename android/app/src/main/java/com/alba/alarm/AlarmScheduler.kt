@@ -238,7 +238,7 @@ object AlarmScheduler {
             .setOngoing(true)
             .setAutoCancel(false)
             .setContentIntent(openPendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Dismiss Alarm", dismissPendingIntent)
+            .addAction(android.R.drawable.ic_media_play, "Start Mission ⚡", openPendingIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 

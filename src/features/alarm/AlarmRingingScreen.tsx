@@ -7,7 +7,7 @@ import { useReportStore } from '@/storage/reportStore';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BackHandler,
   StyleSheet,
@@ -71,9 +71,23 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
   const snoozeAlarmInStore = useAlarmStore(s => s.snoozeAlarm);
 
   const currentAlarmId = alarmId || activeInfo?.id;
-  const activeSession = useActiveMissionStore(s =>
-    s.getActiveSession(currentAlarmId),
-  );
+  const session = useActiveMissionStore(s => s.session);
+  const activeSession = useMemo(() => {
+    if (!session) return null;
+    if (currentAlarmId && session.alarmId !== currentAlarmId) return null;
+    if (session.activeMissionIndex >= session.missions.length) return null;
+    const currentKey = session.missions[session.activeMissionIndex] ?? null;
+    return {
+      isInProgress: true,
+      alarmId: session.alarmId,
+      currentIndex: session.activeMissionIndex,
+      currentMissionKey: currentKey,
+      completedMissions: session.completedMissions,
+      totalCount: session.missions.length,
+      missions: session.missions,
+      subProgress: session.currentSubProgress ?? 0,
+    };
+  }, [currentAlarmId, session]);
   const isInProgress = Boolean(
     activeSession &&
       activeSession.isInProgress &&

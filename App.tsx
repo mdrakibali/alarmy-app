@@ -25,7 +25,6 @@ import { ToastProvider } from '@/components/ui/AppToast';
 function App() {
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
-  const syncFromNative = useAlarmStore(s => s.syncFromNative);
 
     useEffect(() => {
     // Check if an alarm is already ringing when app opens
@@ -46,18 +45,38 @@ function App() {
 
     checkRingingAlarm();
 
-    // Check if app was cold-started from a snooze notification tap
-    const checkInitialSnooze = async () => {
+    // Check if app has an active snooze countdown running (either from notification tap or direct app open)
+    const checkActiveSnooze = async () => {
+      if (!navigationRef.current) return;
+      const currentRoute = navigationRef.current.getCurrentRoute();
+      if (
+        currentRoute?.name === 'AlarmRinging' ||
+        currentRoute?.name?.endsWith('Mission') ||
+        currentRoute?.name === 'SnoozeCountdown'
+      ) {
+        return;
+      }
+
       const initialSnooze = await NativeAlarm.getInitialSnoozeIntent();
-      if (initialSnooze?.alarmId && navigationRef.current) {
+      if (initialSnooze?.alarmId) {
         navigationRef.current.navigate('SnoozeCountdown', {
           alarmId: initialSnooze.alarmId,
           intervalMin: initialSnooze.intervalMin || 5,
         });
+        return;
+      }
+
+      const activeSnooze = await NativeAlarm.getActiveSnoozedAlarm();
+      if (activeSnooze?.id) {
+        navigationRef.current.navigate('SnoozeCountdown', {
+          alarmId: activeSnooze.id,
+          intervalMin: activeSnooze.snoozeIntervalMin || 5,
+          wallpaper: activeSnooze.wallpaper,
+        });
       }
     };
 
-    checkInitialSnooze();
+    checkActiveSnooze();
 
     // Check permissions on Android
     if (Platform.OS === 'android') {
@@ -78,7 +97,7 @@ function App() {
       });
     }
 
-    syncFromNative().finally(() => {
+    useAlarmStore.getState().syncFromNative().finally(() => {
       useAlarmStore.getState().rescheduleAll();
     });
 
@@ -116,7 +135,7 @@ function App() {
     const sub = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
         checkRingingAlarm();
-        checkInitialSnooze();
+        checkActiveSnooze();
       }
     });
 
@@ -126,7 +145,7 @@ function App() {
       snoozeDismissSub?.remove();
       sub.remove();
     };
-  }, [syncFromNative]);
+  }, []);
 
   return (
     <GestureHandlerRootView className="flex-1">
