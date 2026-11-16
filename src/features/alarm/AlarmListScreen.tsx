@@ -230,7 +230,7 @@ export function AlarmListScreen() {
               <TouchableOpacity
                 onPress={async () => {
                   clearSnooze(activeSnoozeAlarm.id);
-                  await NativeAlarm.cancelAlarm(activeSnoozeAlarm.id);
+                  await NativeAlarm.dismissSnooze(activeSnoozeAlarm.id);
                   setActiveSnoozeAlarm(null);
                 }}
                 className="bg-danger/90 px-4 py-2.5 rounded-xl items-center active:bg-danger"
