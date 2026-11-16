@@ -91,6 +91,7 @@ class CameraMissionActivity : ComponentActivity() {
         const val MODE_PHOTO = "photo"
         const val MODE_BARCODE = "barcode"
         const val MODE_SQUAT = "squat"
+        const val MODE_BLINK = "blink"
         const val MODE_REGISTER_BARCODE = "register_barcode"
         const val MODE_REGISTER_PHOTO = "register_photo"
     }
@@ -195,6 +196,7 @@ class CameraMissionActivity : ComponentActivity() {
         val mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_PHOTO
         when (mode) {
             MODE_SQUAT -> buildSquatFlow()
+            MODE_BLINK -> buildBlinkFlow()
             MODE_BARCODE -> buildBarcodeMissionFlow()
             MODE_REGISTER_BARCODE -> buildBarcodeRegisterFlow()
             MODE_REGISTER_PHOTO -> buildPhotoRegisterFlow()
@@ -444,6 +446,229 @@ class CameraMissionActivity : ComponentActivity() {
             )
         }
         return legs
+    }
+
+    // =========================================================================
+    // 1B. BLINK / EYE-TRACKING MISSION FLOW (ML KIT FACE DETECTION)
+    // =========================================================================
+
+    private fun buildBlinkFlow() {
+        val targetBlinks = intent.getIntExtra(EXTRA_TARGET, 5).coerceAtLeast(1)
+        var blinkCount = 0
+        var wasEyesClosed = false
+        var lastBlinkTimeMs = 0L
+
+        // Top Header Badge
+        val remainingText = TextView(this).apply {
+            text = "$targetBlinks"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 44f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+        val subLabel = TextView(this).apply {
+            text = "blinks left"
+            setTextColor(0xFF9AA3AF.toInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+        val topBadge = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xB310151E.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setPadding(dp(20), dp(10), dp(20), dp(12))
+            addView(remainingText)
+            addView(subLabel)
+        }
+        rootContainer.addView(
+            topBadge,
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
+                setMargins(dp(16), dp(36), 0, 0)
+            },
+        )
+
+        // Center Eye State Pill
+        val eyeStatePill = TextView(this).apply {
+            text = "Look at the front camera 👁️"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xCC1652E6.toInt())
+                cornerRadius = dp(16).toFloat()
+            }
+            setPadding(dp(16), dp(8), dp(16), dp(8))
+        }
+        rootContainer.addView(
+            eyeStatePill,
+            FrameLayout.LayoutParams(-2, -2, Gravity.CENTER_HORIZONTAL or Gravity.TOP).apply {
+                setMargins(0, dp(110), 0, 0)
+            },
+        )
+
+        // Bottom Status Box
+        val statusPill = TextView(this).apply {
+            text = "Position your face in view and blink"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+
+        val progressBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = targetBlinks
+            progress = 0
+            progressTintList = ColorStateList.valueOf(0xFF1652E6.toInt())
+            progressBackgroundTintList = ColorStateList.valueOf(0x33FFFFFF)
+        }
+
+        val bottomCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0xCC10151E.toInt())
+                cornerRadius = dp(24).toFloat()
+            }
+            setPadding(dp(20), dp(14), dp(20), dp(14))
+            addView(statusPill)
+            addView(progressBar, LinearLayout.LayoutParams(-1, dp(8)).apply { topMargin = dp(10) })
+        }
+        rootContainer.addView(
+            bottomCard,
+            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(dp(16), 0, dp(16), dp(36))
+            },
+        )
+
+        // Close Button
+        val closeBtn = TextView(this).apply {
+            text = "✕"
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                setColor(0x80000000.toInt())
+                cornerRadius = dp(20).toFloat()
+            }
+            setOnClickListener { finishCancelled("user_closed") }
+        }
+        rootContainer.addView(
+            closeBtn,
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.TOP or Gravity.END).apply {
+                setMargins(0, dp(36), dp(16), 0)
+            },
+        )
+
+        val providerFuture = ProcessCameraProvider.getInstance(this)
+        providerFuture.addListener({
+            val provider = providerFuture.get()
+            val front = CameraSelector.DEFAULT_FRONT_CAMERA
+            val selector = if (provider.hasCamera(front)) front else CameraSelector.DEFAULT_BACK_CAMERA
+            isFrontCamera = (selector == front)
+
+            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).build()
+            preview.surfaceProvider = previewView.surfaceProvider
+
+            val faceOptions = FaceDetectorOptions.Builder()
+                .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .build()
+            val faceDetector = FaceDetection.getClient(faceOptions)
+
+            val analysis = ImageAnalysis.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                if (isFinished) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val media = imageProxy.image
+                if (media == null) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+                val rotation = imageProxy.imageInfo.rotationDegrees
+                val inputImage = InputImage.fromMediaImage(media, rotation)
+
+                faceDetector.process(inputImage)
+                    .addOnSuccessListener { faces ->
+                        if (isFinished || faces.isEmpty()) return@addOnSuccessListener
+                        val face = faces[0]
+                        val leftOpen = face.leftEyeOpenProbability ?: -1f
+                        val rightOpen = face.rightEyeOpenProbability ?: -1f
+                        if (leftOpen < 0f || rightOpen < 0f) return@addOnSuccessListener
+
+                        val areEyesClosed = leftOpen < 0.25f && rightOpen < 0.25f
+                        val areEyesOpen = leftOpen > 0.65f && rightOpen > 0.65f
+                        val now = SystemClock.elapsedRealtime()
+
+                        if (!wasEyesClosed && areEyesClosed) {
+                            wasEyesClosed = true
+                            mainHandler.post {
+                                if (isFinished) return@post
+                                eyeStatePill.text = "Eyes Closed 🙈"
+                                statusPill.text = "Now open your eyes!"
+                            }
+                        } else if (wasEyesClosed && areEyesOpen) {
+                            if (now - lastBlinkTimeMs > 250) {
+                                wasEyesClosed = false
+                                lastBlinkTimeMs = now
+                                blinkCount++
+                                mainHandler.post {
+                                    if (isFinished) return@post
+                                    playBeep(ToneGenerator.TONE_PROP_BEEP)
+                                    vibrate(60)
+                                    eyeStatePill.text = "Eyes Open 👁️"
+                                    val left = (targetBlinks - blinkCount).coerceAtLeast(0)
+                                    remainingText.text = "$left"
+                                    progressBar.progress = blinkCount
+                                    statusPill.text = if (left == 0) "All blinks verified! ✓" else "Blink count: $blinkCount / $targetBlinks"
+
+                                    if (blinkCount >= targetBlinks) {
+                                        finishSuccessBlink(blinkCount)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .addOnCompleteListener {
+                        imageProxy.close()
+                    }
+            }
+
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, selector, preview, analysis)
+                cameraControl = camera?.cameraControl
+            } catch (e: Exception) {
+                Log.e(TAG, "Blink camera bind failed", e)
+                mainHandler.post { finishCancelled("camera_bind_failed") }
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun finishSuccessBlink(count: Int) {
+        if (isFinished) return
+        isFinished = true
+        playBeep(ToneGenerator.TONE_PROP_BEEP2)
+        vibrate(150)
+
+        mainHandler.postDelayed({
+            val data = Intent().apply {
+                putExtra(EXTRA_COMPLETED, true)
+                putExtra(EXTRA_COUNT, count)
+            }
+            setResult(Activity.RESULT_OK, data)
+            finish()
+        }, 350)
     }
 
     // =========================================================================

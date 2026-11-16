@@ -4,7 +4,6 @@ export type WallpaperCategory =
   | 'Daily Motivation'
   | 'Anime'
   | 'Cute Animals'
-  | 'Funny Memes'
   | 'Nature'
   | 'Aesthetic'
   | 'Galaxy'
@@ -37,7 +36,6 @@ export const WALLPAPER_CATEGORIES: {
   { id: 'Daily Motivation', name: 'Daily Motivation', icon: '🔥' },
   { id: 'Anime', name: 'Anime', icon: '⚡' },
   { id: 'Cute Animals', name: 'Cute Animals', icon: '🐾' },
-  { id: 'Funny Memes', name: 'Funny Memes', icon: '😂' },
   { id: 'Nature', name: 'Nature', icon: '🌿' },
   { id: 'Aesthetic', name: 'Aesthetic', icon: '✨' },
   { id: 'Galaxy', name: 'Galaxy', icon: '🌌' },
@@ -278,48 +276,7 @@ export const WALLPAPERS: WallpaperItem[] = [
     accentColor: '#FDE68A',
   },
 
-  // 6. Funny Memes
-  {
-    id: 'memes_clapping_cat',
-    name: 'Clapping Cat Bravo',
-    title: 'Clapping Cat Bravo',
-    category: 'Funny Memes',
-    source: require('../assets/wallpapers/memes/memes_clapping_cat.gif'),
-    soundId: 'alarm_service_bell',
-    soundName: 'Applause Bell Wake',
-    duration: 'Looping GIF',
-    attribution: 'Tenor / AI Clapping Cat',
-    license: 'Royalty-Free / Tenor Content Agreement',
-    accentColor: '#10B981',
-  },
-  {
-    id: 'memes_funny_parrot',
-    name: 'Rainbow Party Parrot',
-    title: 'Rainbow Party Parrot',
-    category: 'Funny Memes',
-    source: require('../assets/wallpapers/memes/memes_funny_parrot.gif'),
-    soundId: 'alarm_arcade_bleep',
-    soundName: 'Party Beat Bass',
-    duration: 'Looping GIF',
-    attribution: 'Tenor / Cult of the Party Parrot',
-    license: 'Royalty-Free / Tenor Content Agreement',
-    accentColor: '#EC4899',
-  },
-  {
-    id: 'memes_screaming_goat',
-    name: 'Dramatic Screaming Alarm',
-    title: 'Dramatic Screaming Alarm',
-    category: 'Funny Memes',
-    source: require('../assets/wallpapers/memes/memes_screaming_goat.gif'),
-    soundId: 'alarm_fire_bell',
-    soundName: 'Unignorable Screaming Wakeup',
-    duration: 'Looping GIF',
-    attribution: 'Tenor / Dramatic Funny Goat Scream',
-    license: 'Royalty-Free / Tenor Content Agreement',
-    accentColor: '#DC2626',
-  },
-
-  // 7. Nature
+  // 6. Nature
   {
     id: 'nature_mountain_view',
     name: 'Majestic Sunrise Peaks',

@@ -17,6 +17,8 @@ import { MemoryMissionScreen } from '@/features/missions/MemoryMissionScreen';
 import { StepMissionScreen } from '@/features/missions/StepMissionScreen';
 import { PhotoMissionScreen } from '@/features/missions/PhotoMissionScreen';
 import { SquatMissionScreen } from '@/features/missions/SquatMissionScreen';
+import { FlipMissionScreen } from '@/features/missions/FlipMissionScreen';
+import { BlinkMissionScreen } from '@/features/missions/BlinkMissionScreen';
 import { MorningScreen } from '@/features/morning/MorningScreen';
 import { AlarmPreviewScreen } from '@/features/onboarding/AlarmPreviewScreen';
 import { PermissionScreen } from '@/features/onboarding/PermissionScreen';
@@ -236,6 +238,22 @@ export function RootNavigator() {
       <Stack.Screen
         name="SquatMission"
         component={SquatMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="FlipMission"
+        component={FlipMissionScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="BlinkMission"
+        component={BlinkMissionScreen}
         options={{
           headerShown: false,
           gestureEnabled: false,

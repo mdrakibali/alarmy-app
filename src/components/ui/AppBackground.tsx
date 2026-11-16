@@ -7,7 +7,12 @@ import {
   View,
 } from 'react-native';
 
-const MutedLoopVideo = requireNativeComponent<{ src: string; style?: any }>('MutedLoopVideo');
+const MutedLoopVideo = requireNativeComponent<{
+  src: string;
+  muted?: boolean;
+  volume?: number;
+  style?: any;
+}>('MutedLoopVideo');
 import { BACKGROUND_ITEMS } from '@/data/backgrounds';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
@@ -19,6 +24,7 @@ import { BackgroundTarget, useThemeStore } from '@/storage/themeStore';
 interface Props {
   target?: BackgroundTarget;
   backgroundId?: string;
+  videoMuted?: boolean;
   children: React.ReactNode;
   className?: string;
 }
@@ -26,6 +32,7 @@ interface Props {
 export function AppBackground({
   target = 'home',
   backgroundId: overrideId,
+  videoMuted = true,
   children,
   className = '',
 }: Props) {
@@ -137,6 +144,7 @@ export function AppBackground({
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <MutedLoopVideo
             src={videoUri}
+            muted={videoMuted}
             style={[StyleSheet.absoluteFill, { opacity: brightness }]}
           />
         </View>
@@ -147,6 +155,7 @@ export function AppBackground({
         <View
           style={[
             StyleSheet.absoluteFill,
+            // eslint-disable-next-line react-native/no-inline-styles
             {
               width: SCREEN_WIDTH,
               height: SCREEN_HEIGHT,

@@ -135,6 +135,8 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
           stepTarget: alarmFromStore?.stepTarget ?? 5,
           squatTarget: alarmFromStore?.squatTarget ?? 3,
           shakeTarget: alarmFromStore?.shakeTarget ?? 5,
+          flipTarget: alarmFromStore?.flipTarget ?? 5,
+          blinkTarget: alarmFromStore?.blinkTarget ?? 5,
           referencePath: alarmFromStore?.photoReferencePath,
           matchThreshold: alarmFromStore?.photoMatchThreshold ?? 72,
           registeredCode: alarmFromStore?.barcodeValue,
@@ -195,13 +197,18 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
             {formattedDate}
           </Text>
 
-          {/* Huge Alba Clock */}
-          <Text
-            style={styles.clockShadow}
-            className="text-white text-[94px] font-black tracking-tight text-center leading-none mt-1 mb-2"
-          >
-            {formattedClock}
-          </Text>
+          {/* Huge Alba Clock with AM/PM */}
+          <View className="flex-row items-baseline justify-center mt-1 mb-2">
+            <Text
+              style={styles.clockShadow}
+              className="text-white text-[94px] font-black tracking-tight text-center leading-none"
+            >
+              {formattedClock}
+            </Text>
+            <Text className="text-white/80 font-black text-xl ml-2 uppercase tracking-widest">
+              {currentTime.getHours() >= 12 ? 'PM' : 'AM'}
+            </Text>
+          </View>
 
           {/* Dark Label Badge Pill */}
           <View className="bg-black/60 px-4 py-1.5 rounded-full flex-row items-center border border-white/10 shadow-md">

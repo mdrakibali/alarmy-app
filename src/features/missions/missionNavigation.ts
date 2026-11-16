@@ -28,6 +28,8 @@ export function navigateToMission(
     squatTarget?: number;
     stepTarget?: number;
     shakeTarget?: number;
+    flipTarget?: number;
+    blinkTarget?: number;
     referencePath?: string;
     matchThreshold?: number;
     registeredCode?: string;

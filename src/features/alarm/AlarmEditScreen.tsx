@@ -131,7 +131,7 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
 
   const addLocalMission = async (m: MissionType) => {
     if (Platform.OS === 'android') {
-      if (['squat', 'photo', 'qr'].includes(m)) {
+      if (['squat', 'photo', 'qr', 'blink'].includes(m)) {
         const hasCam = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
         if (!hasCam) {
           const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
@@ -1317,9 +1317,55 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </View>
       ) : null}
 
-      {draft.missions.includes('step') || draft.missions.includes('squat') || draft.missions.includes('shake') ? (
+      {draft.missions.includes('step') || draft.missions.includes('squat') || draft.missions.includes('shake') || draft.missions.includes('flip') || draft.missions.includes('blink') ? (
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
           <Text className="text-sm font-bold text-navy mb-2">Mission targets (Quick testing & settings)</Text>
+          {draft.missions.includes('flip') ? (
+            <View className="mb-2">
+              <Text className="text-xs font-semibold text-subtext mb-1">Flip target:</Text>
+              <View className="flex-row flex-wrap">
+                {[3, 5, 10, 15].map(value => {
+                  const isSel = (draft.flipTarget ?? 5) === value;
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      onPress={() => patch({ flipTarget: value })}
+                      className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                        isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                      } border`}
+                    >
+                      <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                        {value} flips {value <= 5 ? '⚡' : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+          {draft.missions.includes('blink') ? (
+            <View className="mb-2">
+              <Text className="text-xs font-semibold text-subtext mb-1">Blink target:</Text>
+              <View className="flex-row flex-wrap">
+                {[3, 5, 8, 12].map(value => {
+                  const isSel = (draft.blinkTarget ?? 5) === value;
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      onPress={() => patch({ blinkTarget: value })}
+                      className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                        isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                      } border`}
+                    >
+                      <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                        {value} blinks {value <= 5 ? '⚡' : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
           {draft.missions.includes('step') ? (
             <View className="mb-2">
               <Text className="text-xs font-semibold text-subtext mb-1">Step target:</Text>

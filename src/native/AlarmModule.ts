@@ -456,7 +456,10 @@ class AlarmModuleBridge {
   onFlip(listener: (data: { count: number; isFaceDown: boolean }) => void): () => void {
     if (!this.emitter) return () => {};
     this.startFlipDetection();
-    const sub = this.emitter.addListener('onFlipEvent', listener);
+    const sub = this.emitter.addListener('onFlipEvent', (...args: readonly unknown[]) => {
+      const data = args[0] as { count: number; isFaceDown: boolean };
+      if (data) listener(data);
+    });
     return () => {
       try {
         sub.remove();
@@ -568,7 +571,7 @@ class AlarmModuleBridge {
   }
 
   async openCameraMission(options: {
-    mode: 'photo' | 'barcode' | 'squat' | 'register_barcode' | 'register_photo';
+    mode: 'photo' | 'barcode' | 'squat' | 'blink' | 'register_barcode' | 'register_photo';
     target?: number;
     barcodeValue?: string;
     barcodeName?: string;
