@@ -7,6 +7,8 @@ export interface MissionNavigationExtraParams {
   squatTarget?: number;
   stepTarget?: number;
   shakeTarget?: number;
+  flipTarget?: number;
+  blinkTarget?: number;
   referencePath?: string;
   matchThreshold?: number;
   registeredCode?: string;
@@ -92,6 +94,12 @@ export function navigateToMission(
       return true;
     case 'squat':
       navFn('SquatMission', { ...baseParams, squatTarget });
+      return true;
+    case 'flip':
+      navFn('FlipMission', { ...baseParams, flipTarget: params.flipTarget ?? alarm?.flipTarget ?? 5 });
+      return true;
+    case 'blink':
+      navFn('BlinkMission', { ...baseParams, blinkTarget: params.blinkTarget ?? alarm?.blinkTarget ?? 5 });
       return true;
     default:
       return false;

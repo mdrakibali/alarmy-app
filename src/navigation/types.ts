@@ -48,5 +48,7 @@ export type RootStackParamList = {
   Report: undefined;
   BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[]; registeredCode?: string } | undefined;
   TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[]; typingPhrase?: string } | undefined;
+  FlipMission: { alarmId?: string; missionIndex?: number; missions?: string[]; flipTarget?: number } | undefined;
+  BlinkMission: { alarmId?: string; missionIndex?: number; missions?: string[]; blinkTarget?: number } | undefined;
   MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[]; memoryPairs?: number } | undefined;
 };

@@ -435,6 +435,36 @@ class AlarmModuleBridge {
     }
   }
 
+  async startFlipDetection(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) return false;
+    try {
+      return await AlarmModule.startFlipDetection();
+    } catch {
+      return false;
+    }
+  }
+
+  async stopFlipDetection(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule) return false;
+    try {
+      return await AlarmModule.stopFlipDetection();
+    } catch {
+      return false;
+    }
+  }
+
+  onFlip(listener: (data: { count: number; isFaceDown: boolean }) => void): () => void {
+    if (!this.emitter) return () => {};
+    this.startFlipDetection();
+    const sub = this.emitter.addListener('onFlipEvent', listener);
+    return () => {
+      try {
+        sub.remove();
+      } catch {}
+      this.stopFlipDetection();
+    };
+  }
+
   onShake(listener: () => void): () => void {
     if (!this.emitter) {
       return () => {};

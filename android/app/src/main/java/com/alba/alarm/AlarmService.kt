@@ -189,7 +189,7 @@ class AlarmService : Service() {
                 } catch (e: Exception) {}
             }
         }
-        volumeFadeHandler.postDelayed(volumeFadeRunnable!, 1000)
+        volumeFadeRunnable?.let { volumeFadeHandler.postDelayed(it, 1000) }
     }
 
     private fun startAlarmAudio(alarm: AlarmModel?) {

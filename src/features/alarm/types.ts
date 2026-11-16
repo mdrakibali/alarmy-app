@@ -6,7 +6,9 @@ export type MissionType =
   | 'squat'
   | 'qr'
   | 'photo'
-  | 'step';
+  | 'step'
+  | 'flip'
+  | 'blink';
 
 export interface Alarm {
   id: string;
@@ -32,6 +34,8 @@ export interface Alarm {
   stepTarget?: number;
   squatTarget?: number;
   shakeTarget?: number;
+  flipTarget?: number;
+  blinkTarget?: number;
   mathCount?: number;
   mathDifficulty?: 'easy' | 'normal' | 'hard';
   memoryPairs?: number;

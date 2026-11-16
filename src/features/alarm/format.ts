@@ -11,6 +11,8 @@ export const MISSION_LABEL: Record<MissionType, string> = {
   qr: 'QR',
   photo: 'Photo',
   step: 'Steps',
+  flip: 'Flip Phone',
+  blink: 'Blink / Smile',
 };
 
 export const MISSION_DETAILS: Record<
@@ -22,6 +24,18 @@ export const MISSION_DETAILS: Record<
     desc: 'Solve simple to complex math problems to wake your brain up',
     icon: '🧠',
     badge: 'POPULAR',
+  },
+  flip: {
+    title: 'Flip Phone',
+    desc: 'Turn your phone upside down and back to dismiss',
+    icon: '🔄',
+    badge: 'ICONIC',
+  },
+  blink: {
+    title: 'Blink Eyes',
+    desc: 'Face the camera and blink 5 times to prove you are awake',
+    icon: '👁️',
+    badge: 'SMART AI',
   },
   shake: {
     title: 'Shake Mission',

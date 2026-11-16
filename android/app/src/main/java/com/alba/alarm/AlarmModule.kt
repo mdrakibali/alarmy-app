@@ -29,6 +29,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     private var previewPlayer: MediaPlayer? = null
     private var shakeDetector: ShakeDetector? = null
+    private var flipDetector: FlipDetector? = null
     private var stepCounter: StepCounter? = null
     private var cameraPromise: Promise? = null
     private var pickPromise: Promise? = null
@@ -317,7 +318,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun enableUninstallProtection() {
-        val activity = currentActivity ?: reactContext
+        val activity = reactContext.currentActivity ?: reactContext
         UninstallProtection.requestEnable(activity)
     }
 
@@ -716,6 +717,35 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("SHAKE_STOP_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun startFlipDetection(promise: Promise) {
+        try {
+            if (flipDetector == null) {
+                flipDetector = FlipDetector(reactContext) { count, isFaceDown ->
+                    val map = Arguments.createMap()
+                    map.putInt("count", count)
+                    map.putBoolean("isFaceDown", isFaceDown)
+                    sendEvent("onFlipEvent", map)
+                }
+            }
+            flipDetector?.start()
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("FLIP_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun stopFlipDetection(promise: Promise) {
+        try {
+            flipDetector?.stop()
+            flipDetector = null
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("FLIP_STOP_ERROR", e.message, e)
         }
     }
 
