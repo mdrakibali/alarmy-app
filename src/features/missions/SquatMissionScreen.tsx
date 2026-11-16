@@ -19,7 +19,8 @@ import { dismissAlarmOnMissionSuccess, proceedToNextMission } from './missionNav
 type Props = NativeStackScreenProps<RootStackParamList, 'SquatMission'>;
 
 export function SquatMissionScreen({ navigation, route }: Props) {
-  const target = route.params?.squatTarget ?? 3;
+  const isPreview = Boolean(route.params?.isPreview);
+  const target = isPreview ? 2 : (route.params?.squatTarget ?? 3);
   const insets = useAppInsets();
   const logAlarmDismissed = useReportStore(s => s.logAlarmDismissed);
 
@@ -33,15 +34,21 @@ export function SquatMissionScreen({ navigation, route }: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const isCompletedRef = useRef(false);
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     useActiveMissionStore.getState().updateSubProgress(target);
 
@@ -71,7 +78,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed, target]);
+  }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed, target, isPreview]);
 
   const [poseBlocked, setPoseBlocked] = useState(false);
 
@@ -122,7 +129,25 @@ export function SquatMissionScreen({ navigation, route }: Props) {
         className="flex-1 justify-between px-6 items-center"
       >
         {/* Top Header */}
-        <View className="items-center mt-3">
+        <View className="items-center mt-3 w-full">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • 2 squats to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="bg-ice border border-primary/25 px-4 py-1.5 rounded-full mb-2">
             <Text className="text-primary font-extrabold text-xs uppercase tracking-wider">
               SQUAT MISSION 🏋️
@@ -215,17 +240,29 @@ export function SquatMissionScreen({ navigation, route }: Props) {
       {/* Success Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Workout Complete! ⚡"
-        message={`${target} squats finished. Good morning.`}
-        confirmText="Start My Day ☀️"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Workout Complete! ⚡'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Squat mission. This is what you'll perform in the morning to dismiss your alarm."
+            : `${target} squats finished. Good morning.`
+        }
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day ☀️'}
         icon="🏋️"
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>

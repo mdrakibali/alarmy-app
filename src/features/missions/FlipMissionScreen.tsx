@@ -20,7 +20,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'FlipMission'>;
 
 export function FlipMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
-  const target = route.params?.flipTarget ?? 5;
+  const isPreview = Boolean(route.params?.isPreview);
+  const target = isPreview ? 3 : (route.params?.flipTarget ?? 5);
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
   const missionsParam = route.params?.missions;
@@ -32,15 +33,21 @@ export function FlipMissionScreen({ navigation, route }: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const isCompletedRef = useRef(false);
 
-  // Disable hardware back button
+  // Disable hardware back button (only if not preview)
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     useActiveMissionStore.getState().updateSubProgress(target);
 
@@ -70,7 +77,7 @@ export function FlipMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [alarmId, allMissions, missionIndex, navigation, target]);
+  }, [alarmId, allMissions, missionIndex, navigation, target, isPreview]);
 
   // Listen to native FlipDetector events
   useEffect(() => {

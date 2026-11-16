@@ -20,6 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PhotoMission'>;
 
 export function PhotoMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const isPreview = Boolean(route.params?.isPreview);
   const logAlarmDismissed = useReportStore(s => s.logAlarmDismissed);
 
   const alarmId = route.params?.alarmId;
@@ -36,9 +37,10 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
   const [attemptCount, setAttemptCount] = useState(0);
 
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const isCompletedRef = useRef(false);
 
@@ -49,6 +51,11 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
     try {
       Vibration.vibrate([0, 120, 60, 120]);
     } catch {}
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     const hasNext = proceedToNextMission(
       navigation,
@@ -72,7 +79,7 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed, referencePath, matchThreshold]);
+  }, [alarmId, allMissions, missionIndex, navigation, logAlarmDismissed, referencePath, matchThreshold, isPreview]);
 
   const handleCapture = useCallback(async () => {
     if (isCapturing || isCompletedRef.current) return;
@@ -117,6 +124,24 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center w-full mt-2">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • Snap to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="px-3.5 py-1 rounded-full bg-ice border border-primary/25 mb-1">
             <Text className="text-primary font-extrabold text-[11px] uppercase tracking-wider">
               Photo Wake-up Mission 📸
@@ -206,18 +231,30 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
       {/* Completion Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Out of Bed! 🌟"
-        message="Photo verified! You successfully walked out of bed and woke up!"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Out of Bed! 🌟'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Photo match mission. This is what you'll snap in the morning to dismiss your alarm."
+            : 'Photo verified! You successfully walked out of bed and woke up!'
+        }
         icon="📸"
-        confirmText="Start My Day ☀️"
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day ☀️'}
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>

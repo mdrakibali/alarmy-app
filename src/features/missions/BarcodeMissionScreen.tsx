@@ -20,6 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'BarcodeMission'>;
 
 export function BarcodeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const isPreview = Boolean(route.params?.isPreview);
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
   const missionsParam = route.params?.missions;
@@ -33,9 +34,10 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const isCompletedRef = useRef(false);
 
@@ -46,6 +48,11 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
     try {
       Vibration.vibrate([0, 100, 50, 100]);
     } catch {}
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     const hasNext = proceedToNextMission(
       navigation,
@@ -69,7 +76,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [alarmId, allMissions, missionIndex, navigation, route.params]);
+  }, [alarmId, allMissions, missionIndex, navigation, route.params, isPreview]);
 
   const startRealCameraScan = useCallback(async () => {
     if (isScanning || isCompletedRef.current) return;
@@ -123,6 +130,24 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center w-full mt-2">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • Scan code to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 mb-1">
             <Text className="text-emerald-700 font-extrabold text-[11px] uppercase tracking-wider">
               QR / Barcode Wake-up Mission 📷
@@ -229,18 +254,30 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
       {/* Completion Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Out of Bed! 🎉"
-        message="Barcode verified! You successfully walked out of bed and woke up!"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Out of Bed! 🎉'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Barcode/QR scan mission. This is what you'll scan in the morning to dismiss your alarm."
+            : 'Barcode verified! You successfully walked out of bed and woke up!'
+        }
         icon="🪥"
-        confirmText="Start My Day ☀️"
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day ☀️'}
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>

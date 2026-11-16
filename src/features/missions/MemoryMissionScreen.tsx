@@ -47,7 +47,8 @@ function generateCards(pairCount: number = 6): MemoryCard[] {
 
 export function MemoryMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
-  const totalPairs = route.params?.memoryPairs ?? 6;
+  const isPreview = Boolean(route.params?.isPreview);
+  const totalPairs = isPreview ? 3 : (route.params?.memoryPairs ?? 6);
   const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
 
   const [cards, setCards] = useState<MemoryCard[]>(() => {
@@ -66,17 +67,23 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Disable back press during alarm mission
+  // Disable back press during alarm mission (if not preview)
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const isCompletedRef = useRef(false);
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     useActiveMissionStore.getState().updateSubProgress(totalPairs);
 
@@ -110,7 +117,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [navigation, route.params, totalPairs]);
+  }, [navigation, route.params, totalPairs, isPreview]);
 
   const handleCardPress = (index: number) => {
     if (isProcessing) return;
@@ -180,6 +187,24 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
+          {isPreview ? (
+            <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+              <View className="flex-row items-center flex-1 mr-2">
+                <Text className="text-base mr-2">🧪</Text>
+                <View>
+                  <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                  <Text className="text-[10px] text-amber-700">Quick test mode • 3 pairs to verify</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => navigation.goBack()}
+                className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+              >
+                <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View className="bg-ice border border-primary/25 px-4 py-1.5 rounded-full mb-2">
             <Text className="text-primary font-extrabold text-xs uppercase tracking-wider">
               MEMORY MISSION 🧩
@@ -231,17 +256,29 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
       {/* Success Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Mission Complete! 🌟"
-        message="All pairs matched! Your mind is active and alert. Good morning!"
-        confirmText="Start My Day ☀️"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Mission Complete! 🌟'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Memory mission. This is what you'll match in the morning to dismiss your alarm."
+            : 'All pairs matched! Your mind is active and alert. Good morning!'
+        }
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day ☀️'}
         icon="🧩"
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>

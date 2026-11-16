@@ -64,21 +64,25 @@ export function checkTypingMatch(input: string, target: string): boolean {
 
 export function TypingMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
+  const isPreview = Boolean(route.params?.isPreview);
   const [targetPhrase] = useState(
     () =>
-      route.params?.typingPhrase ||
-      MOTIVATIONAL_PHRASES[
-        Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)
-      ],
+      isPreview
+        ? 'Rise and shine with positive energy!'
+        : route.params?.typingPhrase ||
+          MOTIVATIONAL_PHRASES[
+            Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)
+          ],
   );
   const [typedText, setTypedText] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const isCompletedRef = useRef(false);
 
   useEffect(() => {
+    if (isPreview) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
+  }, [isPreview]);
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
@@ -87,6 +91,11 @@ export function TypingMissionScreen({ navigation, route }: Props) {
     try {
       Vibration.vibrate([0, 100, 50, 100]);
     } catch {}
+
+    if (isPreview) {
+      setShowSuccessModal(true);
+      return;
+    }
 
     const alarmId = route.params?.alarmId;
     const missionIndex = route.params?.missionIndex ?? 0;
@@ -114,7 +123,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
 
     await dismissAlarmOnMissionSuccess(alarmId);
     setShowSuccessModal(true);
-  }, [navigation, route.params, targetPhrase]);
+  }, [navigation, route.params, targetPhrase, isPreview]);
 
   const handleChangeText = (text: string) => {
     setTypedText(text);
@@ -147,7 +156,25 @@ export function TypingMissionScreen({ navigation, route }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           {/* Header */}
-          <View className="items-center">
+          <View className="items-center w-full">
+            {isPreview ? (
+              <View className="w-full bg-amber-50 border border-amber-300 rounded-2xl px-3.5 py-2 mb-3 flex-row items-center justify-between shadow-xs">
+                <View className="flex-row items-center flex-1 mr-2">
+                  <Text className="text-base mr-2">🧪</Text>
+                  <View>
+                    <Text className="text-xs font-bold text-amber-900">Preview Mode</Text>
+                    <Text className="text-[10px] text-amber-700">Quick test mode • Type affirmation</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  className="bg-amber-200/80 px-2.5 py-1 rounded-xl active:bg-amber-300"
+                >
+                  <Text className="text-xs font-bold text-amber-950">Exit ✕</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
             <View className="px-3 py-1 rounded-full bg-ice border border-primary/25 mb-2">
               <Text className="text-primary font-extrabold text-[11px] uppercase tracking-wider">
                 Typing Wake-up Mission ⌨️
@@ -235,18 +262,30 @@ export function TypingMissionScreen({ navigation, route }: Props) {
       {/* Completion Modal */}
       <CustomConfirmModal
         visible={showSuccessModal}
-        title="Mind Awakened! 🌟"
-        message="Affirmation typed accurately! Sleep inertia defeated, have a great day!"
+        title={isPreview ? 'Mission Preview Passed! 🎉' : 'Mind Awakened! 🌟'}
+        message={
+          isPreview
+            ? "Great job! You've verified the Typing mission. This is what you'll type in the morning to dismiss your alarm."
+            : 'Affirmation typed accurately! Sleep inertia defeated, have a great day!'
+        }
         icon="✍️"
-        confirmText="Start My Day"
+        confirmText={isPreview ? 'Done Testing 👍' : 'Start My Day'}
         cancelText=""
         onConfirm={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
         onCancel={() => {
           setShowSuccessModal(false);
-          navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          if (isPreview) {
+            navigation.goBack();
+          } else {
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }
         }}
       />
     </AppBackground>
