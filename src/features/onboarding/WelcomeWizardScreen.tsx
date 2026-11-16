@@ -96,7 +96,7 @@ const WallpaperCard = React.memo(
         {/* Top Right Check Badge */}
         <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
           {isSelected ? (
-            <View className="h-7 w-7 rounded-full bg-[#1652E6] border-2 border-white items-center justify-center">
+            <View className="h-7 w-7 rounded-full bg-primary border-2 border-white items-center justify-center">
               <Text className="text-white text-xs font-black">✓</Text>
             </View>
           ) : (
@@ -179,7 +179,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   );
 
   return (
-    <View className="flex-1 bg-[#F5F6F8]">
+    <View className="flex-1 bg-background">
       {/* Header with Progress Bar */}
       <View
         style={{ paddingTop: Math.max(insets.top, 16) }}
@@ -198,7 +198,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <View
-                className="h-full bg-[#1652E6] rounded-full"
+                className="h-full bg-primary rounded-full"
                 style={{ width: `${(step / 4) * 100}%` }}
               />
             </View>
@@ -291,7 +291,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
-                      ? 'bg-[#EEF4FF] border-[#1652E6]/30'
+                      ? 'bg-ice border-primary/30'
                       : 'bg-white border-slate-100'
                   }`}
                 >
@@ -300,7 +300,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     <View className="flex-1">
                       <Text
                         className={`text-sm font-bold ${
-                          isSelected ? 'text-[#1652E6]' : 'text-slate-800'
+                          isSelected ? 'text-primary' : 'text-slate-800'
                         }`}
                       >
                         {s.title}
@@ -315,7 +315,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     pointerEvents="none"
                     className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                       isSelected
-                        ? 'border-[#1652E6] bg-[#1652E6]'
+                        ? 'border-primary bg-primary'
                         : 'border-slate-300'
                     }`}
                   >
@@ -344,7 +344,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
-                      ? 'bg-[#EEF4FF] border-[#1652E6]'
+                      ? 'bg-ice border-primary'
                       : 'bg-white border-slate-100'
                   }`}
                 >
@@ -358,7 +358,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     <View
                       className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                         isSelected
-                          ? 'border-[#1652E6] bg-[#1652E6]'
+                          ? 'border-primary bg-primary'
                           : 'border-slate-300'
                       }`}
                     >
@@ -385,7 +385,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       >
         <Pressable
           onPress={handleNext}
-          className="w-full bg-[#1652E6] py-4 rounded-2xl items-center shadow-md active:bg-[#0B45C4]"
+          className="w-full bg-primary py-4 rounded-2xl items-center shadow-md active:bg-primary-dark"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Next: Required Permissions 🔐' : 'Next'}

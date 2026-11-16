@@ -99,30 +99,30 @@ export function SquatMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
-          <View className="bg-[#EEF4FF] border border-[#1652E6]/25 px-4 py-1.5 rounded-full mb-2">
-            <Text className="text-[#1652E6] font-extrabold text-xs uppercase tracking-wider">
+          <View className="bg-ice border border-primary/25 px-4 py-1.5 rounded-full mb-2">
+            <Text className="text-primary font-extrabold text-xs uppercase tracking-wider">
               SQUAT MISSION 🏋️
             </Text>
           </View>
-          <Text className="text-2xl font-black text-[#08173E] text-center">
+          <Text className="text-2xl font-black text-navy text-center">
             Complete {target} Squats
           </Text>
-          <Text className="text-xs text-[#556889] font-semibold mt-1 text-center">
+          <Text className="text-xs text-subtext font-semibold mt-1 text-center">
             The front camera opens on its own. Face it and squat.
           </Text>
         </View>
 
         {/* Center Progress Visual */}
         <View className="items-center justify-center my-6">
-          <View className="h-60 w-60 rounded-full border-8 border-[#1652E6]/20 bg-white/95 items-center justify-center shadow-xl relative">
-            <Text className="text-6xl font-black text-[#08173E]">
+          <View className="h-60 w-60 rounded-full border-8 border-primary/20 bg-white/95 items-center justify-center shadow-xl relative">
+            <Text className="text-6xl font-black text-navy">
               {squatsDone}
             </Text>
-            <Text className="text-sm font-bold text-[#556889] mt-1">
+            <Text className="text-sm font-bold text-subtext mt-1">
               / {target} SQUATS
             </Text>
-            <View className="mt-3 px-3 py-1 rounded-full bg-[#EEF4FF]">
-              <Text className="text-xs font-black text-[#1652E6]">
+            <View className="mt-3 px-3 py-1 rounded-full bg-ice">
+              <Text className="text-xs font-black text-primary">
                 {progressPct}% Completed
               </Text>
             </View>
@@ -132,20 +132,20 @@ export function SquatMissionScreen({ navigation, route }: Props) {
         {/* Squat Action Guide & Trigger */}
         <View className="items-center w-full mb-4">
           <View className="bg-white/90 rounded-2xl p-4 w-full border border-slate-200 mb-3 shadow-xs">
-            <Text className="text-xs font-bold text-[#08173E] text-center">
+            <Text className="text-xs font-bold text-navy text-center">
               💡 Leg muscles pump oxygen to your brain instantly waking your entire body.
             </Text>
           </View>
 
           <Pressable
             onPress={startPose}
-            className="w-full bg-[#1652E6] py-4 rounded-2xl items-center shadow-md mb-3 active:bg-[#0B45C4]"
+            className="w-full bg-primary py-4 rounded-2xl items-center shadow-md mb-3 active:bg-primary-dark"
           >
             <Text className="text-white text-base font-black tracking-wide">
               {poseBlocked ? 'Open front camera again' : 'Front camera is opening'}
             </Text>
           </Pressable>
-          <Text className="text-xs font-bold text-[#556889] text-center">
+          <Text className="text-xs font-bold text-subtext text-center">
             {poseBlocked
               ? 'Pose detection did not finish. Shaking the phone does not count.'
               : 'A rep counts only after a full down and up detected by the camera.'}

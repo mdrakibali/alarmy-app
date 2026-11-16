@@ -283,11 +283,11 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
             </Text>
           </TouchableOpacity>
 
-          {/* Primary Action Button: Alarmy signature Coral Red (#FF2D55) */}
+          {/* Primary Action Button */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleStartMissionPress}
-            className="w-full bg-[#FF2D55] py-4.5 rounded-3xl items-center justify-center shadow-2xl"
+            className="w-full bg-danger py-4.5 rounded-3xl items-center justify-center shadow-2xl"
           >
             <Text className="text-white text-xl font-black tracking-wider">
               {mission ? 'Start Mission' : 'Dismiss'}
@@ -441,7 +441,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
                 setShowMissionModal(false);
                 handleFinish();
               }}
-              className="w-full bg-[#FF2D55] py-4 rounded-2xl items-center shadow-md mt-2"
+              className="w-full bg-danger py-4 rounded-2xl items-center shadow-md mt-2"
             >
               <Text className="text-white text-base font-black tracking-wide">
                 Done - Activate Alba ✨

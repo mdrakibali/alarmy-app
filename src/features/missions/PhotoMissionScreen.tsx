@@ -124,38 +124,38 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center w-full mt-2">
-          <View className="px-3.5 py-1 rounded-full bg-[#EEF4FF] border border-[#1652E6]/25 mb-1">
-            <Text className="text-[#1652E6] font-extrabold text-[11px] uppercase tracking-wider">
+          <View className="px-3.5 py-1 rounded-full bg-ice border border-primary/25 mb-1">
+            <Text className="text-primary font-extrabold text-[11px] uppercase tracking-wider">
               Photo Wake-up Mission 📸
             </Text>
           </View>
-          <Text className="text-[#08173E] font-extrabold text-xl mt-1 text-center">
+          <Text className="text-navy font-extrabold text-xl mt-1 text-center">
             Take a Photo of Your Target
           </Text>
-          <Text className="text-[#556889] text-xs text-center mt-0.5">
+          <Text className="text-subtext text-xs text-center mt-0.5">
             Walk to your {selectedTarget.location.toLowerCase()} and frame the target object
           </Text>
         </View>
 
         {/* Target Objective Indicator */}
         <View className="w-full bg-white/95 rounded-2xl p-4 border border-slate-200 shadow-sm mt-2">
-          <Text className="text-[#556889] font-bold text-[10px] uppercase tracking-wider">
+          <Text className="text-subtext font-bold text-[10px] uppercase tracking-wider">
             Registered Target Object
           </Text>
           <View className="flex-row items-center justify-between mt-1">
             <View className="flex-row items-center">
               <Text className="text-2xl mr-2.5">{selectedTarget.icon}</Text>
               <View>
-                <Text className="text-[#08173E] font-black text-base">
+                <Text className="text-navy font-black text-base">
                   {selectedTarget.title}
                 </Text>
-                <Text className="text-[#556889] text-xs font-medium">
+                <Text className="text-subtext text-xs font-medium">
                   Location: {selectedTarget.location}
                 </Text>
               </View>
             </View>
-            <View className="bg-[#EEF4FF] px-2.5 py-1 rounded-lg border border-[#1652E6]/25">
-              <Text className="text-[#1652E6] font-bold text-xs">Registered</Text>
+            <View className="bg-ice px-2.5 py-1 rounded-lg border border-primary/25">
+              <Text className="text-primary font-bold text-xs">Registered</Text>
             </View>
           </View>
         </View>
@@ -168,10 +168,10 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
           )}
 
           {/* Viewfinder Target Reticle */}
-          <View className="w-60 h-44 border-2 border-dashed border-[#1652E6] rounded-2xl items-center justify-center relative bg-black/35">
+          <View className="w-60 h-44 border-2 border-dashed border-primary rounded-2xl items-center justify-center relative bg-black/35">
             {/* Target silhouette preview */}
             <Text className="text-5xl opacity-40 mb-2">{selectedTarget.icon}</Text>
-            <Text className="text-[#1652E6] font-mono text-[11px] font-bold">
+            <Text className="text-primary font-mono text-[11px] font-bold">
               [ FRAME {selectedTarget.title.toUpperCase()} ]
             </Text>
 
@@ -219,7 +219,7 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
           <Pressable
             onPress={handleCapture}
             disabled={isCapturing}
-            className="w-full bg-[#1652E6] py-4 rounded-2xl items-center active:bg-[#0B45C4] shadow-md mb-2"
+            className="w-full bg-primary py-4 rounded-2xl items-center active:bg-primary-dark shadow-md mb-2"
           >
             <Text className="text-white font-extrabold text-base tracking-wide">
               {isCapturing ? 'Analyzing Photo Match...' : 'Capture Photo 📸'}
@@ -237,7 +237,7 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
             }}
             className="py-1"
           >
-            <Text className="text-[#1652E6] font-bold text-xs underline">
+            <Text className="text-primary font-bold text-xs underline">
               Switch Target Object ({selectedTarget.title}) 🔄
             </Text>
           </Pressable>

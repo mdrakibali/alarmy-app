@@ -176,8 +176,8 @@ export function MathMissionScreen({ navigation, route }: Props) {
         {/* Top Header & Progress */}
         <View className="items-center">
           <View className="flex-row items-center justify-between w-full mb-2">
-            <View className="px-3 py-1 rounded-full bg-[#EEF4FF] border border-[#1652E6]/25">
-              <Text className="text-[#1652E6] font-extrabold text-[11px] uppercase tracking-wider">
+            <View className="px-3 py-1 rounded-full bg-ice border border-primary/25">
+              <Text className="text-primary font-extrabold text-[11px] uppercase tracking-wider">
                 Math Wake-up Mission
               </Text>
             </View>
@@ -222,7 +222,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
           {/* Progress Bar */}
           <View className="w-full bg-slate-200/80 h-2 rounded-full mt-2 overflow-hidden">
             <View
-              className="bg-[#1652E6] h-full rounded-full"
+              className="bg-primary h-full rounded-full"
               style={{
                 width: `${((problemIndex + 1) / TOTAL_PROBLEMS) * 100}%`,
               }}
@@ -237,8 +237,8 @@ export function MathMissionScreen({ navigation, route }: Props) {
           </Text>
 
           {inputMode === 'keypad' ? (
-            <View className="h-14 w-48 border-b-2 border-[#1652E6] items-center justify-center mt-4">
-              <Text className="text-4xl font-extrabold text-[#1652E6]">
+            <View className="h-14 w-48 border-b-2 border-primary items-center justify-center mt-4">
+              <Text className="text-4xl font-extrabold text-primary">
                 {userInput || '?'}
               </Text>
             </View>
@@ -274,13 +274,13 @@ export function MathMissionScreen({ navigation, route }: Props) {
                     onPress={() => handleOptionPress(opt)}
                     className={`w-[48%] py-5 rounded-2xl mb-3 flex-row items-center px-4 border ${
                       isSelected
-                        ? 'bg-[#EEF4FF] border-[#1652E6]'
+                        ? 'bg-ice border-primary'
                         : 'bg-white/95 border-slate-100 shadow-sm active:bg-slate-50'
                     }`}
                   >
                     <View
                       className={`h-8 w-8 rounded-full items-center justify-center mr-3 ${
-                        isSelected ? 'bg-[#1652E6]' : 'bg-slate-100'
+                        isSelected ? 'bg-primary' : 'bg-slate-100'
                       }`}
                     >
                       <Text
@@ -293,7 +293,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
                     </View>
                     <Text
                       className={`text-2xl font-black ${
-                        isSelected ? 'text-[#0284C7]' : 'text-slate-800'
+                        isSelected ? 'text-primary' : 'text-slate-800'
                       }`}
                     >
                       {opt}
@@ -346,7 +346,7 @@ export function MathMissionScreen({ navigation, route }: Props) {
             {/* Submit Button */}
             <Pressable
               onPress={handleSubmitKeypad}
-              className="w-full bg-[#1652E6] py-4 rounded-2xl items-center active:bg-[#0B45C4] shadow-sm"
+              className="w-full bg-primary py-4 rounded-2xl items-center active:bg-primary-dark shadow-sm"
             >
               <Text className="text-white text-base font-extrabold tracking-wide">
                 Submit Answer
