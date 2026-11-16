@@ -18,6 +18,8 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.bridge.ActivityEventListener
+import com.facebook.react.bridge.UiThreadUtil
+import android.util.Log
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -453,70 +455,107 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun previewSound(soundId: String, promise: Promise) {
-        Thread {
+        UiThreadUtil.runOnUiThread {
             try {
                 stopSoundPreviewInternal()
-                var soundUri: Uri? = null
 
+                val player = MediaPlayer()
+                var configured = false
+
+                // 1. Try file:// or content:// URI
                 if (soundId.startsWith("file://") || soundId.startsWith("content://")) {
-                    soundUri = Uri.parse(soundId)
-                } else if (soundId.isNotEmpty()) {
+                    try {
+                        player.setDataSource(reactContext, Uri.parse(soundId))
+                        configured = true
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to load URI sound: $soundId", e)
+                    }
+                }
+
+                // 2. Try bundled raw resource
+                if (!configured && soundId.isNotEmpty()) {
                     val cleanId = soundId.lowercase().replace("-", "_")
                     val resId = reactContext.resources.getIdentifier(cleanId, "raw", reactContext.packageName)
                     if (resId != 0) {
-                        soundUri = Uri.parse("android.resource://${reactContext.packageName}/$resId")
+                        try {
+                            val afd = reactContext.resources.openRawResourceFd(resId)
+                            if (afd != null) {
+                                player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                                afd.close()
+                                configured = true
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to load raw resource FD: $cleanId", e)
+                        }
                     }
                 }
 
-                // 2. Fallback to system ringtones
-                if (soundUri == null) {
-                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                }
-                if (soundUri == null) {
-                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-                }
-                if (soundUri == null) {
-                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                // 3. Fallback to bundled gentle morning
+                if (!configured) {
+                    val fallbackResId = reactContext.resources.getIdentifier("alarm_gentle_morning", "raw", reactContext.packageName)
+                    if (fallbackResId != 0) {
+                        try {
+                            val afd = reactContext.resources.openRawResourceFd(fallbackResId)
+                            if (afd != null) {
+                                player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                                afd.close()
+                                configured = true
+                            }
+                        } catch (_: Exception) {}
+                    }
                 }
 
-                val player = MediaPlayer().apply {
-                    setDataSource(reactContext, soundUri!!)
-                    val audioAttributes = AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                    setAudioAttributes(audioAttributes)
-                    isLooping = false
-                    setOnPreparedListener { mp ->
+                // 4. Fallback to system ringtones
+                if (!configured) {
+                    val sysUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    if (sysUri != null) {
                         try {
-                            mp.start()
-                        } catch (e: Exception) {}
+                            player.setDataSource(reactContext, sysUri)
+                            configured = true
+                        } catch (_: Exception) {}
                     }
-                    setOnCompletionListener { mp ->
-                        try {
-                            mp.release()
-                        } catch (e: Exception) {}
-                        if (previewPlayer == mp) {
-                            previewPlayer = null
-                        }
-                    }
-                    setOnErrorListener { mp, _, _ ->
-                        try {
-                            mp.release()
-                        } catch (e: Exception) {}
-                        if (previewPlayer == mp) {
-                            previewPlayer = null
-                        }
-                        true
-                    }
-                    prepareAsync()
                 }
+
+                if (!configured) {
+                    player.release()
+                    promise.resolve(false)
+                    return@runOnUiThread
+                }
+
+                // Use ALARM audio stream so it is loud and respects alarm volume
+                val audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+                player.setAudioAttributes(audioAttributes)
+                player.setVolume(1.0f, 1.0f)
+                player.isLooping = false
+
+                player.setOnCompletionListener { mp ->
+                    try { mp.release() } catch (_: Exception) {}
+                    if (previewPlayer == mp) {
+                        previewPlayer = null
+                    }
+                }
+                player.setOnErrorListener { mp, _, _ ->
+                    try { mp.release() } catch (_: Exception) {}
+                    if (previewPlayer == mp) {
+                        previewPlayer = null
+                    }
+                    true
+                }
+
+                player.prepare()
+                player.start()
                 previewPlayer = player
                 promise.resolve(true)
             } catch (e: Exception) {
+                Log.e(TAG, "Error previewing sound: $soundId", e)
                 promise.resolve(false)
             }
-        }.start()
+        }
     }
 
     @ReactMethod

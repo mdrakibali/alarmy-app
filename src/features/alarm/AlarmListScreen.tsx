@@ -114,9 +114,10 @@ export function AlarmListScreen() {
   }, [alarms, nowTimestamp]);
 
   const handleDuplicate = (alarm: Alarm) => {
-    const { id, ...rest } = alarm;
+    const copy = { ...alarm };
+    delete (copy as Partial<Alarm>).id;
     addAlarm({
-      ...rest,
+      ...copy,
       label: `${alarm.label || 'Alarm'} (Copy)`,
       enabled: true,
     });

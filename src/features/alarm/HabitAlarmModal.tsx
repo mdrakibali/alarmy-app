@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -14,6 +14,7 @@ import { useAlarmStore } from './alarmStore';
 import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import type { MissionType } from './types';
 import { MISSION_DETAILS, SOUND_OPTIONS } from './format';
+import { NativeAlarm } from '@/native/AlarmModule';
 
 interface Props {
   visible: boolean;
@@ -97,8 +98,13 @@ export function HabitAlarmModal({ visible, onClose }: Props) {
   const [minute, setMinute] = useState(30);
   const [repeatDays, setRepeatDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]); // Daily by default
   const [missions, setMissions] = useState<MissionType[]>([]);
-  const [soundId, setSoundId] = useState('loud_siren');
+  const [soundId, setSoundId] = useState('alarm_gentle_morning');
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showSoundPicker, setShowSoundPicker] = useState(false);
+
+  const soundName = useMemo(() => {
+    return SOUND_OPTIONS.find(s => s.id === soundId)?.label || 'Gentle Morning';
+  }, [soundId]);
 
   const handleSelectTemplate = (template: HabitTemplate) => {
     setSelectedHabit(template);
@@ -430,6 +436,48 @@ export function HabitAlarmModal({ visible, onClose }: Props) {
                   })}
                 </View>
               </View>
+
+              {/* Alarm Sound Selector */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setShowSoundPicker(!showSoundPicker)}
+                className="flex-row items-center justify-between py-3.5 px-4 rounded-2xl bg-[#1E1E22] mb-4 border border-white/5"
+              >
+                <Text className="text-white text-sm font-semibold">Alarm Sound</Text>
+                <View className="flex-row items-center">
+                  <Text className="text-slate-400 text-sm font-medium mr-1.5">{soundName}</Text>
+                  <Text className="text-slate-500 font-bold">›</Text>
+                </View>
+              </TouchableOpacity>
+
+              {showSoundPicker && (
+                <View className="bg-[#1E1E22] rounded-2xl p-2 mb-4 border border-white/10 max-h-44">
+                  {SOUND_OPTIONS.slice(0, 6).map(s => (
+                    <TouchableOpacity
+                      key={s.id}
+                      onPress={() => {
+                        setSoundId(s.id);
+                        setShowSoundPicker(false);
+                        NativeAlarm.previewSound(s.id).catch(() => {});
+                      }}
+                      className={`p-3 rounded-xl flex-row items-center justify-between ${
+                        soundId === s.id ? 'bg-primary/20' : ''
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm ${
+                          soundId === s.id ? 'text-primary font-bold' : 'text-white'
+                        }`}
+                      >
+                        {s.icon} {s.label}
+                      </Text>
+                      {soundId === s.id && (
+                        <Text className="text-primary text-xs font-black">✓</Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
               {/* Save Button */}
               <TouchableOpacity
