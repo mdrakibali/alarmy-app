@@ -38,6 +38,7 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
 
     companion object {
         const val NAME = "AlarmModule"
+        private const val TAG = "AlarmModule"
         private const val CAMERA_REQUEST = 4401
         private const val PICK_REQUEST = 4402
         private const val AUDIO_REQUEST = 4403
