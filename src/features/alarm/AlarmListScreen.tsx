@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
+  Modal,
   Pressable,
   Switch,
   Text,
@@ -18,6 +19,9 @@ import { formatTime, sortAlarms } from './format';
 import { nextOccurrence } from './nextOccurrence';
 import type { Alarm } from './types';
 import { DaypartHeader } from './DaypartHeader';
+import { QuickAlarmModal } from './QuickAlarmModal';
+import { HabitAlarmModal } from './HabitAlarmModal';
+import { useToast } from '@/components/ui/AppToast';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -25,13 +29,25 @@ export function AlarmListScreen() {
   const insets = useAppInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const toast = useToast();
   const alarms = useAlarmStore(s => s.alarms);
   const toggleAlarm = useAlarmStore(s => s.toggleAlarm);
   const clearSnooze = useAlarmStore(s => s.clearSnooze);
+  const removeAlarm = useAlarmStore(s => s.removeAlarm);
+  const addAlarm = useAlarmStore(s => s.addAlarm);
   const sorted = sortAlarms(alarms);
+
   const [nowTimestamp, setNowTimestamp] = useState(Date.now());
   const [snoozeSeconds, setSnoozeSeconds] = useState<number>(0);
   const [activeSnoozeAlarm, setActiveSnoozeAlarm] = useState<any>(null);
+
+  // FAB Popup State (Matching Alarmy design)
+  const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
+  const [showQuickModal, setShowQuickModal] = useState(false);
+  const [showHabitModal, setShowHabitModal] = useState(false);
+
+  // Card Options Modal
+  const [selectedAlarmForMenu, setSelectedAlarmForMenu] = useState<Alarm | null>(null);
 
   useEffect(() => {
     const checkSnooze = () => {
@@ -97,10 +113,39 @@ export function AlarmListScreen() {
     return `${hours} hr. ${minutes} min`;
   }, [alarms, nowTimestamp]);
 
+  const handleDuplicate = (alarm: Alarm) => {
+    const { id, ...rest } = alarm;
+    addAlarm({
+      ...rest,
+      label: `${alarm.label || 'Alarm'} (Copy)`,
+      enabled: true,
+    });
+    setSelectedAlarmForMenu(null);
+    toast.showToast({
+      title: 'Alarm Duplicated',
+      message: 'A copy of this alarm was added to your schedule.',
+      icon: '📋',
+      type: 'success',
+    });
+  };
+
+  const handleDelete = (alarmId: string) => {
+    removeAlarm(alarmId);
+    setSelectedAlarmForMenu(null);
+    toast.showToast({
+      title: 'Alarm Deleted',
+      message: 'The alarm was removed from your schedule.',
+      icon: '🗑️',
+      type: 'info',
+    });
+  };
+
   return (
     <Screen padded={false}>
-      <View className="flex-1 bg-background">
+      <View className="flex-1 bg-background relative">
         <DaypartHeader now={new Date(nowTimestamp)} countdown={nextAlarmCountdown} />
+
+        {/* Promo banner matching Alarmy */}
         <Pressable
           onPress={() => navigation.navigate('AlarmEdit')}
           className="mx-4 mb-3 flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-100"
@@ -197,33 +242,177 @@ export function AlarmListScreen() {
             paddingBottom: 160 + insets.bottom,
           }}
           ListEmptyComponent={
-            <EmptyState onAdd={() => navigation.navigate('AlarmEdit')} />
+            <EmptyState onAdd={() => setIsFabMenuOpen(true)} />
           }
           renderItem={({ item }) => (
             <AlarmCard
               alarm={item}
               onPress={() => navigation.navigate('AlarmEdit', { id: item.id })}
               onToggle={() => toggleAlarm(item.id)}
+              onOpenMenu={() => setSelectedAlarmForMenu(item)}
             />
           )}
         />
 
+        {/* Backdrop for FAB Menu */}
+        {isFabMenuOpen && (
+          <Pressable
+            style={{ zIndex: 40 }}
+            onPress={() => setIsFabMenuOpen(false)}
+            className="absolute inset-0 bg-black/65"
+          />
+        )}
+
+        {/* Floating Action Menu Popups (Matching Alarmy Screenshot 1.12) */}
+        {isFabMenuOpen && (
+          <View
+            style={{ bottom: 156 + insets.bottom, right: 20, zIndex: 50 }}
+            className="absolute items-end"
+          >
+            {/* Top Card: Habit alarm & Quick alarm */}
+            <View className="bg-white rounded-3xl w-52 shadow-2xl mb-3 overflow-hidden border border-slate-100/80">
+              {/* Habit Alarm Option */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setIsFabMenuOpen(false);
+                  setShowHabitModal(true);
+                }}
+                className="flex-row items-center px-4 py-3.5 active:bg-slate-50"
+              >
+                <View className="w-8 h-8 rounded-xl bg-purple-50 items-center justify-center mr-3">
+                  <Text className="text-lg">🗓️</Text>
+                </View>
+                <Text className="text-slate-900 text-base font-bold">
+                  Habit alarm
+                </Text>
+              </TouchableOpacity>
+
+              <View className="h-[1px] bg-slate-100 mx-4" />
+
+              {/* Quick Alarm Option */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setIsFabMenuOpen(false);
+                  setShowQuickModal(true);
+                }}
+                className="flex-row items-center px-4 py-3.5 active:bg-slate-50"
+              >
+                <View className="w-8 h-8 rounded-xl bg-blue-50 items-center justify-center mr-3">
+                  <Text className="text-lg">⚡</Text>
+                </View>
+                <Text className="text-slate-900 text-base font-bold">
+                  Quick alarm
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Bottom Card: Alarm */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => {
+                setIsFabMenuOpen(false);
+                navigation.navigate('AlarmEdit');
+              }}
+              className="bg-white rounded-3xl w-52 px-4 py-3.5 flex-row items-center shadow-2xl border border-slate-100/80 active:bg-slate-50"
+            >
+              <View className="w-8 h-8 rounded-xl bg-red-50 items-center justify-center mr-3">
+                <Text className="text-lg">⏰</Text>
+              </View>
+              <Text className="text-slate-900 text-base font-bold">
+                Alarm
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Floating Action Button (FAB) */}
         <View
-          style={{ bottom: 76 + insets.bottom }}
-          className="absolute right-5"
+          style={{ bottom: 76 + insets.bottom, right: 20, zIndex: 50 }}
+          className="absolute"
         >
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Add alarm"
-            onPress={() => navigation.navigate('AlarmEdit')}
-            className="h-16 w-16 items-center justify-center rounded-full bg-secondary shadow-2xl active:scale-95"
+            accessibilityLabel={isFabMenuOpen ? 'Close add menu' : 'Add alarm'}
+            onPress={() => setIsFabMenuOpen(!isFabMenuOpen)}
+            className="h-16 w-16 items-center justify-center rounded-full bg-[#FF2D55] shadow-2xl active:scale-95"
           >
             <Text className="text-3xl font-light text-white leading-none">
-              +
+              {isFabMenuOpen ? '✕' : '+'}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
+
+        {/* Quick Alarm Bottom Sheet */}
+        <QuickAlarmModal
+          visible={showQuickModal}
+          onClose={() => setShowQuickModal(false)}
+        />
+
+        {/* Habit Alarm Modal */}
+        <HabitAlarmModal
+          visible={showHabitModal}
+          onClose={() => setShowHabitModal(false)}
+        />
+
+        {/* Card Options Modal (Three dots) */}
+        {selectedAlarmForMenu && (
+          <Modal
+            visible={Boolean(selectedAlarmForMenu)}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSelectedAlarmForMenu(null)}
+          >
+            <Pressable
+              onPress={() => setSelectedAlarmForMenu(null)}
+              className="flex-1 bg-black/60 justify-end"
+            >
+              <View
+                style={{ paddingBottom: Math.max(insets.bottom + 16, 24) }}
+                className="bg-white rounded-t-3xl p-6"
+              >
+                <View className="flex-row items-center justify-between pb-3 border-b border-slate-100 mb-2">
+                  <Text className="text-lg font-black text-slate-900">
+                    {selectedAlarmForMenu.label || 'Alarm Options'}
+                  </Text>
+                  <TouchableOpacity onPress={() => setSelectedAlarmForMenu(null)}>
+                    <Text className="text-slate-400 font-bold text-base">✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    const id = selectedAlarmForMenu.id;
+                    setSelectedAlarmForMenu(null);
+                    navigation.navigate('AlarmEdit', { id });
+                  }}
+                  className="flex-row items-center py-3.5 border-b border-slate-50"
+                >
+                  <Text className="text-xl mr-3">✏️</Text>
+                  <Text className="text-slate-800 text-base font-bold">Edit Alarm</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => handleDuplicate(selectedAlarmForMenu)}
+                  className="flex-row items-center py-3.5 border-b border-slate-50"
+                >
+                  <Text className="text-xl mr-3">📋</Text>
+                  <Text className="text-slate-800 text-base font-bold">Duplicate Alarm</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => handleDelete(selectedAlarmForMenu.id)}
+                  className="flex-row items-center py-3.5"
+                >
+                  <Text className="text-xl mr-3">🗑️</Text>
+                  <Text className="text-red-500 text-base font-bold">Delete Alarm</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Modal>
+        )}
       </View>
     </Screen>
   );
@@ -233,10 +422,12 @@ function AlarmCard({
   alarm,
   onPress,
   onToggle,
+  onOpenMenu,
 }: {
   alarm: Alarm;
   onPress: () => void;
   onToggle: () => void;
+  onOpenMenu: () => void;
 }) {
   const { time, period } = formatTime(alarm.hour, alarm.minute);
   const hasMission = alarm.missions.length > 0;
@@ -252,6 +443,12 @@ function AlarmCard({
     ? '📷'
     : '🎯';
 
+  const badgeIcon = alarm.habitIcon
+    ? alarm.habitIcon
+    : alarm.isQuickAlarm
+    ? '⚡'
+    : '🐥';
+
   return (
     <Pressable
       onPress={onPress}
@@ -260,19 +457,33 @@ function AlarmCard({
       {/* Top Row: S M T W T F S and Switch */}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
-          {DAY_LABELS.map((dayLabel, index) => {
-            const isSelected = alarm.repeatDays.includes(index);
-            return (
-              <Text
-                key={index}
-                className={`mr-3 text-xs font-bold ${
-                  isSelected ? 'text-navy font-extrabold' : 'text-slate-300'
-                }`}
-              >
-                {dayLabel}
+          {alarm.isQuickAlarm ? (
+            <View className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200/50">
+              <Text className="text-[10px] font-black text-blue-600 uppercase tracking-wider">
+                Quick Alarm ({alarm.quickMinutes || 15}m)
               </Text>
-            );
-          })}
+            </View>
+          ) : alarm.repeatDays.length === 0 ? (
+            <View className="px-2 py-0.5 rounded-md bg-slate-100">
+              <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Once
+              </Text>
+            </View>
+          ) : (
+            DAY_LABELS.map((dayLabel, index) => {
+              const isSelected = alarm.repeatDays.includes(index);
+              return (
+                <Text
+                  key={index}
+                  className={`mr-3 text-xs font-bold ${
+                    isSelected ? 'text-navy font-extrabold' : 'text-slate-300'
+                  }`}
+                >
+                  {dayLabel}
+                </Text>
+              );
+            })
+          )}
         </View>
 
         {/* Custom Alba Switch */}
@@ -301,8 +512,11 @@ function AlarmCard({
           {period}
         </Text>
         {hasMission && (
-          <View className="ml-3 rounded-lg bg-slate-100 px-2 py-0.5">
-            <Text className="text-xs">{missionIcon}</Text>
+          <View className="ml-3 rounded-lg bg-slate-100 px-2 py-0.5 flex-row items-center">
+            <Text className="text-xs mr-1">{missionIcon}</Text>
+            <Text className="text-[10px] font-black text-slate-600">
+              {alarm.missions.length}
+            </Text>
           </View>
         )}
       </View>
@@ -310,7 +524,7 @@ function AlarmCard({
       {/* Bottom Row: Label & Menu */}
       <View className="flex-row items-center justify-between pt-1">
         <View className="flex-row items-center flex-1 pr-2">
-          <Text className="mr-1 text-sm">🐥</Text>
+          <Text className="mr-1.5 text-sm">{badgeIcon}</Text>
           <Text
             className="text-xs font-semibold text-slate-500"
             numberOfLines={1}
@@ -318,7 +532,17 @@ function AlarmCard({
             {alarm.label || 'Wake up early'}
           </Text>
         </View>
-        <Text className="text-base font-bold text-slate-300">⋮</Text>
+
+        <TouchableOpacity
+          onPress={e => {
+            e.stopPropagation();
+            onOpenMenu();
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          className="p-1"
+        >
+          <Text className="text-base font-bold text-slate-400">⋮</Text>
+        </TouchableOpacity>
       </View>
     </Pressable>
   );
@@ -336,7 +560,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </Text>
       <Pressable
         onPress={onAdd}
-        className="rounded-2xl bg-primary px-6 py-3.5 shadow-sm active:bg-primary-dark"
+        className="rounded-2xl bg-[#FF2D55] px-6 py-3.5 shadow-sm active:bg-[#E0264A]"
       >
         <Text className="text-sm font-bold text-white">Create Alarm</Text>
       </Pressable>

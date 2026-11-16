@@ -3,6 +3,8 @@ import {
   BackHandler,
   Image,
   Modal,
+  PermissionsAndroid,
+  Platform,
   ScrollView,
   Switch,
   Text,
@@ -127,7 +129,34 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
     }
   }, [visible, initialMissions]);
 
-  const addLocalMission = (m: MissionType) => {
+  const addLocalMission = async (m: MissionType) => {
+    if (Platform.OS === 'android') {
+      if (['squat', 'photo', 'qr'].includes(m)) {
+        const hasCam = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+        if (!hasCam) {
+          const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
+            title: 'Camera Access Needed',
+            message: 'Alba needs camera permission to verify this mission.',
+            buttonPositive: 'Allow',
+          });
+          if (res !== PermissionsAndroid.RESULTS.GRANTED) {
+            return;
+          }
+        }
+      } else if (m === 'step' && Platform.Version >= 29) {
+        const hasAct = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION);
+        if (!hasAct) {
+          const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION, {
+            title: 'Motion Sensor Permission',
+            message: 'Alba needs physical activity access to count steps.',
+            buttonPositive: 'Allow',
+          });
+          if (res !== PermissionsAndroid.RESULTS.GRANTED) {
+            return;
+          }
+        }
+      }
+    }
     setLocalMissions(curr => (curr.length < 5 ? [...curr, m] : curr));
   };
 
@@ -456,6 +485,20 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
   const save = () => {
     NativeAlarm.stopSoundPreview().catch(() => {});
+
+    // Ensure system permissions on Android
+    if (Platform.OS === 'android') {
+      NativeAlarm.canScheduleExactAlarms().then(ok => {
+        if (!ok) NativeAlarm.openExactAlarmSettings();
+      });
+      if (Platform.Version >= 33) {
+        PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS).then(hasNotif => {
+          if (!hasNotif) {
+            PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS).catch(() => {});
+          }
+        });
+      }
+    }
 
     // Mission requirement validation
     if (draft.missions.includes('photo') && !draft.photoReferencePath) {

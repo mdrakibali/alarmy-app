@@ -40,4 +40,9 @@ export interface Alarm {
   wakeUpCheckMin?: number;
   timePressure?: boolean;
   labelReminder?: boolean;
+  isQuickAlarm?: boolean;
+  quickMinutes?: number;
+  isHabitAlarm?: boolean;
+  habitIcon?: string;
+  habitGoal?: string;
 }

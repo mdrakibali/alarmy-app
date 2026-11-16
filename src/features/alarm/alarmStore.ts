@@ -137,52 +137,61 @@ export const useAlarmStore = create<AlarmState>()(
         const native = await NativeAlarm.listAlarms();
         if (native.length === 0) return;
         set(s => {
+          const mapRowToAlarm = (row: any): Alarm => ({
+            id: row.id,
+            hour: row.hour ?? 7,
+            minute: row.minute ?? 0,
+            label: row.label ?? 'Alarm',
+            repeatDays: row.repeatDays ?? [],
+            enabled: row.enabled,
+            soundId: row.soundId ?? 'default',
+            volume: row.volume ?? 1.0,
+            vibrate: row.vibrate ?? true,
+            snooze: row.snooze ?? {
+              enabled: true,
+              intervalMin: 5,
+              maxCount: row.snoozeMaxCount ?? 3,
+            },
+            missions: (row.missions ?? []) as any,
+            wallpaper: row.wallpaper,
+            snoozedUntil: row.snoozeUsed > 0 ? row.triggerTimeMs : undefined,
+            gentleWakeup: true,
+            photoReferencePath: row.photoReferencePath,
+            photoMatchThreshold: row.photoMatchThreshold ?? 72,
+            barcodeValue: row.barcodeValue,
+            stepTarget: row.stepTarget ?? 5,
+            squatTarget: row.squatTarget ?? 3,
+            shakeTarget: row.shakeTarget ?? 5,
+            mathCount: row.mathCount ?? 2,
+            mathDifficulty: row.mathDifficulty ?? 'normal',
+            memoryPairs: row.memoryPairs ?? 6,
+            typingPhrase: row.typingPhrase,
+          });
+
           if (s.alarms.length === 0) {
-            const hydrated: Alarm[] = native.map(row => ({
-              id: row.id,
-              hour: row.hour ?? 7,
-              minute: row.minute ?? 0,
-              label: row.label ?? 'Alarm',
-              repeatDays: row.repeatDays ?? [],
-              enabled: row.enabled,
-              soundId: row.soundId ?? 'default',
-              volume: row.volume ?? 1.0,
-              vibrate: row.vibrate ?? true,
-              snooze: row.snooze ?? {
-                enabled: true,
-                intervalMin: 5,
-                maxCount: row.snoozeMaxCount ?? 3,
-              },
-              missions: (row.missions ?? []) as any,
-              wallpaper: row.wallpaper,
-              snoozedUntil: row.snoozeUsed > 0 ? row.triggerTimeMs : undefined,
-              gentleWakeup: true,
-              photoReferencePath: row.photoReferencePath,
-              photoMatchThreshold: row.photoMatchThreshold ?? 72,
-              barcodeValue: row.barcodeValue,
-              stepTarget: row.stepTarget ?? 5,
-              squatTarget: row.squatTarget ?? 3,
-              shakeTarget: row.shakeTarget ?? 5,
-              mathCount: row.mathCount ?? 2,
-              mathDifficulty: row.mathDifficulty ?? 'normal',
-              memoryPairs: row.memoryPairs ?? 6,
-              typingPhrase: row.typingPhrase,
-            }));
-            return { alarms: hydrated };
+            return { alarms: native.map(mapRowToAlarm) };
           }
 
-          return {
-            alarms: s.alarms.map(alarm => {
-              const match = native.find(row => row.id === alarm.id);
-              if (!match) return alarm;
-              return {
-                ...alarm,
-                enabled: match.enabled,
-                snoozedUntil:
-                  match.snoozeUsed > 0 ? match.triggerTimeMs : undefined,
-              };
-            }),
-          };
+          // Merge existing state with native updates, and include any new native alarms
+          const updatedAlarms = s.alarms.map(alarm => {
+            const match = native.find(row => row.id === alarm.id);
+            if (!match) return alarm;
+            return {
+              ...alarm,
+              enabled: match.enabled,
+              snoozedUntil:
+                match.snoozeUsed > 0 ? match.triggerTimeMs : undefined,
+            };
+          });
+
+          // Add any alarms that exist in native DB but were not yet in store
+          for (const row of native) {
+            if (!updatedAlarms.some(a => a.id === row.id)) {
+              updatedAlarms.push(mapRowToAlarm(row));
+            }
+          }
+
+          return { alarms: updatedAlarms };
         });
       },
     }),
