@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Alba</string>
+    <string name="uninstall_protection_label">Alba Uninstall Protection</string>
+    <string name="uninstall_protection_description">Prevents Alba from being uninstalled during wake-up missions to ensure you wake up.</string>
 </resources>

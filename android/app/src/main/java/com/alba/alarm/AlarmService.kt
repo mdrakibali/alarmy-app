@@ -137,6 +137,35 @@ class AlarmService : Service() {
 
     private val volumeFadeHandler = Handler(Looper.getMainLooper())
     private var volumeFadeRunnable: Runnable? = null
+    private var volumeGuardRunnable: Runnable? = null
+    private var targetStreamVolume: Int = 0
+
+    /**
+     * Volume Guard (Anti-mute Lock):
+     * Runs every 500ms while the alarm is ringing.
+     * If the user presses the hardware volume down key, Android lowers STREAM_ALARM.
+     * This guard immediately forces it back up so the user cannot sleep through the alarm!
+     */
+    private fun startVolumeGuard(audioManager: AudioManager?, maxStreamVol: Int) {
+        targetStreamVolume = (maxStreamVol * 0.95f).toInt().coerceAtLeast(1)
+        volumeGuardRunnable?.let { volumeFadeHandler.removeCallbacks(it) }
+        volumeGuardRunnable = object : Runnable {
+            override fun run() {
+                try {
+                    if (isRinging && audioManager != null) {
+                        val current = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+                        if (current < targetStreamVolume) {
+                            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, targetStreamVolume, 0)
+                        }
+                        volumeFadeHandler.postDelayed(this, 500)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "VolumeGuard stream adjustment error", e)
+                }
+            }
+        }
+        volumeFadeHandler.post(volumeGuardRunnable!!)
+    }
 
     private fun startCrescendoVolume(player: MediaPlayer, targetVolume: Float) {
         // Start gently at 10% volume
@@ -150,17 +179,17 @@ class AlarmService : Service() {
             override fun run() {
                 try {
                     if (isRinging && player.isPlaying && currentVol < targetVolume) {
-                        // Increase volume by 6% every 1.5 seconds until target volume
-                        currentVol = (currentVol + 0.06f).coerceAtMost(targetVolume)
+                        // Increase volume by 5% every 1 second until target volume is reached (~20 seconds)
+                        currentVol = (currentVol + 0.05f).coerceAtMost(targetVolume)
                         player.setVolume(currentVol, currentVol)
                         if (currentVol < targetVolume) {
-                            volumeFadeHandler.postDelayed(this, 1500)
+                            volumeFadeHandler.postDelayed(this, 1000)
                         }
                     }
                 } catch (e: Exception) {}
             }
         }
-        volumeFadeHandler.postDelayed(volumeFadeRunnable!!, 1500)
+        volumeFadeHandler.postDelayed(volumeFadeRunnable!, 1000)
     }
 
     private fun startAlarmAudio(alarm: AlarmModel?) {
@@ -192,16 +221,14 @@ class AlarmService : Service() {
                 audioManager?.requestAudioFocus(null, AudioManager.STREAM_ALARM, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
             }
 
-            // Ensure physical alarm stream is audible (prevent silent playback if phone was muted)
+            // Ensure physical alarm stream is audible and start Volume Guard (Anti-mute)
             val maxStreamVol = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 1
-            val currentStreamVol = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0
-            if (currentStreamVol < (maxStreamVol * 0.4f).toInt()) {
-                audioManager?.setStreamVolume(
-                    AudioManager.STREAM_ALARM,
-                    (maxStreamVol * 0.8f).toInt().coerceAtLeast(1),
-                    0
-                )
-            }
+            audioManager?.setStreamVolume(
+                AudioManager.STREAM_ALARM,
+                (maxStreamVol * 0.95f).toInt().coerceAtLeast(1),
+                0
+            )
+            startVolumeGuard(audioManager, maxStreamVol)
 
             var soundUri: Uri? = null
 
@@ -293,6 +320,8 @@ class AlarmService : Service() {
 
         volumeFadeRunnable?.let { r: Runnable -> volumeFadeHandler.removeCallbacks(r) }
         volumeFadeRunnable = null
+        volumeGuardRunnable?.let { r: Runnable -> volumeFadeHandler.removeCallbacks(r) }
+        volumeGuardRunnable = null
 
         try {
             mediaPlayer?.stop()

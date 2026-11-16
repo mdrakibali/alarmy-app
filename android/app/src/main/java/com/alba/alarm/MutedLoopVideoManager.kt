@@ -15,4 +15,14 @@ class MutedLoopVideoManager : SimpleViewManager<MutedLoopVideoView>() {
     fun setSrc(view: MutedLoopVideoView, src: String?) {
         view.setSource(src)
     }
+
+    @ReactProp(name = "muted", defaultBoolean = true)
+    fun setMuted(view: MutedLoopVideoView, muted: Boolean) {
+        view.setMuted(muted)
+    }
+
+    @ReactProp(name = "volume", defaultFloat = 1.0f)
+    fun setVolume(view: MutedLoopVideoView, volume: Float) {
+        view.setVolumeLevel(volume)
+    }
 }

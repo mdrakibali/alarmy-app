@@ -230,6 +230,26 @@ class AlarmModuleBridge {
     }
   }
 
+  async isUninstallProtectionEnabled(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule?.isUninstallProtectionEnabled) return false;
+    try {
+      return await AlarmModule.isUninstallProtectionEnabled();
+    } catch {
+      return false;
+    }
+  }
+
+  enableUninstallProtection(): void {
+    if (Platform.OS === 'android' && AlarmModule?.enableUninstallProtection) {
+      AlarmModule.enableUninstallProtection();
+    }
+  }
+
+  async disableUninstallProtection(): Promise<boolean> {
+    if (Platform.OS !== 'android' || !AlarmModule?.disableUninstallProtection) return false;
+    return await AlarmModule.disableUninstallProtection();
+  }
+
   async canScheduleExactAlarms(): Promise<boolean> {
     if (Platform.OS !== 'android' || !AlarmModule) {
       return true;

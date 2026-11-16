@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
+  AppState,
   Image,
   Linking,
   Platform,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   View,
 } from 'react-native';
@@ -29,6 +31,7 @@ export function SettingsScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [exactAlarmAllowed, setExactAlarmAllowed] = useState(true);
   const [batteryIgnored, setBatteryIgnored] = useState(true);
+  const [uninstallProtection, setUninstallProtection] = useState(false);
   const [eveningType, setEveningType] = useState(false);
   const [lateSleep, setLateSleep] = useState(false);
   const suggestedHour = suggestChronotypeHour({ evening: eveningType, lateSleep });
@@ -44,6 +47,10 @@ export function SettingsScreen() {
 
   useEffect(() => {
     checkPermissions();
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') checkPermissions();
+    });
+    return () => sub.remove();
   }, []);
 
   const checkPermissions = async () => {
@@ -52,6 +59,8 @@ export function SettingsScreen() {
       setExactAlarmAllowed(exact);
       const battery = await NativeAlarm.isIgnoringBatteryOptimizations();
       setBatteryIgnored(battery);
+      const admin = await NativeAlarm.isUninstallProtectionEnabled();
+      setUninstallProtection(admin);
     }
   };
 
@@ -310,7 +319,7 @@ export function SettingsScreen() {
             )}
           </Row>
 
-          <Row last>
+          <Row>
             <View className="flex-1 pr-3">
               <Text className="text-sm text-slate-800 font-bold">
                 Battery Optimization Bypass
@@ -329,6 +338,40 @@ export function SettingsScreen() {
                 <Text className="text-xs font-bold text-white">Disable</Text>
               </Pressable>
             )}
+          </Row>
+
+          <Row last>
+            <View className="flex-1 pr-3">
+              <Text className="text-sm text-slate-800 font-bold">
+                🛡️ Prevent Uninstall (Device Admin)
+              </Text>
+              <Text className="text-xs text-slate-500 mt-0.5">
+                {uninstallProtection
+                  ? 'Protected 🔒 - Cannot uninstall during ringing alarms'
+                  : 'Disabled - App can be uninstalled to skip missions'}
+              </Text>
+            </View>
+            <Switch
+              value={uninstallProtection}
+              onValueChange={async (on) => {
+                if (on) {
+                  NativeAlarm.enableUninstallProtection();
+                } else {
+                  try {
+                    await NativeAlarm.disableUninstallProtection();
+                    setUninstallProtection(false);
+                  } catch (e) {
+                    toast.showToast({
+                      title: 'Cannot Disable Now',
+                      message: 'An alarm is ringing or snoozed. Complete it first!',
+                      type: 'error',
+                    });
+                  }
+                }
+              }}
+              trackColor={{ false: '#E2E8F0', true: '#1652E6' }}
+              thumbColor="#FFFFFF"
+            />
           </Row>
         </Section>
       )}

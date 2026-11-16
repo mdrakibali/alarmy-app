@@ -8,12 +8,17 @@ import android.os.Build
 import android.widget.FrameLayout
 import android.widget.VideoView
 
+import android.media.MediaPlayer
+
 /**
- * Full-bleed wallpaper video. Volume stays at zero so it cannot replace the alarm.
+ * Full-bleed wallpaper video with configurable mute / audio toggle.
  */
 class MutedLoopVideoView(context: Context) : FrameLayout(context) {
     private val video = VideoView(context)
     private var current: String? = null
+    private var isMuted: Boolean = true
+    private var volumeLevel: Float = 1.0f
+    private var mediaPlayerRef: MediaPlayer? = null
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -25,18 +30,37 @@ class MutedLoopVideoView(context: Context) : FrameLayout(context) {
         )
     }
 
+    fun setMuted(muted: Boolean) {
+        isMuted = muted
+        applyVolume()
+    }
+
+    fun setVolumeLevel(vol: Float) {
+        volumeLevel = vol.coerceIn(0f, 1f)
+        applyVolume()
+    }
+
+    private fun applyVolume() {
+        val vol = if (isMuted) 0f else volumeLevel
+        try {
+            mediaPlayerRef?.setVolume(vol, vol)
+        } catch (_: Exception) {}
+    }
+
     fun setSource(uri: String?) {
         if (uri.isNullOrBlank()) {
             current = null
             video.stopPlayback()
+            mediaPlayerRef = null
             return
         }
         if (uri == current) return
         current = uri
         video.setVideoURI(Uri.parse(uri))
         video.setOnPreparedListener { player ->
+            mediaPlayerRef = player
             player.isLooping = true
-            player.setVolume(0f, 0f)
+            applyVolume()
             player.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)

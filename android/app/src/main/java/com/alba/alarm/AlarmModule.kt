@@ -311,6 +311,27 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun isUninstallProtectionEnabled(promise: Promise) {
+        promise.resolve(UninstallProtection.isEnabled(reactContext))
+    }
+
+    @ReactMethod
+    fun enableUninstallProtection() {
+        val activity = currentActivity ?: reactContext
+        UninstallProtection.requestEnable(activity)
+    }
+
+    @ReactMethod
+    fun disableUninstallProtection(promise: Promise) {
+        if (AlarmService.isRinging) {
+            promise.reject("ERR_ALARM_LOCKED", "An alarm mission is actively ringing. Complete the mission first.")
+            return
+        }
+        UninstallProtection.disable(reactContext)
+        promise.resolve(true)
+    }
+
+    @ReactMethod
     fun canUseFullScreenIntent(promise: Promise) {
         if (Build.VERSION.SDK_INT >= 34) {
             val manager = reactContext.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
