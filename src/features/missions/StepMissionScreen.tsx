@@ -14,6 +14,7 @@ import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { proceedToNextMission } from './missionNavigation';
 
@@ -24,35 +25,17 @@ const DEFAULT_STEPS = 5;
 export function StepMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const target = route.params?.stepTarget ?? DEFAULT_STEPS;
-  const [stepsWalked, setStepsWalked] = useState(0);
+  const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
+  const [stepsWalked, setStepsWalked] = useState(() => Math.min(target - 1, Math.max(0, savedSubProgress)));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const handleSimulateStep = () => {
-    try {
-      Vibration.vibrate(50);
-    } catch {}
-    setStepsWalked(prev => {
-      const next = prev + 1;
-      if (next >= target) {
-        setTimeout(() => {
-          completeMission();
-        }, 150);
-        return target;
-      }
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
-    return () => sub.remove();
-  }, []);
 
   const isCompletedRef = useRef(false);
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    useActiveMissionStore.getState().updateSubProgress(target);
 
     try {
       Vibration.vibrate([0, 120, 60, 120]);
@@ -86,11 +69,37 @@ export function StepMissionScreen({ navigation, route }: Props) {
     setShowSuccessModal(true);
   }, [navigation, route.params, target]);
 
+  const handleManualStepFallback = () => {
+    try {
+      Vibration.vibrate(50);
+    } catch {}
+    setStepsWalked(prev => {
+      const next = prev + 1;
+      useActiveMissionStore.getState().updateSubProgress(next);
+      if (next >= target) {
+        setTimeout(() => {
+          completeMission();
+        }, 150);
+        return target;
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => sub.remove();
+  }, []);
+
   const addStep = useCallback((count: number) => {
-    setStepsWalked(count);
-    if (count >= target) {
-      completeMission();
-    }
+    setStepsWalked(prev => {
+      const next = Math.max(prev, count);
+      useActiveMissionStore.getState().updateSubProgress(next);
+      if (next >= target) {
+        completeMission();
+      }
+      return next;
+    });
   }, [completeMission, target]);
 
   const [sensorMissing, setSensorMissing] = useState(false);
@@ -184,7 +193,7 @@ export function StepMissionScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* Step Guide & Quick Test Trigger */}
+        {/* Step Guide & Sensor Status */}
         <View className="items-center w-full mb-4 px-2">
           <View className="bg-white/90 rounded-2xl p-4 w-full border border-slate-200 mb-3 shadow-xs">
             <Text className="text-xs font-bold text-navy text-center">
@@ -192,19 +201,25 @@ export function StepMissionScreen({ navigation, route }: Props) {
             </Text>
           </View>
 
-          <Pressable
-            onPress={handleSimulateStep}
-            className="w-full bg-emerald-600 py-3 rounded-2xl items-center shadow-xs mb-3 active:bg-emerald-700"
-          >
-            <Text className="text-white text-xs font-black uppercase tracking-wider">
-              ⚡ +1 Step (Quick Test)
+          {sensorMissing ? (
+            <View className="w-full items-center">
+              <Pressable
+                onPress={handleManualStepFallback}
+                className="w-full bg-amber-500 py-3 rounded-2xl items-center shadow-xs mb-2 active:bg-amber-600"
+              >
+                <Text className="text-white text-xs font-black uppercase tracking-wider">
+                  ⚠️ Sensor Unavailable: Tap to Step (+1)
+                </Text>
+              </Pressable>
+              <Text className="text-xs text-subtext text-center font-medium">
+                Step sensor not available on this device or permission denied.
+              </Text>
+            </View>
+          ) : (
+            <Text className="text-xs font-semibold text-slate-500 text-center">
+              Hardware step sensor active. Walk around to register steps.
             </Text>
-          </Pressable>
-          <Text className="text-xs font-bold text-subtext text-center">
-            {sensorMissing
-              ? 'Sensor missing or disabled. Tap Quick Test above to step.'
-              : 'Walk with phone or tap Quick Test above for testing.'}
-          </Text>
+          )}
         </View>
       </View>
 

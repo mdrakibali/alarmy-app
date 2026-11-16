@@ -12,6 +12,7 @@ import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { proceedToNextMission } from './missionNavigation';
 
@@ -27,7 +28,8 @@ export function SquatMissionScreen({ navigation, route }: Props) {
   const missionsParam = route.params?.missions;
   const allMissions = useMemo(() => missionsParam ?? [], [missionsParam]);
 
-  const [squatsDone, setSquatsDone] = useState(0);
+  const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
+  const [squatsDone, setSquatsDone] = useState(() => Math.min(target - 1, Math.max(0, savedSubProgress)));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
@@ -40,6 +42,8 @@ export function SquatMissionScreen({ navigation, route }: Props) {
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    useActiveMissionStore.getState().updateSubProgress(target);
 
     try {
       Vibration.vibrate([0, 150, 75, 150]);
@@ -77,6 +81,7 @@ export function SquatMissionScreen({ navigation, route }: Props) {
     } catch {}
     setSquatsDone(prev => {
       const next = prev + 1;
+      useActiveMissionStore.getState().updateSubProgress(next);
       if (next >= target) {
         setTimeout(() => {
           completeMission();
@@ -90,7 +95,9 @@ export function SquatMissionScreen({ navigation, route }: Props) {
   const startPose = useCallback(async () => {
     const result = await NativeAlarm.openCameraMission({ mode: 'squat', target });
     if (result?.completed) {
-      setSquatsDone(result.count ?? target);
+      const done = result.count ?? target;
+      setSquatsDone(done);
+      useActiveMissionStore.getState().updateSubProgress(done);
       completeMission();
       return;
     }
@@ -183,20 +190,25 @@ export function SquatMissionScreen({ navigation, route }: Props) {
             </Text>
           </Pressable>
 
-          {/* Quick simulation button for testing */}
-          <Pressable
-            onPress={handleSimulateSquat}
-            className="w-full bg-emerald-600 py-3 rounded-2xl items-center shadow-xs mb-3 active:bg-emerald-700"
-          >
-            <Text className="text-white text-xs font-black uppercase tracking-wider">
-              ⚡ +1 Squat (Quick Test)
+          {poseBlocked ? (
+            <View className="w-full items-center">
+              <Pressable
+                onPress={handleSimulateSquat}
+                className="w-full bg-amber-500 py-3 rounded-2xl items-center shadow-xs mb-2 active:bg-amber-600"
+              >
+                <Text className="text-white text-xs font-black uppercase tracking-wider">
+                  ⚠️ Camera Unavailable: Tap to Count Squat (+1)
+                </Text>
+              </Pressable>
+              <Text className="text-xs text-subtext text-center font-medium">
+                Camera access blocked or unavailable. Use manual squat count fallback.
+              </Text>
+            </View>
+          ) : (
+            <Text className="text-xs font-semibold text-slate-500 text-center">
+              A rep counts only after a full down and up detected by the front camera.
             </Text>
-          </Pressable>
-          <Text className="text-xs font-bold text-subtext text-center">
-            {poseBlocked
-              ? 'Pose detection did not finish. Shaking the phone does not count.'
-              : 'A rep counts only after a full down and up detected by the camera.'}
-          </Text>
+          )}
         </View>
       </View>
 

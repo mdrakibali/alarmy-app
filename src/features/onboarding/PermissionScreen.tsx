@@ -23,6 +23,14 @@ export function PermissionScreen({ navigation, route }: Props) {
   const [hasNotification, setHasNotification] = useState(false);
   const [hasBatteryOpt, setHasBatteryOpt] = useState(false);
   const [hasOverlay, setHasOverlay] = useState(false);
+  const [hasCamera, setHasCamera] = useState(false);
+  const [hasActivity, setHasActivity] = useState(false);
+
+  const needsCamera =
+    Boolean(params.missions?.some(m => ['photo', 'qr', 'squat'].includes(m))) ||
+    ['photo', 'qr', 'squat'].includes(params.mission);
+  const needsStep =
+    Boolean(params.missions?.includes('step')) || params.mission === 'step';
 
   const checkAllPermissions = useCallback(async () => {
     if (Platform.OS !== 'android') return;
@@ -45,6 +53,18 @@ export function PermissionScreen({ navigation, route }: Props) {
 
       const overlay = await NativeAlarm.canDrawOverlays();
       setHasOverlay(Boolean(overlay));
+
+      const cam = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+      setHasCamera(Boolean(cam));
+
+      if (Platform.Version >= 29) {
+        const act = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION,
+        );
+        setHasActivity(Boolean(act));
+      } else {
+        setHasActivity(true);
+      }
     } catch (e) {
       console.warn('Error checking permissions:', e);
     }
@@ -74,6 +94,42 @@ export function PermissionScreen({ navigation, route }: Props) {
           },
         );
         setHasNotification(res === PermissionsAndroid.RESULTS.GRANTED);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  };
+
+  const requestCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const res = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Access',
+            message: 'Alba needs camera access for Photo, QR/Barcode, and Squat wake-up missions.',
+            buttonPositive: 'Allow',
+          },
+        );
+        setHasCamera(res === PermissionsAndroid.RESULTS.GRANTED);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  };
+
+  const requestActivityPermission = async () => {
+    if (Platform.OS === 'android' && Platform.Version >= 29) {
+      try {
+        const res = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION,
+          {
+            title: 'Physical Activity Tracking',
+            message: 'Alba needs motion sensor access to count your morning steps accurately.',
+            buttonPositive: 'Allow',
+          },
+        );
+        setHasActivity(res === PermissionsAndroid.RESULTS.GRANTED);
       } catch (e) {
         console.warn(e);
       }
@@ -259,6 +315,74 @@ export function PermissionScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* 5. Camera Access (if required by mission) */}
+        {needsCamera ? (
+          <View className="bg-white rounded-3xl p-4 mb-3 border border-slate-100 shadow-xs flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1 pr-3">
+              <View className="h-12 w-12 rounded-2xl bg-rose-50 items-center justify-center mr-3 border border-rose-100">
+                <Text className="text-2xl">📸</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-slate-900">
+                  Camera Access
+                </Text>
+                <Text className="text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">
+                  Required for Photo, QR/Barcode, and Squat wake-up missions
+                </Text>
+              </View>
+            </View>
+
+            {hasCamera ? (
+              <View className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 flex-row items-center">
+                <Text className="text-emerald-600 font-black text-xs mr-1">✓</Text>
+                <Text className="text-emerald-700 font-extrabold text-xs">Allowed</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={requestCameraPermission}
+                className="px-4 py-2 rounded-xl bg-primary shadow-xs active:bg-primary-dark"
+              >
+                <Text className="text-white text-xs font-black">Allow</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null}
+
+        {/* 6. Physical Activity Recognition (if required by step mission) */}
+        {needsStep ? (
+          <View className="bg-white rounded-3xl p-4 mb-3 border border-slate-100 shadow-xs flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1 pr-3">
+              <View className="h-12 w-12 rounded-2xl bg-indigo-50 items-center justify-center mr-3 border border-indigo-100">
+                <Text className="text-2xl">🚶</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-slate-900">
+                  Physical Activity
+                </Text>
+                <Text className="text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">
+                  Required for counting steps to dismiss morning step alarms
+                </Text>
+              </View>
+            </View>
+
+            {hasActivity ? (
+              <View className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 flex-row items-center">
+                <Text className="text-emerald-600 font-black text-xs mr-1">✓</Text>
+                <Text className="text-emerald-700 font-extrabold text-xs">Allowed</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={requestActivityPermission}
+                className="px-4 py-2 rounded-xl bg-primary shadow-xs active:bg-primary-dark"
+              >
+                <Text className="text-white text-xs font-black">Allow</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null}
 
         {/* Tip Box */}
         <View className="bg-ice/70 border border-primary/20 rounded-2xl p-3.5 mt-2 flex-row items-center">

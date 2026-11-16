@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/ui/Screen';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
 
 export function ReportScreen() {
   const insets = useAppInsets();
+  const navigation = useNavigation();
+  const canGoBack = navigation.canGoBack();
 
   const logs = useReportStore(s => s.logs);
   const getWeeklyConsistency = useReportStore(s => s.getWeeklyConsistency);
@@ -32,6 +35,15 @@ export function ReportScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
+        {canGoBack && (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="self-start py-1 px-3 mb-3 rounded-full bg-slate-100 flex-row items-center"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text className="text-slate-700 font-bold text-xs">‹ Back</Text>
+          </TouchableOpacity>
+        )}
         <Text className="text-3xl font-black text-navy tracking-tight">Report</Text>
         <Text className="text-sm text-subtext mt-1">
           Your weekly wake-up and consistency analysis

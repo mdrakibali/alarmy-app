@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  BackHandler,
   Image,
   Modal,
   ScrollView,
@@ -19,10 +20,6 @@ import { findMotionMedia, MOTION_MEDIA } from '@/data/motionMedia';
 import { OFFLINE_PACK } from '@/data/offlinePack';
 import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
-import {
-  CodeScanner,
-  useCameraPermission,
-} from '@/components/camera/CameraScanner';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useToast } from '@/components/ui/AppToast';
@@ -295,19 +292,46 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   const updateAlarm = useAlarmStore(s => s.updateAlarm);
   const removeAlarm = useAlarmStore(s => s.removeAlarm);
 
-  const [draft, setDraft] = useState<Omit<Alarm, 'id'>>(() =>
-    existing ? { ...existing } : blankAlarm(),
+  const initialDraft = useMemo<Omit<Alarm, 'id'>>(
+    () => (existing ? { ...existing } : blankAlarm()),
+    [existing],
   );
+  const [draft, setDraft] = useState<Omit<Alarm, 'id'>>(initialDraft);
 
   const [showSnoozePicker, setShowSnoozePicker] = useState(false);
   const [showSoundPicker, setShowSoundPicker] = useState(false);
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [registeringCode, setRegisteringCode] = useState(false);
-  const { hasPermission, requestPermission } = useCameraPermission();
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
   const [soundQuery, setSoundQuery] = useState('');
   const [downloadedSounds, setDownloadedSounds] = useState<{ id: string; path: string; title: string }[]>([]);
+
+  const isDirty = useMemo(() => {
+    return JSON.stringify(draft) !== JSON.stringify(initialDraft);
+  }, [draft, initialDraft]);
+
+  const handleCancel = () => {
+    if (isDirty) {
+      setShowDiscardModal(true);
+    } else {
+      NativeAlarm.stopSoundPreview().catch(() => {});
+      navigation.goBack();
+    }
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      if (isDirty) {
+        setShowDiscardModal(true);
+        return true;
+      }
+      NativeAlarm.stopSoundPreview().catch(() => {});
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [isDirty]);
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const selectedVisualId = draft.wallpaper || alarmBackground;
@@ -322,7 +346,6 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   // Stop preview on unmount
   useEffect(() => {
     return () => {
-      setRegisteringCode(false);
       try {
         Promise.resolve(NativeAlarm.stopSoundPreview()).catch(() => {});
       } catch {}
@@ -432,7 +455,29 @@ export function AlarmEditScreen({ navigation, route }: Props) {
   };
 
   const save = () => {
-    NativeAlarm.stopSoundPreview();
+    NativeAlarm.stopSoundPreview().catch(() => {});
+
+    // Mission requirement validation
+    if (draft.missions.includes('photo') && !draft.photoReferencePath) {
+      toast.showToast({
+        title: 'Reference Photo Required 📸',
+        message: 'Please take and register a reference photo before saving.',
+        type: 'error',
+        icon: '📸',
+      });
+      return;
+    }
+
+    if (draft.missions.includes('qr') && !draft.barcodeValue?.trim()) {
+      toast.showToast({
+        title: 'Barcode / QR Required 📷',
+        message: 'Please scan or enter a registered code before saving.',
+        type: 'error',
+        icon: '📷',
+      });
+      return;
+    }
+
     const label = draft.label.trim() || 'Wake up early';
     // Default repeatDays to all 7 days if none selected, so alarm always rings reliably every day (including Sat & Sun)
     const repeatDays =
@@ -493,10 +538,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       >
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => {
-            NativeAlarm.stopSoundPreview();
-            navigation.goBack();
-          }}
+          onPress={handleCancel}
           hitSlop={10}
           className="p-1"
         >
@@ -1020,76 +1062,218 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           )}
         </View>
 
+      {/* Math Mission Configuration */}
+      {draft.missions.includes('math') ? (
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
+          <Text className="text-sm font-bold text-navy mb-1">🧠 Math Mission Settings</Text>
+          <Text className="text-xs text-subtext mb-2">Configure problem count and difficulty</Text>
+          <Text className="text-xs font-semibold text-subtext mb-1">Number of problems:</Text>
+          <View className="flex-row flex-wrap mb-3">
+            {[1, 3, 5, 10].map(count => {
+              const isSel = (draft.mathCount ?? 3) === count;
+              return (
+                <TouchableOpacity
+                  key={count}
+                  onPress={() => patch({ mathCount: count })}
+                  className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                    isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                  } border`}
+                >
+                  <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                    {count} {count === 1 ? 'problem' : 'problems'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text className="text-xs font-semibold text-subtext mb-1">Difficulty:</Text>
+          <View className="flex-row flex-wrap">
+            {(['easy', 'normal', 'hard'] as const).map(diff => {
+              const isSel = (draft.mathDifficulty ?? 'normal') === diff;
+              return (
+                <TouchableOpacity
+                  key={diff}
+                  onPress={() => patch({ mathDifficulty: diff })}
+                  className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                    isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                  } border`}
+                >
+                  <Text className={`text-xs font-bold capitalize ${isSel ? 'text-white' : 'text-navy'}`}>
+                    {diff}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {/* Memory Mission Configuration */}
+      {draft.missions.includes('memory') ? (
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
+          <Text className="text-sm font-bold text-navy mb-1">🧩 Memory Game Settings</Text>
+          <Text className="text-xs text-subtext mb-2">Select how many card pairs to match</Text>
+          <View className="flex-row flex-wrap">
+            {[4, 6, 8, 12].map(pairs => {
+              const isSel = (draft.memoryPairs ?? 6) === pairs;
+              return (
+                <TouchableOpacity
+                  key={pairs}
+                  onPress={() => patch({ memoryPairs: pairs })}
+                  className={`mr-2 mb-1 px-3 py-1.5 rounded-full ${
+                    isSel ? 'bg-primary border-primary' : 'bg-background border-primary/30'
+                  } border`}
+                >
+                  <Text className={`text-xs font-bold ${isSel ? 'text-white' : 'text-navy'}`}>
+                    {pairs} pairs ({pairs * 2} cards)
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {/* Typing Mission Configuration */}
+      {draft.missions.includes('typing') ? (
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
+          <Text className="text-sm font-bold text-navy mb-1">⌨️ Typing Mission Settings</Text>
+          <Text className="text-xs text-subtext mb-2">Choose or type an affirmation phrase</Text>
+          <TextInput
+            value={draft.typingPhrase ?? 'I am wide awake and ready to conquer the day.'}
+            onChangeText={text => patch({ typingPhrase: text })}
+            placeholder="Type your morning affirmation"
+            placeholderTextColor="#94A3B8"
+            multiline
+            className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-sm text-slate-800 font-medium mb-2.5"
+          />
+          <View className="flex-row flex-wrap">
+            {[
+              'I am wide awake and ready to conquer the day.',
+              'Rise and shine with positive energy and focus.',
+              'Today will be a successful, peaceful, and productive day.',
+            ].map((preset, idx) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => patch({ typingPhrase: preset })}
+                className="mr-2 mb-1.5 px-3 py-1 rounded-full bg-ice border border-primary/30"
+              >
+                <Text className="text-xs text-primary font-semibold">Preset {idx + 1}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
       {/* Mission capture setup */}
       {draft.missions.includes('photo') ? (
-        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
+          <Text className="text-sm font-bold text-navy mb-1">📸 Photo Mission Setup</Text>
+          <Text className="text-xs text-subtext mb-3">
+            Register a clear photo of an object (sink, coffee mug, desk) you must photograph to stop the alarm.
+          </Text>
           <TouchableOpacity
+            activeOpacity={0.85}
             onPress={async () => {
               const shot = await NativeAlarm.openCameraMission({ mode: 'photo' });
               if (shot?.path) {
                 patch({ photoReferencePath: shot.path });
+                toast.showToast({
+                  title: 'Photo Registered! 📸',
+                  message: 'Reference photo captured successfully.',
+                  type: 'success',
+                  icon: '📸',
+                });
               }
             }}
+            className="bg-primary py-3 px-4 rounded-2xl items-center active:bg-primary-dark mb-3"
           >
-            <Text className="text-sm font-bold text-navy">
-              {draft.photoReferencePath ? 'Reference photo saved. Tap to replace.' : 'Register reference photo'}
+            <Text className="text-white font-bold text-sm">
+              {draft.photoReferencePath ? '✓ Replace Reference Photo' : '📸 Take Reference Photo'}
             </Text>
           </TouchableOpacity>
-          <View className="flex-row mt-3">
+          {draft.photoReferencePath ? (
+            <Text className="text-xs font-semibold text-emerald-600 mb-2">
+              ✓ Registered: {draft.photoReferencePath.split('/').pop()}
+            </Text>
+          ) : (
+            <Text className="text-xs font-semibold text-rose-500 mb-2">
+              ⚠️ Photo required before saving this alarm
+            </Text>
+          )}
+          <Text className="text-xs font-semibold text-subtext mb-1">Match sensitivity:</Text>
+          <View className="flex-row">
             {[65, 72, 85].map(value => (
               <TouchableOpacity
                 key={value}
                 onPress={() => patch({ photoMatchThreshold: value })}
-                className={`mr-2 px-3 py-2 rounded-full border ${
+                className={`mr-2 px-3 py-1.5 rounded-full border ${
                   (draft.photoMatchThreshold ?? 72) === value ? 'bg-navy' : 'bg-white border-slate-200'
                 }`}
               >
                 <Text className={`text-xs font-bold ${(draft.photoMatchThreshold ?? 72) === value ? 'text-white' : 'text-navy'}`}>
-                  Match {value}%
+                  {value}% {value === 72 ? '(Recommended)' : ''}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
       ) : null}
+
+      {/* QR / Barcode Mission Setup */}
       {draft.missions.includes('qr') ? (
-        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
-          <Text className="text-sm font-bold text-navy">
-            {draft.barcodeValue ? `Registered code: ${draft.barcodeValue}` : 'No QR or barcode registered'}
+        <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
+          <Text className="text-sm font-bold text-navy mb-1">📷 QR / Barcode Registration</Text>
+          <Text className="text-xs text-subtext mb-3">
+            Scan a real barcode (toothpaste, shampoo, book) or enter the code manually.
           </Text>
-          <Text className="text-xs text-subtext mt-1">
-            Scan the real code during setup. Typed text is not saved.
-          </Text>
+          <View className="flex-row items-center mb-3">
+            <TextInput
+              value={draft.barcodeValue ?? ''}
+              onChangeText={val => patch({ barcodeValue: val })}
+              placeholder="Barcode number or QR code text"
+              placeholderTextColor="#94A3B8"
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 font-mono mr-2"
+            />
+            {draft.barcodeValue ? (
+              <TouchableOpacity
+                onPress={() => patch({ barcodeValue: '' })}
+                className="h-9 w-9 bg-slate-100 rounded-full items-center justify-center mr-1"
+              >
+                <Text className="text-xs text-slate-500 font-bold">✕</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
           <TouchableOpacity
+            activeOpacity={0.85}
             onPress={async () => {
-              if (!hasPermission) {
-                const granted = await requestPermission();
-                if (!granted) return;
+              const res = await NativeAlarm.openCameraMission({ mode: 'barcode' });
+              if (res?.value) {
+                patch({ barcodeValue: res.value.trim() });
+                toast.showToast({
+                  title: 'Barcode Registered! ✓',
+                  message: `Code: ${res.value.trim()}`,
+                  type: 'success',
+                  icon: '📷',
+                });
               }
-              setRegisteringCode(true);
             }}
-            className="mt-3 bg-primary py-3 rounded-2xl items-center active:bg-primary-dark"
+            className="bg-primary py-3 px-4 rounded-2xl items-center active:bg-primary-dark"
           >
-            <Text className="text-white font-bold">Scan code to register</Text>
+            <Text className="text-white font-bold text-sm">📸 Scan with Camera Scanner</Text>
           </TouchableOpacity>
-          {registeringCode ? (
-            <View className="h-56 mt-3 rounded-2xl overflow-hidden">
-              <CodeScanner
-                style={{ width: '100%', height: '100%' }}
-                isActive={registeringCode}
-                barcodeFormats={['qr-code', 'ean-13', 'ean-8', 'code-128', 'upc-a']}
-                onBarcodeScanned={(codes: any[]) => {
-                  const value = codes.find((code: any) => code.rawValue)?.rawValue;
-                  if (!value) return;
-                  patch({ barcodeValue: value.trim() });
-                  setRegisteringCode(false);
-                }}
-                onError={() => setRegisteringCode(false)}
-              />
-            </View>
-          ) : null}
+          {draft.barcodeValue ? (
+            <Text className="text-xs font-semibold text-emerald-600 mt-2">
+              ✓ Registered code: {draft.barcodeValue}
+            </Text>
+          ) : (
+            <Text className="text-xs font-semibold text-rose-500 mt-2">
+              ⚠️ Code required before saving this alarm
+            </Text>
+          )}
         </View>
       ) : null}
+
       {draft.missions.includes('step') || draft.missions.includes('squat') || draft.missions.includes('shake') ? (
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
           <Text className="text-sm font-bold text-navy mb-2">Mission targets (Quick testing & settings)</Text>
@@ -1187,6 +1371,23 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         insetsBottom={insets.bottom}
         onClose={() => setShowMissionModal(false)}
         onSave={missions => patch({ missions })}
+      />
+
+      {/* Custom Discard Confirmation Modal */}
+      <CustomConfirmModal
+        visible={showDiscardModal}
+        title="Discard changes?"
+        message="You have unsaved changes. Are you sure you want to discard them and go back?"
+        icon="⚠️"
+        confirmText="Discard"
+        cancelText="Keep Editing"
+        isDestructive
+        onConfirm={() => {
+          setShowDiscardModal(false);
+          NativeAlarm.stopSoundPreview().catch(() => {});
+          navigation.goBack();
+        }}
+        onCancel={() => setShowDiscardModal(false)}
       />
 
       {/* Custom Delete Confirmation Modal */}

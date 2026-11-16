@@ -7,6 +7,7 @@ import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
 import { useAppInsets } from '@/utils/safeArea';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { proceedToNextMission } from './missionNavigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MathMission'>;
@@ -19,26 +20,52 @@ interface MathProblem {
   options: number[];
 }
 
-function generateProblem(): MathProblem {
-  const ops: Array<'+' | '-' | '×'> = ['+', '-', '×'];
+function generateProblem(difficulty: 'easy' | 'normal' | 'hard' = 'normal'): MathProblem {
+  const ops: Array<'+' | '-' | '×'> = difficulty === 'easy' ? ['+', '-'] : ['+', '-', '×'];
   const op = ops[Math.floor(Math.random() * ops.length)];
 
   let a = 0;
   let b = 0;
   let ans = 0;
 
-  if (op === '+') {
-    a = Math.floor(Math.random() * 40) + 12;
-    b = Math.floor(Math.random() * 40) + 12;
-    ans = a + b;
-  } else if (op === '-') {
-    a = Math.floor(Math.random() * 50) + 30;
-    b = Math.floor(Math.random() * 25) + 5;
-    ans = a - b;
+  if (difficulty === 'easy') {
+    if (op === '+') {
+      a = Math.floor(Math.random() * 9) + 1;
+      b = Math.floor(Math.random() * 9) + 1;
+      ans = a + b;
+    } else {
+      a = Math.floor(Math.random() * 10) + 5;
+      b = Math.floor(Math.random() * 5) + 1;
+      ans = a - b;
+    }
+  } else if (difficulty === 'hard') {
+    if (op === '+') {
+      a = Math.floor(Math.random() * 80) + 30;
+      b = Math.floor(Math.random() * 80) + 30;
+      ans = a + b;
+    } else if (op === '-') {
+      a = Math.floor(Math.random() * 90) + 50;
+      b = Math.floor(Math.random() * 50) + 20;
+      ans = a - b;
+    } else {
+      a = Math.floor(Math.random() * 18) + 11;
+      b = Math.floor(Math.random() * 9) + 3;
+      ans = a * b;
+    }
   } else {
-    a = Math.floor(Math.random() * 11) + 3;
-    b = Math.floor(Math.random() * 9) + 2;
-    ans = a * b;
+    if (op === '+') {
+      a = Math.floor(Math.random() * 40) + 12;
+      b = Math.floor(Math.random() * 40) + 12;
+      ans = a + b;
+    } else if (op === '-') {
+      a = Math.floor(Math.random() * 50) + 30;
+      b = Math.floor(Math.random() * 25) + 5;
+      ans = a - b;
+    } else {
+      a = Math.floor(Math.random() * 11) + 3;
+      b = Math.floor(Math.random() * 9) + 2;
+      ans = a * b;
+    }
   }
 
   // Generate 3 plausible distractors
@@ -65,11 +92,15 @@ export function MathMissionScreen({ navigation, route }: Props) {
   const alarmId = route.params?.alarmId;
   const missionIndex = route.params?.missionIndex ?? 0;
   const allMissions = route.params?.missions ?? [];
+  const TOTAL_PROBLEMS = route.params?.mathCount ?? 2;
+  const difficulty = route.params?.mathDifficulty ?? 'normal';
 
-  const TOTAL_PROBLEMS = 2;
-  const [problemIndex, setProblemIndex] = useState(0);
+  const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
+  const [problemIndex, setProblemIndex] = useState(
+    savedSubProgress < TOTAL_PROBLEMS ? savedSubProgress : 0,
+  );
   const [currentProblem, setCurrentProblem] = useState<MathProblem>(() =>
-    generateProblem(),
+    generateProblem(difficulty),
   );
   const [inputMode, setInputMode] = useState<'mcq' | 'keypad'>('mcq');
   const [userInput, setUserInput] = useState('');

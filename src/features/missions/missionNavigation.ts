@@ -10,6 +10,10 @@ export interface MissionNavigationExtraParams {
   referencePath?: string;
   matchThreshold?: number;
   registeredCode?: string;
+  mathCount?: number;
+  mathDifficulty?: 'easy' | 'normal' | 'hard';
+  memoryPairs?: number;
+  typingPhrase?: string;
 }
 
 export function navigateToMission(
@@ -25,6 +29,10 @@ export function navigateToMission(
     referencePath?: string;
     matchThreshold?: number;
     registeredCode?: string;
+    mathCount?: number;
+    mathDifficulty?: 'easy' | 'normal' | 'hard';
+    memoryPairs?: number;
+    typingPhrase?: string;
   },
   action: 'replace' | 'navigate' = 'replace',
 ): boolean {
@@ -40,6 +48,10 @@ export function navigateToMission(
   const matchThreshold =
     params.matchThreshold ?? alarm?.photoMatchThreshold ?? 72;
   const registeredCode = params.registeredCode ?? alarm?.barcodeValue;
+  const mathCount = params.mathCount ?? alarm?.mathCount ?? 2;
+  const mathDifficulty = params.mathDifficulty ?? alarm?.mathDifficulty ?? 'normal';
+  const memoryPairs = params.memoryPairs ?? alarm?.memoryPairs ?? 6;
+  const typingPhrase = params.typingPhrase ?? alarm?.typingPhrase;
 
   const baseParams = {
     alarmId: params.alarmId,
@@ -51,7 +63,7 @@ export function navigateToMission(
 
   switch (missionKey) {
     case 'math':
-      navFn('MathMission', baseParams);
+      navFn('MathMission', { ...baseParams, mathCount, mathDifficulty });
       return true;
     case 'shake':
       navFn('ShakeMission', { ...baseParams, shakeTarget });
@@ -60,10 +72,10 @@ export function navigateToMission(
       navFn('BarcodeMission', { ...baseParams, registeredCode });
       return true;
     case 'typing':
-      navFn('TypingMission', baseParams);
+      navFn('TypingMission', { ...baseParams, typingPhrase });
       return true;
     case 'memory':
-      navFn('MemoryMission', baseParams);
+      navFn('MemoryMission', { ...baseParams, memoryPairs });
       return true;
     case 'step':
       navFn('StepMission', { ...baseParams, stepTarget });

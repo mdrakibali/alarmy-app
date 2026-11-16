@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Pressable, Text, Vibration, View } from 'react-native';
+import { BackHandler, Text, Vibration, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppBackground } from '@/components/ui/AppBackground';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { proceedToNextMission } from './missionNavigation';
 
@@ -15,13 +16,19 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
 
   const REQUIRED_SHAKES = route.params?.shakeTarget ?? 5;
-  const [shakesLeft, setShakesLeft] = useState<number>(REQUIRED_SHAKES);
+  const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
+  const initialCompleted = Math.min(savedSubProgress, REQUIRED_SHAKES - 1);
+  const [shakesLeft, setShakesLeft] = useState<number>(() => {
+    return Math.max(1, REQUIRED_SHAKES - initialCompleted);
+  });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const isCompletedRef = useRef(false);
 
   const completeMission = useCallback(async () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
+
+    useActiveMissionStore.getState().updateSubProgress(REQUIRED_SHAKES);
 
     const alarmId = route.params?.alarmId;
     const missionIndex = route.params?.missionIndex ?? 0;
@@ -32,6 +39,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
       missionIndex,
       allMissions,
       alarmId,
+      { shakeTarget: REQUIRED_SHAKES },
     );
     if (hasNext) return;
 
@@ -48,7 +56,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
-  }, [navigation, route.params]);
+  }, [navigation, REQUIRED_SHAKES, route.params]);
 
   const handleShake = useCallback(() => {
     if (isCompletedRef.current) return;
@@ -58,6 +66,9 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
 
     setShakesLeft(prev => {
       const next = prev - 1;
+      const doneSoFar = REQUIRED_SHAKES - Math.max(0, next);
+      useActiveMissionStore.getState().updateSubProgress(doneSoFar);
+
       if (next <= 0) {
         if (!isCompletedRef.current) {
           setTimeout(() => {
@@ -68,7 +79,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
       }
       return next;
     });
-  }, [completeMission]);
+  }, [completeMission, REQUIRED_SHAKES]);
 
   useEffect(() => {
     // Disable back button during mission
@@ -130,19 +141,13 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* Bottom helper & Test button */}
-        <View className="w-full items-center">
-          <Pressable
-            onPress={handleShake}
-            className="w-full bg-emerald-600 py-3 rounded-2xl items-center shadow-xs mb-3 active:bg-emerald-700"
-          >
-            <Text className="text-white text-xs font-black uppercase tracking-wider">
-              ⚡ +1 Shake (Quick Test)
+        {/* Bottom helper */}
+        <View className="w-full items-center mb-4">
+          <View className="bg-white/90 rounded-2xl p-4 w-full border border-slate-200 shadow-xs">
+            <Text className="text-subtext text-center text-xs font-semibold">
+              💡 Physical movement with real sensor detection breaks morning grogginess. Keep shaking until the counter reaches zero!
             </Text>
-          </Pressable>
-          <Text className="text-subtext text-center text-xs font-medium mb-4">
-            Shake your device or use Quick Test for instant simulation.
-          </Text>
+          </View>
         </View>
       </View>
 

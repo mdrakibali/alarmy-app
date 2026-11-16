@@ -66,6 +66,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const [targetPhrase] = useState(
     () =>
+      route.params?.typingPhrase ||
       MOTIVATIONAL_PHRASES[
         Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)
       ],
@@ -96,6 +97,7 @@ export function TypingMissionScreen({ navigation, route }: Props) {
       missionIndex,
       allMissions,
       alarmId,
+      { typingPhrase: targetPhrase },
     );
     if (hasNext) return;
 

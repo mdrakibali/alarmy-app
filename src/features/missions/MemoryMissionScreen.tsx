@@ -12,6 +12,7 @@ import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useReportStore } from '@/storage/reportStore';
+import { useActiveMissionStore } from '@/storage/activeMissionStore';
 import { useAppInsets } from '@/utils/safeArea';
 import { proceedToNextMission } from './missionNavigation';
 
@@ -24,14 +25,13 @@ interface MemoryCard {
   isMatched: boolean;
 }
 
-const CARD_ICONS = ['🌟', '🍕', '🚀', '🐱', '⚽', '🎸'];
+const ALL_ICONS = ['🌟', '🍕', '🚀', '🐱', '⚽', '🎸', '🎯', '🥑', '⚡', '💎', '🍉', '🔥'];
 
-function generateCards(): MemoryCard[] {
+function generateCards(pairCount: number = 6): MemoryCard[] {
+  const chosenIcons = ALL_ICONS.slice(0, Math.min(pairCount, ALL_ICONS.length));
   const deck: MemoryCard[] = [];
   let id = 1;
-  // Duplicate icons for 6 pairs = 12 cards
-  const pairList = [...CARD_ICONS, ...CARD_ICONS];
-  // Shuffle
+  const pairList = [...chosenIcons, ...chosenIcons];
   pairList.sort(() => Math.random() - 0.5);
 
   pairList.forEach(icon => {
@@ -47,7 +47,21 @@ function generateCards(): MemoryCard[] {
 
 export function MemoryMissionScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
-  const [cards, setCards] = useState<MemoryCard[]>(() => generateCards());
+  const totalPairs = route.params?.memoryPairs ?? 6;
+  const savedSubProgress = useActiveMissionStore.getState().getSubProgress();
+
+  const [cards, setCards] = useState<MemoryCard[]>(() => {
+    const fresh = generateCards(totalPairs);
+    if (savedSubProgress > 0 && savedSubProgress < totalPairs) {
+      const iconsToMatch = ALL_ICONS.slice(0, savedSubProgress);
+      return fresh.map(c => ({
+        ...c,
+        isMatched: iconsToMatch.includes(c.icon),
+        isFlipped: iconsToMatch.includes(c.icon),
+      }));
+    }
+    return fresh;
+  });
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -64,6 +78,8 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
 
+    useActiveMissionStore.getState().updateSubProgress(totalPairs);
+
     try {
       Vibration.vibrate([0, 100, 50, 100]);
     } catch {}
@@ -77,6 +93,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
       missionIndex,
       allMissions,
       alarmId,
+      { memoryPairs: totalPairs },
     );
     if (hasNext) return;
 
@@ -93,7 +110,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
 
     await NativeAlarm.stopAlarm();
     setShowSuccessModal(true);
-  }, [navigation, route.params]);
+  }, [navigation, route.params, totalPairs]);
 
   const handleCardPress = (index: number) => {
     if (isProcessing) return;
@@ -121,6 +138,9 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
             const updated = [...prev];
             updated[firstIdx] = { ...updated[firstIdx], isMatched: true };
             updated[secondIdx] = { ...updated[secondIdx], isMatched: true };
+
+            const matchedCount = updated.filter(c => c.isMatched).length / 2;
+            useActiveMissionStore.getState().updateSubProgress(matchedCount);
 
             const allMatched = updated.every(c => c.isMatched);
             if (allMatched) {
@@ -169,19 +189,20 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
             Match All Card Pairs
           </Text>
           <Text className="text-xs text-slate-500 font-semibold mt-1">
-            Pairs Matched: {matchedPairs} / 6
+            Pairs Matched: {matchedPairs} / {totalPairs}
           </Text>
         </View>
 
-        {/* 4 x 3 Card Grid */}
+        {/* Dynamic Card Grid */}
         <View className="flex-row flex-wrap justify-between my-4">
           {cards.map((card, idx) => {
             const showFace = card.isFlipped || card.isMatched;
+            const cardWidth = totalPairs >= 8 ? 'w-[22%]' : 'w-[30%]';
             return (
               <Pressable
                 key={card.id}
                 onPress={() => handleCardPress(idx)}
-                className={`w-[30%] h-24 mb-3 rounded-2xl items-center justify-center border-2 shadow-sm ${
+                className={`${cardWidth} h-20 mb-3 rounded-2xl items-center justify-center border-2 shadow-sm ${
                   card.isMatched
                     ? 'bg-emerald-50 border-emerald-400'
                     : showFace
@@ -190,7 +211,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
                 }`}
               >
                 {showFace ? (
-                  <Text className="text-3xl">{card.icon}</Text>
+                  <Text className={totalPairs >= 8 ? 'text-2xl' : 'text-3xl'}>{card.icon}</Text>
                 ) : (
                   <Text className="text-xl text-slate-400 font-bold">❓</Text>
                 )}

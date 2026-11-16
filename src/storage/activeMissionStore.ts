@@ -10,12 +10,15 @@ export interface ActiveMissionSession {
   missions: string[];
   startedAt: number;
   lastUpdatedAt: number;
+  currentSubProgress?: number;
 }
 
 interface ActiveMissionState {
   session: ActiveMissionSession | null;
   startSession: (alarmId: string, missions: string[], startIndex?: number) => void;
   recordMissionCompleted: (alarmId: string, completedIndex: number, missionKey: string) => number;
+  updateSubProgress: (progress: number) => void;
+  getSubProgress: () => number;
   getActiveSession: (alarmId?: string) => {
     isInProgress: boolean;
     alarmId: string;
@@ -24,6 +27,7 @@ interface ActiveMissionState {
     completedMissions: string[];
     totalCount: number;
     missions: string[];
+    subProgress: number;
   } | null;
   clearSession: () => void;
 }
@@ -72,9 +76,26 @@ export const useActiveMissionStore = create<ActiveMissionState>((set, get) => ({
       missions,
       startedAt: Date.now(),
       lastUpdatedAt: Date.now(),
+      currentSubProgress: 0,
     };
     saveSession(newSession);
     set({ session: newSession });
+  },
+
+  updateSubProgress: (progress: number) => {
+    const current = get().session;
+    if (!current) return;
+    const updated: ActiveMissionSession = {
+      ...current,
+      currentSubProgress: progress,
+      lastUpdatedAt: Date.now(),
+    };
+    saveSession(updated);
+    set({ session: updated });
+  },
+
+  getSubProgress: () => {
+    return get().session?.currentSubProgress ?? 0;
   },
 
   recordMissionCompleted: (alarmId: string, completedIndex: number, missionKey: string) => {
@@ -101,6 +122,7 @@ export const useActiveMissionStore = create<ActiveMissionState>((set, get) => ({
       missions: missions.length > 0 ? missions : [missionKey],
       startedAt: current?.startedAt || Date.now(),
       lastUpdatedAt: Date.now(),
+      currentSubProgress: 0,
     };
     saveSession(updatedSession);
     set({ session: updatedSession });
@@ -123,6 +145,7 @@ export const useActiveMissionStore = create<ActiveMissionState>((set, get) => ({
       completedMissions: current.completedMissions,
       totalCount: current.missions.length,
       missions: current.missions,
+      subProgress: current.currentSubProgress ?? 0,
     };
   },
 

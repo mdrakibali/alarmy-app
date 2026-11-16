@@ -31,7 +31,7 @@ export type RootStackParamList = {
   AlarmEdit: { id?: string } | undefined;
   AlarmRinging: { id?: string } | undefined;
   SnoozeCountdown: { alarmId: string; intervalMin: number; wallpaper?: string };
-  MathMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  MathMission: { alarmId?: string; missionIndex?: number; missions?: string[]; mathCount?: number; mathDifficulty?: 'easy' | 'normal' | 'hard' } | undefined;
   ShakeMission: { alarmId?: string; missionIndex?: number; missions?: string[]; shakeTarget?: number } | undefined;
   StepMission: { alarmId?: string; missionIndex?: number; missions?: string[]; stepTarget?: number } | undefined;
   PhotoMission: {
@@ -47,6 +47,6 @@ export type RootStackParamList = {
   OfflineLibrary: undefined;
   Report: undefined;
   BarcodeMission: { alarmId?: string; missionIndex?: number; missions?: string[]; registeredCode?: string } | undefined;
-  TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
-  MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[] } | undefined;
+  TypingMission: { alarmId?: string; missionIndex?: number; missions?: string[]; typingPhrase?: string } | undefined;
+  MemoryMission: { alarmId?: string; missionIndex?: number; missions?: string[]; memoryPairs?: number } | undefined;
 };
