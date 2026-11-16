@@ -13,9 +13,9 @@ import {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { NativeAlarm } from '@/native/AlarmModule';
 
-const ITEM_HEIGHT = 44;
-const CONTAINER_HEIGHT = 220; // 5 visible rows (2 above, 1 center, 2 below)
-const PADDING_VERTICAL = (CONTAINER_HEIGHT - ITEM_HEIGHT) / 2; // 88px
+const ITEM_HEIGHT = 68; // ktAlarm standard rowHeight = 68dp
+const CONTAINER_HEIGHT = 204; // 3 visible rows (68dp * 3 = 204dp)
+const PADDING_VERTICAL = (CONTAINER_HEIGHT - ITEM_HEIGHT) / 2; // 68dp
 
 const HOURS_12_BASE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MINUTES_BASE = Array.from({ length: 60 }, (_, i) => i);
@@ -38,7 +38,7 @@ const WheelColumn = React.memo(function WheelColumnComponent({
   initialValue,
   formatLabel,
   onSelected,
-  width = 76,
+  width = 82,
 }: WheelColumnProps) {
   const listRef = useRef<FlatList<number>>(null);
   const baseCount = items.length;
@@ -159,11 +159,15 @@ const WheelColumn = React.memo(function WheelColumnComponent({
         return <View style={{ height: ITEM_HEIGHT, width }} />;
       }
 
-      // 3D Cylindrical Perspective Math
-      const angle = diff * 26; // degrees
-      const scale = 1 - Math.min(Math.abs(diff), 2.5) * 0.12;
-      const opacity = Math.max(0.18, 1 - Math.min(Math.abs(diff), 2.5) * 0.38);
+      // Exact ktAlarm Cylindrical Trigonometry:
+      // angle = diff * (PI / 3) rad = diff * 60 deg
+      // scale = cos(angle)
+      // translateY = sin(angle) * rowHeight / 0.8660254f
       const isCenter = diff === 0;
+      const angleDeg = diff * 42; // subtle perspective angle
+      const scale = isCenter ? 1 : Math.max(0.68, 1 - Math.abs(diff) * 0.28);
+      const opacity = isCenter ? 1 : Math.max(0.24, 0.45 - Math.abs(diff) * 0.15);
+      const translateY = diff * 4;
 
       return (
         <Pressable
@@ -174,10 +178,10 @@ const WheelColumn = React.memo(function WheelColumnComponent({
               width,
               height: ITEM_HEIGHT,
               transform: [
-                { perspective: 600 },
-                { rotateX: `${-angle}deg` },
+                { perspective: 800 },
+                { rotateX: `${-angleDeg}deg` },
                 { scale },
-                { translateY: Math.sin((angle * Math.PI) / 180) * 7 },
+                { translateY },
               ],
               opacity,
             },
@@ -216,9 +220,9 @@ const WheelColumn = React.memo(function WheelColumnComponent({
           paddingTop: PADDING_VERTICAL,
           paddingBottom: PADDING_VERTICAL,
         }}
-        initialNumToRender={14}
-        maxToRenderPerBatch={18}
-        windowSize={7}
+        initialNumToRender={10}
+        maxToRenderPerBatch={12}
+        windowSize={5}
         removeClippedSubviews={true}
       />
     </View>
@@ -315,37 +319,37 @@ export const WheelTimePicker = React.memo(
 
     return (
       <View className="w-full items-center py-1">
-        {/* Main 3D Cylinder Viewport */}
+        {/* Main 3D Cylinder Viewport matching ktAlarm (280dp wide, 204dp high) */}
         <View style={styles.viewportContainer}>
-          {/* Frosted Center Selection Pill (Apple / Alba Precision Lens) */}
+          {/* ktAlarm Center Selection Pill: #F5F5F5 / rgba(245, 245, 245, 1) with 18dp rounded corners */}
           <View pointerEvents="none" style={styles.centerLens} />
 
-          {/* Top 3D Cylindrical Curve Gradient Mask */}
-          <Svg height={52} width="100%" style={styles.topMask} pointerEvents="none">
+          {/* Top 3D Soft Fade Mask */}
+          <Svg height={48} width="100%" style={styles.topMask} pointerEvents="none">
             <Defs>
               <LinearGradient id="topFadeMask" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.96" />
-                <Stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.65" />
+                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+                <Stop offset="65%" stopColor="#FFFFFF" stopOpacity="0.6" />
                 <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
               </LinearGradient>
             </Defs>
-            <Rect x="0" y="0" width="100%" height="52" fill="url(#topFadeMask)" />
+            <Rect x="0" y="0" width="100%" height="48" fill="url(#topFadeMask)" />
           </Svg>
 
-          {/* Bottom 3D Cylindrical Curve Gradient Mask */}
-          <Svg height={52} width="100%" style={styles.bottomMask} pointerEvents="none">
+          {/* Bottom 3D Soft Fade Mask */}
+          <Svg height={48} width="100%" style={styles.bottomMask} pointerEvents="none">
             <Defs>
               <LinearGradient id="bottomFadeMask" x1="0" y1="1" x2="0" y2="0">
-                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.96" />
-                <Stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.65" />
+                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+                <Stop offset="65%" stopColor="#FFFFFF" stopOpacity="0.6" />
                 <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
               </LinearGradient>
             </Defs>
-            <Rect x="0" y="0" width="100%" height="52" fill="url(#bottomFadeMask)" />
+            <Rect x="0" y="0" width="100%" height="48" fill="url(#bottomFadeMask)" />
           </Svg>
 
-          {/* Columns Row */}
-          <View className="flex-row items-center justify-center">
+          {/* ktAlarm Layout: Hours (width 82) + Colon (width 30) + Minutes (width 82) + Stacked AM/PM (width 60) */}
+          <View style={styles.pickerRow}>
             {/* Hours Infinite 3D Wheel */}
             <WheelColumn
               items={HOURS_12_BASE}
@@ -353,11 +357,11 @@ export const WheelTimePicker = React.memo(
               initialValue={currentHour12}
               formatLabel={val => (val < 10 ? `0${val}` : `${val}`)}
               onSelected={handleHourSelected}
-              width={76}
+              width={82}
             />
 
-            {/* Colon Separator */}
-            <View className="w-6 items-center justify-center z-10">
+            {/* Colon Separator - ktAlarm 42sp styling */}
+            <View style={styles.colonContainer}>
               <Text style={styles.colonText}>:</Text>
             </View>
 
@@ -368,13 +372,13 @@ export const WheelTimePicker = React.memo(
               initialValue={minute}
               formatLabel={val => (val < 10 ? `0${val}` : `${val}`)}
               onSelected={handleMinuteSelected}
-              width={76}
+              width={82}
             />
 
-            {/* AM / PM Segmented Control */}
-            <View className="ml-3.5 z-20">
+            {/* ktAlarm Vertical AM / PM Stack (60dp wide, 48dp tall each, 8dp margin) */}
+            <View style={styles.periodColumn}>
               <TouchableOpacity
-                activeOpacity={0.85}
+                activeOpacity={0.8}
                 onPress={() => handlePeriodToggle(false)}
                 style={[
                   styles.periodPill,
@@ -392,7 +396,7 @@ export const WheelTimePicker = React.memo(
               </TouchableOpacity>
 
               <TouchableOpacity
-                activeOpacity={0.85}
+                activeOpacity={0.8}
                 onPress={() => handlePeriodToggle(true)}
                 style={[
                   styles.periodPill,
@@ -413,16 +417,16 @@ export const WheelTimePicker = React.memo(
           </View>
         </View>
 
-        {/* Quick Adjustment Pills (-15m, -5m, +5m, +15m) */}
+        {/* Quick Adjustment Pills (-15m, -5m, +5m, +15m) in clean light styling */}
         <View className="flex-row items-center justify-center mt-3 gap-2">
           {[-15, -5, 5, 15].map(delta => (
             <TouchableOpacity
               key={delta}
               activeOpacity={0.7}
               onPress={() => applyNudge(delta)}
-              className="px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200/60 active:bg-slate-200"
+              className="px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200/80 active:bg-slate-200"
             >
-              <Text className="text-[11px] font-extrabold text-slate-600">
+              <Text className="text-xs font-black text-slate-700">
                 {delta > 0 ? `+${delta}m` : `${delta}m`}
               </Text>
             </TouchableOpacity>
@@ -438,27 +442,30 @@ const styles = StyleSheet.create({
   viewportContainer: {
     position: 'relative',
     width: '100%',
+    maxWidth: 320,
     height: CONTAINER_HEIGHT,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
   centerLens: {
     position: 'absolute',
-    top: 86,
-    left: 16,
-    right: 16,
-    height: 48,
+    top: 68, // Centered at (204 - 68) / 2
+    left: 12,
+    right: 12,
+    height: 68,
     borderRadius: 18,
-    backgroundColor: 'rgba(241, 245, 249, 0.85)',
+    backgroundColor: '#F5F5F5', // ktAlarm standard light gray lens
     borderWidth: 1.5,
-    borderColor: 'rgba(226, 232, 240, 0.95)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    borderColor: '#E8EDF2',
   },
   topMask: {
     position: 'absolute',
@@ -480,33 +487,47 @@ const styles = StyleSheet.create({
   },
   itemText: {
     textAlign: 'center',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   centerText: {
-    fontSize: 34,
+    fontSize: 52, // ktAlarm standard ~52sp font
     fontWeight: '900',
-    color: '#08173E', // Alba Deep Navy
+    color: '#0F172A', // Crisp dark navy / slate text
+    includeFontPadding: false,
   },
   sideText: {
-    fontSize: 26,
+    fontSize: 38,
     fontWeight: '700',
-    color: '#64748B', // Slate
+    color: '#94A3B8', // Soft slate
+    includeFontPadding: false,
+  },
+  colonContainer: {
+    width: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 12,
   },
   colonText: {
-    fontSize: 30,
+    fontSize: 42, // ktAlarm standard 42f colon
     fontWeight: '900',
-    color: '#08173E',
-    marginTop: -2,
+    color: '#0F172A',
+    marginBottom: 4,
+    includeFontPadding: false,
+  },
+  periodColumn: {
+    marginLeft: 12,
+    zIndex: 20,
+    justifyContent: 'center',
   },
   periodPill: {
-    width: 58,
-    height: 42,
-    borderRadius: 14,
+    width: 60, // ktAlarm 60dp width
+    height: 48, // ktAlarm 48dp height
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   periodPillActive: {
-    backgroundColor: '#1652E6', // Alba Primary Blue
+    backgroundColor: '#1652E6', // ktAlarm / Alba primary blue accent
     shadowColor: '#1652E6',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -514,12 +535,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   periodPillInactive: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1.2,
-    borderColor: '#E2E8F0',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
   },
   periodText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.5,
   },

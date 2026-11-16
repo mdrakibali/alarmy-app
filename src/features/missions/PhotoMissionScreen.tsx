@@ -159,12 +159,12 @@ export function PhotoMissionScreen({ navigation, route }: Props) {
         </View>
 
         {/* Interactive Camera Card */}
-        <View className="w-full bg-slate-900 rounded-3xl p-6 items-center justify-center my-3 border border-slate-800 shadow-xl">
+        <View className="w-full bg-white rounded-3xl p-6 items-center justify-center my-3 border border-slate-100 shadow-sm">
           <Text className="text-5xl mb-2">📷</Text>
-          <Text className="text-white font-extrabold text-lg text-center mb-1">
+          <Text className="text-slate-900 font-extrabold text-lg text-center mb-1">
             Real-time Photo Matcher
           </Text>
-          <Text className="text-slate-400 text-xs text-center mb-5 px-4">
+          <Text className="text-slate-500 text-xs text-center mb-5 px-4">
             The camera includes a picture-in-picture target preview and instant illumination-tolerant verification.
           </Text>
 

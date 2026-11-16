@@ -144,6 +144,8 @@ export function PermissionScreen({ navigation, route }: Props) {
       soundId: params.soundId,
       mission: params.mission,
       missions: params.missions,
+      photoReferencePath: params.photoReferencePath,
+      barcodeValue: params.barcodeValue,
     });
   };
 

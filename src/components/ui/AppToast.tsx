@@ -91,19 +91,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         >
           <Pressable
             onPress={hideToast}
-            className="bg-slate-900 rounded-2xl py-3 px-4 flex-row items-center justify-between border border-slate-700 shadow-xl"
+            className="bg-white rounded-2xl py-3 px-4 flex-row items-center justify-between border border-slate-200 shadow-2xl"
           >
             <View className="flex-row items-center flex-1 pr-3">
               <Text className="text-xl mr-3">
                 {toast.icon || (toast.type === 'error' ? '⚠️' : '✨')}
               </Text>
               <View className="flex-1">
-                <Text className="text-sm font-extrabold text-white tracking-tight">
+                <Text className="text-sm font-extrabold text-slate-900 tracking-tight">
                   {toast.title}
                 </Text>
                 {Boolean(toast.message) && (
                   <Text
-                    className="text-xs font-medium text-slate-300 mt-0.5 leading-4"
+                    className="text-xs font-medium text-slate-600 mt-0.5 leading-4"
                     numberOfLines={2}
                   >
                     {toast.message}

@@ -37,28 +37,52 @@ const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[]
     icon: '📱',
   },
   {
-    id: 'qr',
-    title: 'QR / Barcode Mission',
-    desc: 'Leave bed and scan your bathroom toothpaste or coffee mug to turn off!',
-    icon: '📷',
-  },
-  {
-    id: 'typing',
-    title: 'Typing Mission',
-    desc: 'Type motivational morning affirmations accurately to start your day!',
-    icon: '⌨️',
-  },
-  {
-    id: 'photo',
-    title: 'Photo Mission',
-    desc: 'Leave bed and photograph a registered object (like your bathroom sink)!',
-    icon: '📸',
+    id: 'step',
+    title: 'Step Counter Mission',
+    desc: 'Get out of bed and walk 10–50 steps to wake up your body and mind!',
+    icon: '🚶',
   },
   {
     id: 'squat',
     title: 'Squat Mission',
     desc: 'Do 10 morning squats holding your phone to activate your blood flow!',
     icon: '🏋️',
+  },
+  {
+    id: 'photo',
+    title: 'Photo Match Mission',
+    desc: 'Leave bed and photograph a registered object (like your bathroom sink)!',
+    icon: '📸',
+  },
+  {
+    id: 'qr',
+    title: 'QR / Barcode Mission',
+    desc: 'Leave bed and scan your bathroom toothpaste or coffee mug to turn off!',
+    icon: '📷',
+  },
+  {
+    id: 'memory',
+    title: 'Memory Card Game',
+    desc: 'Flip and match pairs of cards to activate brain focus and alertness!',
+    icon: '🧩',
+  },
+  {
+    id: 'typing',
+    title: 'Typing Affirmation',
+    desc: 'Type motivational morning affirmations accurately to start your day!',
+    icon: '⌨️',
+  },
+  {
+    id: 'flip',
+    title: 'Flip Phone Mission',
+    desc: 'Repeatedly flip your phone face-up and face-down to break sleep inertia!',
+    icon: '🔄',
+  },
+  {
+    id: 'blink',
+    title: 'Eye Blink Mission',
+    desc: 'Look at front camera and blink repeatedly to wake up your eyes!',
+    icon: '👁️',
   },
 ];
 
@@ -134,6 +158,48 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   const [previewWallpaper, setPreviewWallpaper] = useState<MotionItem | null>(null);
   const [selectedSound, setSelectedSound] = useState('alarm_gentle_morning');
   const [selectedMissions, setSelectedMissions] = useState<MissionType[]>(['shake']);
+  const [photoReferencePath, setPhotoReferencePath] = useState<string | undefined>(undefined);
+  const [barcodeValue, setBarcodeValue] = useState<string | undefined>(undefined);
+  const [soundCategory, setSoundCategory] = useState<string>('All');
+
+  const soundCategories = useMemo(
+    () => [
+      'All',
+      'Gentle Morning',
+      'Acoustic Guitar',
+      'Soft Piano',
+      'Nature & Birds',
+      'Rain & Thunder',
+      'Classic Bell',
+      'Energetic Wake Up',
+    ],
+    [],
+  );
+
+  const filteredSounds = useMemo(() => {
+    if (soundCategory === 'All') return ALARM_SOUND_ITEMS;
+    return ALARM_SOUND_ITEMS.filter(s =>
+      s.category.toLowerCase().includes(soundCategory.toLowerCase()),
+    );
+  }, [soundCategory]);
+
+  const handleTakeReferencePhoto = async () => {
+    try {
+      const shot = await NativeAlarm.openCameraMission({ mode: 'register_photo' });
+      if (shot?.path) {
+        setPhotoReferencePath(shot.path);
+      }
+    } catch {}
+  };
+
+  const handleScanReferenceBarcode = async () => {
+    try {
+      const res = await NativeAlarm.openCameraMission({ mode: 'register_barcode' });
+      if (res?.value) {
+        setBarcodeValue(res.value.trim());
+      }
+    } catch {}
+  };
 
   // Stop audio preview on unmount
   useEffect(() => {
@@ -190,6 +256,8 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         soundId: selectedSound,
         mission: selectedMissions[0],
         missions: selectedMissions,
+        photoReferencePath,
+        barcodeValue,
       } as any);
     }
   };

@@ -19,6 +19,8 @@ export type RootStackParamList = {
     soundId: string;
     mission: MissionType;
     missions?: MissionType[];
+    photoReferencePath?: string;
+    barcodeValue?: string;
   };
   AlarmPreview: {
     hour: number;
@@ -27,6 +29,8 @@ export type RootStackParamList = {
     soundId: string;
     mission: MissionType;
     missions?: MissionType[];
+    photoReferencePath?: string;
+    barcodeValue?: string;
   };
   AlarmEdit: { id?: string } | undefined;
   AlarmRinging: { id?: string } | undefined;

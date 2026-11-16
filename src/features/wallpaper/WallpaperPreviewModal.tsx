@@ -209,25 +209,25 @@ export function WallpaperPreviewModal({
             />
             <View
               style={{ paddingBottom: insets.bottom + 16 }}
-              className="bg-neutral-900 rounded-t-3xl p-6 border-t border-neutral-800 z-10"
+              className="bg-white rounded-t-3xl p-6 border-t border-slate-200 z-10"
             >
-              <View className="h-1 w-12 bg-neutral-700 rounded-full self-center mb-5" />
-              <Text className="text-lg font-black text-white text-center mb-1">
+              <View className="h-1 w-12 bg-slate-300 rounded-full self-center mb-5" />
+              <Text className="text-lg font-black text-slate-900 text-center mb-1">
                 Apply Animated Wallpaper
               </Text>
-              <Text className="text-xs text-neutral-400 text-center mb-5">
+              <Text className="text-xs text-slate-500 text-center mb-5">
                 Choose where to display "{wallpaper.name}"
               </Text>
 
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleApplyTo('all')}
-                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700"
+                className="p-4 rounded-2xl bg-slate-50 mb-2.5 border border-slate-200"
               >
-                <Text className="text-sm font-extrabold text-white">
+                <Text className="text-sm font-extrabold text-slate-900">
                   📱 Apply to All (Global Default)
                 </Text>
-                <Text className="text-xs text-neutral-400 mt-0.5">
+                <Text className="text-xs text-slate-500 mt-0.5">
                   Sets as background for Home, Alarm, and Ringing screens
                 </Text>
               </TouchableOpacity>
@@ -235,12 +235,12 @@ export function WallpaperPreviewModal({
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleApplyTo('alarm')}
-                className="p-4 rounded-2xl bg-neutral-800 mb-2.5 border border-neutral-700"
+                className="p-4 rounded-2xl bg-slate-50 mb-2.5 border border-slate-200"
               >
-                <Text className="text-sm font-extrabold text-white">
+                <Text className="text-sm font-extrabold text-slate-900">
                   ⏰ Apply to Alarm Screen
                 </Text>
-                <Text className="text-xs text-neutral-400 mt-0.5">
+                <Text className="text-xs text-slate-500 mt-0.5">
                   Display when viewing or configuring alarms
                 </Text>
               </TouchableOpacity>
@@ -248,12 +248,12 @@ export function WallpaperPreviewModal({
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleApplyTo('ringing')}
-                className="p-4 rounded-2xl bg-neutral-800 mb-4 border border-neutral-700"
+                className="p-4 rounded-2xl bg-slate-50 mb-4 border border-slate-200"
               >
-                <Text className="text-sm font-extrabold text-white">
+                <Text className="text-sm font-extrabold text-slate-900">
                   🔔 Apply to Ringing Screen
                 </Text>
-                <Text className="text-xs text-neutral-400 mt-0.5">
+                <Text className="text-xs text-slate-500 mt-0.5">
                   Shows full-screen looping GIF when morning alarm rings
                 </Text>
               </TouchableOpacity>
@@ -261,9 +261,9 @@ export function WallpaperPreviewModal({
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => setShowApplySheet(false)}
-                className="py-3.5 rounded-2xl bg-neutral-800 items-center"
+                className="py-3.5 rounded-2xl bg-slate-100 items-center border border-slate-200"
               >
-                <Text className="text-sm font-bold text-neutral-400">
+                <Text className="text-sm font-bold text-slate-600">
                   Cancel
                 </Text>
               </TouchableOpacity>

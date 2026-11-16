@@ -100,7 +100,7 @@ const QuickWallpaperCard = React.memo(
           borderColor: isSelected ? '#1652E6' : '#E2E8F0',
           borderWidth: 2,
         }}
-        className="w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative bg-slate-900"
+        className="w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative bg-slate-100"
       >
         {lottieSource ? (
           <LottieView
@@ -149,6 +149,11 @@ interface MissionPickerModalProps {
   visible: boolean;
   initialMissions: MissionType[];
   insetsBottom: number;
+  hasPhotoReference?: boolean;
+  hasBarcode?: boolean;
+  barcodeValue?: string;
+  onRegisterPhoto?: () => void;
+  onRegisterBarcode?: () => void;
   onClose: () => void;
   onSave: (missions: MissionType[]) => void;
 }
@@ -157,6 +162,11 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
   visible,
   initialMissions,
   insetsBottom,
+  hasPhotoReference = false,
+  hasBarcode = false,
+  barcodeValue = '',
+  onRegisterPhoto,
+  onRegisterBarcode,
   onClose,
   onSave,
 }: MissionPickerModalProps) {
@@ -210,6 +220,11 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
   const handleDone = () => {
     onSave(localMissions);
     onClose();
+    if (localMissions.includes('photo') && !hasPhotoReference && onRegisterPhoto) {
+      setTimeout(onRegisterPhoto, 300);
+    } else if (localMissions.includes('qr') && !hasBarcode && onRegisterBarcode) {
+      setTimeout(onRegisterBarcode, 300);
+    }
   };
 
   return (
@@ -272,60 +287,101 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
                     borderColor: count > 0 ? '#1652E6' : '#F1F5F9',
                     borderWidth: 1.5,
                   }}
-                  className="flex-row items-center justify-between p-4 rounded-2xl mb-2.5"
+                  className="p-4 rounded-2xl mb-2.5"
                 >
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      if (canAddMore) addLocalMission(missionKey);
-                    }}
-                    className="flex-row items-center flex-1 pr-2"
-                  >
-                    <Text className="text-3xl mr-3">{item.icon}</Text>
-                    <View className="flex-1">
-                      <View className="flex-row items-center mb-0.5">
-                        <Text className="text-base font-bold text-slate-900 mr-2">
-                          {item.title}
-                        </Text>
-                        <View className="rounded px-1.5 py-0.5 bg-rose-50">
-                          <Text className="text-[9px] font-black text-rose-500">
-                            {item.badge}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text className="text-xs text-slate-500 font-medium leading-tight">
-                        {item.desc}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <View className="flex-row items-center">
-                    {count > 0 && (
-                      <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => removeLocalMission(missionKey)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-2"
-                      >
-                        <Text className="text-slate-700 font-black text-sm">−</Text>
-                      </TouchableOpacity>
-                    )}
+                  <View className="flex-row items-center justify-between">
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={() => {
                         if (canAddMore) addLocalMission(missionKey);
                       }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      disabled={!canAddMore}
-                      className={`px-3.5 py-1.5 rounded-full ${
-                        canAddMore ? 'bg-primary' : 'bg-slate-300'
-                      }`}
+                      className="flex-row items-center flex-1 pr-2"
                     >
-                      <Text className="text-white text-xs font-black">
-                        {count > 0 ? `+ Add (${count})` : '+ Add'}
-                      </Text>
+                      <Text className="text-3xl mr-3">{item.icon}</Text>
+                      <View className="flex-1">
+                        <View className="flex-row items-center mb-0.5">
+                          <Text className="text-base font-bold text-slate-900 mr-2">
+                            {item.title}
+                          </Text>
+                          <View className="rounded px-1.5 py-0.5 bg-rose-50">
+                            <Text className="text-[9px] font-black text-rose-500">
+                              {item.badge}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text className="text-xs text-slate-500 font-medium leading-tight">
+                          {item.desc}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
+
+                    <View className="flex-row items-center">
+                      {count > 0 && (
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => removeLocalMission(missionKey)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          className="h-8 w-8 rounded-full bg-slate-200 items-center justify-center mr-2"
+                        >
+                          <Text className="text-slate-700 font-black text-sm">−</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          if (canAddMore) addLocalMission(missionKey);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        disabled={!canAddMore}
+                        className={`px-3.5 py-1.5 rounded-full ${
+                          canAddMore ? 'bg-primary' : 'bg-slate-300'
+                        }`}
+                      >
+                        <Text className="text-white text-xs font-black">
+                          {count > 0 ? `+ Add (${count})` : '+ Add'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
+
+                  {/* Immediate registration helper for photo & qr */}
+                  {count > 0 && missionKey === 'photo' && (
+                    <View className="mt-2.5 pt-2 border-t border-slate-200/60 flex-row items-center justify-between">
+                      <Text className="text-[11px] font-semibold text-slate-600 flex-1 mr-2">
+                        {hasPhotoReference ? '✓ Reference photo registered' : '⚠️ Photo required to verify waking up'}
+                      </Text>
+                      {onRegisterPhoto && (
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={onRegisterPhoto}
+                          className="bg-primary px-3 py-1.5 rounded-xl shadow-xs"
+                        >
+                          <Text className="text-white text-[11px] font-bold">
+                            {hasPhotoReference ? 'Change 📸' : 'Take Photo 📸'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+
+                  {count > 0 && missionKey === 'qr' && (
+                    <View className="mt-2.5 pt-2 border-t border-slate-200/60 flex-row items-center justify-between">
+                      <Text className="text-[11px] font-semibold text-slate-600 flex-1 mr-2">
+                        {hasBarcode ? `✓ Code: ${barcodeValue}` : '⚠️ Barcode / QR required to verify'}
+                      </Text>
+                      {onRegisterBarcode && (
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={onRegisterBarcode}
+                          className="bg-emerald-600 px-3 py-1.5 rounded-xl shadow-xs"
+                        >
+                          <Text className="text-white text-[11px] font-bold">
+                            {hasBarcode ? 'Rescan 📷' : 'Scan Code 📷'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -1668,6 +1724,35 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       <MissionPickerModal
         visible={showMissionModal}
         initialMissions={draft.missions}
+        hasPhotoReference={Boolean(draft.photoReferencePath)}
+        hasBarcode={Boolean(draft.barcodeValue?.trim())}
+        barcodeValue={draft.barcodeValue ?? ''}
+        onRegisterPhoto={async () => {
+          setShowMissionModal(false);
+          const shot = await NativeAlarm.openCameraMission({ mode: 'register_photo' });
+          if (shot?.path) {
+            patch({ photoReferencePath: shot.path });
+            toast.showToast({
+              title: 'Photo Registered! 📸',
+              message: 'Reference photo captured successfully.',
+              type: 'success',
+              icon: '📸',
+            });
+          }
+        }}
+        onRegisterBarcode={async () => {
+          setShowMissionModal(false);
+          const res = await NativeAlarm.openCameraMission({ mode: 'register_barcode' });
+          if (res?.value) {
+            patch({ barcodeValue: res.value.trim() });
+            toast.showToast({
+              title: 'Barcode Registered! ✓',
+              message: `Code: ${res.value.trim()}`,
+              type: 'success',
+              icon: '📷',
+            });
+          }
+        }}
         insetsBottom={insets.bottom}
         onClose={() => setShowMissionModal(false)}
         onSave={missions => patch({ missions })}

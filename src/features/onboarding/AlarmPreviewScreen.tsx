@@ -157,6 +157,8 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       snooze: { enabled: true, intervalMin: 5, maxCount: 3 },
       missions: missionsList,
       wallpaper,
+      photoReferencePath: route.params.photoReferencePath,
+      barcodeValue: route.params.barcodeValue,
     });
 
     // Apply chosen animated wallpaper to app theme

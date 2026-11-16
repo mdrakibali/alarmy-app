@@ -60,7 +60,7 @@ const Card = React.memo(function WallpaperCard({
     <Pressable
       onPress={() => onPress(id)}
       style={{ width: '48%', height: 224, marginBottom: 16 }}
-      className={`rounded-3xl overflow-hidden border-2 bg-slate-900 ${
+      className={`rounded-3xl overflow-hidden border-2 bg-slate-100 ${
         selected ? 'border-primary' : 'border-slate-200'
       }`}
     >
