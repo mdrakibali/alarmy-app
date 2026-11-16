@@ -121,6 +121,41 @@ export const ALBA_BACKGROUNDS: AlbaBackground[] = [
     source: require('../assets/backgrounds/night/moon-sea.jpg'),
     creditId: 'pexels-355288',
   },
+  {
+    id: 'kt_midnight',
+    name: 'Midnight Serenity',
+    group: 'Night',
+    source: require('../assets/backgrounds/kt/midnight.png'),
+    creditId: 'kt-alarm-01',
+  },
+  {
+    id: 'kt_forest',
+    name: 'Misty Woodland',
+    group: 'Nature',
+    source: require('../assets/backgrounds/kt/forest.png'),
+    creditId: 'kt-alarm-02',
+  },
+  {
+    id: 'kt_sea',
+    name: 'Deep Pacific',
+    group: 'Nature',
+    source: require('../assets/backgrounds/kt/sea.png'),
+    creditId: 'kt-alarm-03',
+  },
+  {
+    id: 'kt_dawn',
+    name: 'Morning Glow',
+    group: 'Minimal',
+    source: require('../assets/backgrounds/kt/dawn.png'),
+    creditId: 'kt-alarm-04',
+  },
+  {
+    id: 'kt_dark',
+    name: 'OLED Velvet',
+    group: 'Minimal',
+    source: require('../assets/backgrounds/kt/dark.png'),
+    creditId: 'kt-alarm-05',
+  },
 ];
 
 export function findAlbaBackground(id: string | undefined) {

@@ -43,6 +43,7 @@ export interface Alarm {
   useVideoAudio?: boolean;
   backupSoundId?: string;
   wakeUpCheckMin?: number;
+  bedtimeReminder?: boolean;
   timePressure?: boolean;
   labelReminder?: boolean;
   isQuickAlarm?: boolean;

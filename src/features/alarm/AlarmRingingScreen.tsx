@@ -1,4 +1,5 @@
 import { AppBackground } from '@/components/ui/AppBackground';
+import { EmergencyDismissModal } from '@/components/ui/EmergencyDismissModal';
 import { navigateToMission } from '@/features/missions/missionNavigation';
 import { NativeAlarm, type RingingAlarmInfo } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
@@ -32,6 +33,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
 
   const [activeInfo, setActiveInfo] = useState<RingingAlarmInfo | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
 
   useEffect(() => {
     // Clock ticker every second
@@ -278,7 +280,27 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
                 : 'Dismiss'}
             </Text>
           </TouchableOpacity>
+
+          {hasMission && (
+            <TouchableOpacity
+              onPress={() => setShowEmergencyModal(true)}
+              className="mt-3 py-1.5 px-4 rounded-full bg-black/40 border border-white/10"
+            >
+              <Text className="text-[11px] font-bold text-white/70">
+                Emergency Unlock (50 taps) 🆘
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        <EmergencyDismissModal
+          visible={showEmergencyModal}
+          onClose={() => setShowEmergencyModal(false)}
+          onDismissSuccess={() => {
+            setShowEmergencyModal(false);
+            navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+          }}
+        />
       </View>
     </AppBackground>
   );

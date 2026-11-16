@@ -44,8 +44,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AlarmEdit'>;
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const QUICK_BASE_WALLPAPERS = [
-  ...ALBA_BACKGROUNDS.slice(0, 4).map(w => ({ id: w.id, name: w.name, source: w.source })),
-  ...MOTION_MEDIA.slice(0, 8).map(w => ({ id: w.id, name: w.name, source: w.poster })),
+  ...ALBA_BACKGROUNDS.map(w => ({ id: w.id, name: w.name, source: w.source })),
+  ...MOTION_MEDIA.map(w => ({ id: w.id, name: w.name, source: w.poster })),
 ];
 
 interface QuickWallpaperCardProps {
@@ -1019,6 +1019,22 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 </Text>
               </TouchableOpacity>
             ))}
+          </View>
+
+          <View className="h-[1px] bg-slate-100 my-4" />
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 pr-3">
+              <Text className="text-sm font-bold text-slate-800">Bedtime Wind-down Reminder</Text>
+              <Text className="text-xs text-slate-400 mt-0.5">
+                Receive a notification 30 mins before sleep to ensure 7.5+ hours of rest.
+              </Text>
+            </View>
+            <Switch
+              value={Boolean(draft.bedtimeReminder)}
+              onValueChange={v => patch({ bedtimeReminder: v })}
+              trackColor={{ false: '#E2E8F0', true: '#1652E6' }}
+              thumbColor="#FFFFFF"
+            />
           </View>
         </View>
 
