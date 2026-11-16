@@ -32,6 +32,7 @@ import { useThemeStore } from '@/storage/themeStore';
 import { useToast } from '@/components/ui/AppToast';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { useAlarmStore } from './alarmStore';
+import { navigateToMission } from '../missions/missionNavigation';
 import { Check, ChevronRight, Music, Play, Plus, Search, Square, Trash2, Volume2, X } from 'lucide-react-native';
 import {
   MISSION_DETAILS,
@@ -154,6 +155,7 @@ interface MissionPickerModalProps {
   barcodeValue?: string;
   onRegisterPhoto?: () => void;
   onRegisterBarcode?: () => void;
+  onTryMission?: (mission: MissionType) => void;
   onClose: () => void;
   onSave: (missions: MissionType[]) => void;
 }
@@ -167,10 +169,12 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
   barcodeValue = '',
   onRegisterPhoto,
   onRegisterBarcode,
+  onTryMission,
   onClose,
   onSave,
 }: MissionPickerModalProps) {
   const [localMissions, setLocalMissions] = useState<MissionType[]>(initialMissions);
+  const [infoMission, setInfoMission] = useState<MissionType | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -312,6 +316,15 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
                         <Text className="text-xs text-slate-500 font-medium leading-tight">
                           {item.desc}
                         </Text>
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() => setInfoMission(missionKey)}
+                          className="flex-row items-center mt-1.5 self-start py-0.5 px-2 bg-slate-50 rounded-lg border border-slate-200"
+                        >
+                          <Text className="text-[10px] font-bold text-primary">
+                            ℹ️ Details & Test ▶️
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                     </TouchableOpacity>
 
@@ -401,6 +414,138 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
           </View>
         </View>
       </View>
+
+      {/* Mission Detail & Preview Modal */}
+      {infoMission ? (
+        <Modal
+          visible={Boolean(infoMission)}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setInfoMission(null)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/60 px-5">
+            <View className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-100 shadow-2xl">
+              {/* Header */}
+              <View className="flex-row items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <View className="flex-row items-center flex-1 pr-2">
+                  <Text className="text-3xl mr-2.5">{MISSION_DETAILS[infoMission].icon}</Text>
+                  <View className="flex-1">
+                    <Text className="text-lg font-black text-slate-900" numberOfLines={1}>
+                      {MISSION_DETAILS[infoMission].title}
+                    </Text>
+                    <View className="flex-row items-center mt-0.5">
+                      <View className="rounded px-1.5 py-0.5 bg-blue-50 mr-1.5">
+                        <Text className="text-[10px] font-black text-primary">
+                          {MISSION_DETAILS[infoMission].category}
+                        </Text>
+                      </View>
+                      <Text className="text-[11px] font-bold text-amber-500">
+                        {'★'.repeat(MISSION_DETAILS[infoMission].difficulty)}
+                        {'☆'.repeat(5 - MISSION_DETAILS[infoMission].difficulty)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setInfoMission(null)}
+                  className="h-8 w-8 rounded-full bg-slate-100 items-center justify-center"
+                >
+                  <X size={16} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
+                {/* How It Works */}
+                <View className="mb-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                  <Text className="text-xs font-black text-slate-900 mb-1">
+                    📋 How it works
+                  </Text>
+                  <Text className="text-xs text-slate-600 leading-relaxed font-medium">
+                    {MISSION_DETAILS[infoMission].howItWorks}
+                  </Text>
+                </View>
+
+                {/* Why It Works / Science */}
+                <View className="mb-3 bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100">
+                  <Text className="text-xs font-black text-primary mb-1">
+                    🔬 Sleep Inertia Relief (Why it works)
+                  </Text>
+                  <Text className="text-xs text-slate-700 leading-relaxed font-medium">
+                    {MISSION_DETAILS[infoMission].whyItWorks}
+                  </Text>
+                </View>
+
+                {/* Recommended For */}
+                <View className="mb-4 bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100">
+                  <Text className="text-xs font-black text-emerald-800 mb-1">
+                    🎯 Recommended for
+                  </Text>
+                  <Text className="text-xs text-slate-700 leading-relaxed font-medium">
+                    {MISSION_DETAILS[infoMission].recommendedFor}
+                  </Text>
+                </View>
+              </ScrollView>
+
+              {/* Actions */}
+              <View className="pt-2 border-t border-slate-100">
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    const m = infoMission;
+                    setInfoMission(null);
+                    if (onTryMission) {
+                      onTryMission(m);
+                    }
+                  }}
+                  className="w-full bg-primary py-3.5 rounded-2xl items-center shadow-xs active:bg-primary-dark mb-2"
+                >
+                  <Text className="text-white text-xs font-black uppercase tracking-wider">
+                    ▶️ Try This Mission (Quick Preview)
+                  </Text>
+                </TouchableOpacity>
+
+                <View className="flex-row items-center">
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      if (localMissions.includes(infoMission)) {
+                        removeLocalMission(infoMission);
+                      } else {
+                        addLocalMission(infoMission);
+                      }
+                      setInfoMission(null);
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl items-center border mr-2 ${
+                      localMissions.includes(infoMission)
+                        ? 'bg-rose-50 border-rose-200'
+                        : 'bg-ice border-primary/30'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-bold ${
+                        localMissions.includes(infoMission)
+                          ? 'text-rose-600'
+                          : 'text-primary'
+                      }`}
+                    >
+                      {localMissions.includes(infoMission)
+                        ? '− Remove from Alarm'
+                        : '+ Add to Alarm'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setInfoMission(null)}
+                    className="py-2.5 px-4 rounded-xl items-center bg-slate-100"
+                  >
+                    <Text className="text-xs font-bold text-slate-600">Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </Modal>
   );
 });
@@ -591,6 +736,53 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       setPreviewingSoundId(targetId);
       NativeAlarm.previewSound(targetId).catch(() => {});
     }
+  };
+
+  const handleTryMission = (missionKey: MissionType) => {
+    if (missionKey === 'photo' && !draft.photoReferencePath) {
+      toast.showToast({
+        title: 'Photo Required 📸',
+        message: 'Please take and register a reference photo first before testing.',
+        type: 'warning',
+        icon: '📸',
+      });
+      return;
+    }
+    if (missionKey === 'qr' && !draft.barcodeValue?.trim()) {
+      toast.showToast({
+        title: 'Barcode Required 📷',
+        message: 'Please scan or enter a barcode first before testing.',
+        type: 'warning',
+        icon: '📷',
+      });
+      return;
+    }
+
+    setShowMissionModal(false);
+
+    navigateToMission(
+      navigation,
+      missionKey,
+      {
+        alarmId: existingId || 'preview-draft',
+        missionIndex: 0,
+        missions: [missionKey],
+        isPreview: true,
+        squatTarget: draft.squatTarget,
+        stepTarget: draft.stepTarget,
+        shakeTarget: draft.shakeTarget,
+        flipTarget: draft.flipTarget,
+        blinkTarget: draft.blinkTarget,
+        referencePath: draft.photoReferencePath,
+        matchThreshold: draft.photoMatchThreshold,
+        registeredCode: draft.barcodeValue,
+        mathCount: draft.mathCount,
+        mathDifficulty: draft.mathDifficulty,
+        memoryPairs: draft.memoryPairs,
+        typingPhrase: draft.typingPhrase,
+      },
+      'navigate',
+    );
   };
 
   const save = () => {
@@ -1437,6 +1629,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               );
             })}
           </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => handleTryMission('math')}
+            className="mt-3 bg-slate-50 border border-slate-200 py-2.5 rounded-2xl items-center flex-row justify-center active:bg-slate-100"
+          >
+            <Text className="text-xs font-bold text-slate-800">▶️ Test Math Mission (Preview)</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -1463,6 +1662,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               );
             })}
           </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => handleTryMission('memory')}
+            className="mt-3 bg-slate-50 border border-slate-200 py-2.5 rounded-2xl items-center flex-row justify-center active:bg-slate-100"
+          >
+            <Text className="text-xs font-bold text-slate-800">▶️ Test Memory Game (Preview)</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -1494,6 +1700,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               </TouchableOpacity>
             ))}
           </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => handleTryMission('typing')}
+            className="mt-3 bg-slate-50 border border-slate-200 py-2.5 rounded-2xl items-center flex-row justify-center active:bg-slate-100"
+          >
+            <Text className="text-xs font-bold text-slate-800">▶️ Test Typing Mission (Preview)</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -1525,9 +1738,23 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             </Text>
           </TouchableOpacity>
           {draft.photoReferencePath ? (
-            <Text className="text-xs font-semibold text-emerald-600 mb-2">
-              ✓ Registered: {draft.photoReferencePath.split('/').pop()}
-            </Text>
+            <View className="flex-row items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-100 mb-3">
+              <Image
+                source={{
+                  uri: draft.photoReferencePath.startsWith('file://')
+                    ? draft.photoReferencePath
+                    : `file://${draft.photoReferencePath}`,
+                }}
+                className="w-14 h-14 rounded-xl mr-3 bg-slate-200"
+                resizeMode="cover"
+              />
+              <View className="flex-1">
+                <Text className="text-xs font-bold text-emerald-600">✓ Reference Photo Registered</Text>
+                <Text className="text-[11px] text-slate-500 font-mono mt-0.5" numberOfLines={1}>
+                  {draft.photoReferencePath.split('/').pop()}
+                </Text>
+              </View>
+            </View>
           ) : (
             <Text className="text-xs font-semibold text-rose-500 mb-2">
               ⚠️ Photo required before saving this alarm
@@ -1549,6 +1776,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               </TouchableOpacity>
             ))}
           </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => handleTryMission('photo')}
+            className="mt-3 bg-slate-50 border border-slate-200 py-2.5 rounded-2xl items-center flex-row justify-center active:bg-slate-100"
+          >
+            <Text className="text-xs font-bold text-slate-800">▶️ Test Photo Matching (Preview)</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -1603,6 +1837,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               ⚠️ Code required before saving this alarm
             </Text>
           )}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => handleTryMission('qr')}
+            className="mt-3 bg-slate-50 border border-slate-200 py-2.5 rounded-2xl items-center flex-row justify-center active:bg-slate-100"
+          >
+            <Text className="text-xs font-bold text-slate-800">▶️ Test Barcode Scanner (Preview)</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -1610,7 +1851,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100 shadow-xs">
           <Text className="text-sm font-bold text-navy mb-2">Mission targets (Quick testing & settings)</Text>
           {draft.missions.includes('flip') ? (
-            <View className="mb-2">
+            <View className="mb-3">
               <Text className="text-xs font-semibold text-subtext mb-1">Flip target:</Text>
               <View className="flex-row flex-wrap">
                 {[3, 5, 10, 15].map(value => {
@@ -1630,10 +1871,17 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   );
                 })}
               </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleTryMission('flip')}
+                className="mt-2 bg-slate-50 border border-slate-200 py-2 rounded-xl items-center flex-row justify-center active:bg-slate-100"
+              >
+                <Text className="text-xs font-bold text-slate-800">▶️ Test Flip Phone (Preview)</Text>
+              </TouchableOpacity>
             </View>
           ) : null}
           {draft.missions.includes('blink') ? (
-            <View className="mb-2">
+            <View className="mb-3">
               <Text className="text-xs font-semibold text-subtext mb-1">Blink target:</Text>
               <View className="flex-row flex-wrap">
                 {[3, 5, 8, 12].map(value => {
@@ -1653,10 +1901,17 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   );
                 })}
               </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleTryMission('blink')}
+                className="mt-2 bg-slate-50 border border-slate-200 py-2 rounded-xl items-center flex-row justify-center active:bg-slate-100"
+              >
+                <Text className="text-xs font-bold text-slate-800">▶️ Test Eye Blink (Preview)</Text>
+              </TouchableOpacity>
             </View>
           ) : null}
           {draft.missions.includes('step') ? (
-            <View className="mb-2">
+            <View className="mb-3">
               <Text className="text-xs font-semibold text-subtext mb-1">Step target:</Text>
               <View className="flex-row flex-wrap">
                 {[5, 10, 20, 30].map(value => {
@@ -1676,10 +1931,17 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   );
                 })}
               </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleTryMission('step')}
+                className="mt-2 bg-slate-50 border border-slate-200 py-2 rounded-xl items-center flex-row justify-center active:bg-slate-100"
+              >
+                <Text className="text-xs font-bold text-slate-800">▶️ Test Step Counter (Preview)</Text>
+              </TouchableOpacity>
             </View>
           ) : null}
           {draft.missions.includes('squat') ? (
-            <View className="mb-2">
+            <View className="mb-3">
               <Text className="text-xs font-semibold text-subtext mb-1">Squat target:</Text>
               <View className="flex-row flex-wrap">
                 {[2, 3, 5, 10].map(value => {
@@ -1699,6 +1961,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   );
                 })}
               </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleTryMission('squat')}
+                className="mt-2 bg-slate-50 border border-slate-200 py-2 rounded-xl items-center flex-row justify-center active:bg-slate-100"
+              >
+                <Text className="text-xs font-bold text-slate-800">▶️ Test Squats (Preview)</Text>
+              </TouchableOpacity>
             </View>
           ) : null}
           {draft.missions.includes('shake') ? (
@@ -1722,6 +1991,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   );
                 })}
               </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleTryMission('shake')}
+                className="mt-2 bg-slate-50 border border-slate-200 py-2 rounded-xl items-center flex-row justify-center active:bg-slate-100"
+              >
+                <Text className="text-xs font-bold text-slate-800">▶️ Test Shake Counter (Preview)</Text>
+              </TouchableOpacity>
             </View>
           ) : null}
         </View>
@@ -1775,6 +2051,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             });
           }
         }}
+        onTryMission={handleTryMission}
         insetsBottom={insets.bottom}
         onClose={() => setShowMissionModal(false)}
         onSave={missions => patch({ missions })}
