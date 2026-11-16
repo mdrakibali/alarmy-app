@@ -11,6 +11,7 @@ export interface MotionItem {
 }
 
 export const MOTION_MEDIA: MotionItem[] = [
+  // --- Ambient GIFs ---
   { id: 'motion_gif_sunset_city', name: 'Sunset city', kind: 'gif', poster: require('../assets/backgrounds/posters/gif-sunset-city.jpg'), asset: 'alba/gif/gif-sunset-city.gif', creditId: 'mixkit-3983' },
   { id: 'motion_gif_sun_meadow', name: 'Sunlit meadow', kind: 'gif', poster: require('../assets/backgrounds/posters/gif-sun-meadow.jpg'), asset: 'alba/gif/gif-sun-meadow.gif', creditId: 'mixkit-40657' },
   { id: 'motion_gif_slow_river', name: 'Slow river', kind: 'gif', poster: require('../assets/backgrounds/posters/gif-slow-river.jpg'), asset: 'alba/gif/gif-slow-river.gif', creditId: 'mixkit-1218' },
@@ -31,19 +32,32 @@ export const MOTION_MEDIA: MotionItem[] = [
   { id: 'motion_gif_fireplace', name: 'Fireplace', kind: 'gif', poster: require('../assets/backgrounds/posters/gif-fireplace.jpg'), asset: 'alba/gif/gif-fireplace.gif', creditId: 'mixkit-52284' },
   { id: 'motion_gif_space', name: 'Stars', kind: 'gif', poster: require('../assets/backgrounds/posters/gif-space-stars.jpg'), asset: 'alba/gif/gif-space-stars.gif', creditId: 'mixkit-1610' },
   { id: 'motion_gif_moon', name: 'Hazy moon', kind: 'gif', poster: require('../assets/backgrounds/posters/gif-night-moon.jpg'), asset: 'alba/gif/gif-night-moon.gif', creditId: 'mixkit-4433' },
-  { id: 'motion_vid_sunset_beach', name: 'Sunset beach', kind: 'video', poster: require('../assets/backgrounds/posters/vid-sunset-beach.jpg'), asset: 'alba/video/mixkit-sunset-beach.mp4', creditId: 'mixkit-2168' },
-  { id: 'motion_vid_sunset_sea', name: 'Sunset sea', kind: 'video', poster: require('../assets/backgrounds/posters/vid-sunset-sea.jpg'), asset: 'alba/video/mixkit-sunset-sea.mp4', creditId: 'mixkit-4119' },
-  { id: 'motion_vid_rain_lake', name: 'Rain on the lake', kind: 'video', poster: require('../assets/backgrounds/posters/vid-rain-lake.jpg'), asset: 'alba/video/mixkit-rain-lake.mp4', creditId: 'mixkit-18312' },
-  { id: 'motion_vid_waterfall', name: 'Waterfall', kind: 'video', poster: require('../assets/backgrounds/posters/vid-waterfall.jpg'), asset: 'alba/video/mixkit-waterfall.mp4', creditId: 'mixkit-572' },
-  { id: 'motion_vid_fireplace', name: 'Fireplace', kind: 'video', poster: require('../assets/backgrounds/posters/vid-fireplace.jpg'), asset: 'alba/video/mixkit-fireplace.mp4', creditId: 'mixkit-52284' },
-  { id: 'motion_vid_space', name: 'Stars', kind: 'video', poster: require('../assets/backgrounds/posters/vid-space-stars.jpg'), asset: 'alba/video/mixkit-space-stars.mp4', creditId: 'mixkit-1610' },
-  { id: 'motion_vid_city_night', name: 'City at night', kind: 'video', poster: require('../assets/backgrounds/posters/vid-city-night.jpg'), asset: 'alba/video/mixkit-city-night.mp4', creditId: 'mixkit-49845' },
-  { id: 'motion_vid_moon', name: 'Hazy moon', kind: 'video', poster: require('../assets/backgrounds/posters/vid-night-moon.jpg'), asset: 'alba/video/mixkit-night-moon.mp4', creditId: 'mixkit-4433' },
-  { id: 'motion_vid_forest_falls', name: 'Forest waterfall', kind: 'video', poster: require('../assets/backgrounds/posters/vid-forest-waterfall.jpg'), asset: 'alba/video/mixkit-forest-waterfall.mp4', creditId: 'mixkit-2213' },
-  { id: 'motion_vid_clouds', name: 'Clouds over meadow', kind: 'video', poster: require('../assets/backgrounds/posters/vid-clouds-meadow.jpg'), asset: 'alba/video/mixkit-clouds-meadow.mp4', creditId: 'mixkit-4070' },
+
+  // --- High Definition Looping Videos (MP4) ---
+  { id: 'motion_vid_sunset_beach', name: 'Golden Sunset Beach', kind: 'video', poster: require('../assets/backgrounds/posters/vid-sunset-beach.jpg'), asset: 'alba/video/mixkit-sunset-beach.mp4', creditId: 'mixkit-2168' },
+  { id: 'motion_vid_sunset_sea', name: 'Ocean Sunset Tide', kind: 'video', poster: require('../assets/backgrounds/posters/vid-sunset-sea.jpg'), asset: 'alba/video/mixkit-sunset-sea.mp4', creditId: 'mixkit-4119' },
+  { id: 'motion_vid_rain_lake', name: 'Raindrops on Lake', kind: 'video', poster: require('../assets/backgrounds/posters/vid-rain-lake.jpg'), asset: 'alba/video/mixkit-rain-lake.mp4', creditId: 'mixkit-18312' },
+  { id: 'motion_vid_waterfall', name: 'Mountain Waterfall', kind: 'video', poster: require('../assets/backgrounds/posters/vid-waterfall.jpg'), asset: 'alba/video/mixkit-waterfall.mp4', creditId: 'mixkit-572' },
+  { id: 'motion_vid_fireplace', name: 'Cozy Hearth Fireplace', kind: 'video', poster: require('../assets/backgrounds/posters/vid-fireplace.jpg'), asset: 'alba/video/mixkit-fireplace.mp4', creditId: 'mixkit-52284' },
+  { id: 'motion_vid_space', name: 'Deep Space Stars', kind: 'video', poster: require('../assets/backgrounds/posters/vid-space-stars.jpg'), asset: 'alba/video/mixkit-space-stars.mp4', creditId: 'mixkit-1610' },
+  { id: 'motion_vid_city_night', name: 'Metropolis Night Lights', kind: 'video', poster: require('../assets/backgrounds/posters/vid-city-night.jpg'), asset: 'alba/video/mixkit-city-night.mp4', creditId: 'mixkit-49845' },
+  { id: 'motion_vid_moon', name: 'Hazy Lunar Glow', kind: 'video', poster: require('../assets/backgrounds/posters/vid-night-moon.jpg'), asset: 'alba/video/mixkit-night-moon.mp4', creditId: 'mixkit-4433' },
+  { id: 'motion_vid_forest_falls', name: 'Forest Falls & Moss', kind: 'video', poster: require('../assets/backgrounds/posters/vid-forest-waterfall.jpg'), asset: 'alba/video/mixkit-forest-waterfall.mp4', creditId: 'mixkit-2213' },
+  { id: 'motion_vid_clouds', name: 'Meadow Cloud Drift', kind: 'video', poster: require('../assets/backgrounds/posters/vid-clouds-meadow.jpg'), asset: 'alba/video/mixkit-clouds-meadow.mp4', creditId: 'mixkit-4070' },
+  { id: 'motion_vid_sunrise_horizon', name: 'Golden Sunrise Horizon', kind: 'video', poster: require('../assets/backgrounds/posters/vid-sunrise-horizon.jpg'), asset: 'alba/video/mixkit-sunrise-horizon.mp4', creditId: 'mixkit-6734' },
+  { id: 'motion_vid_peaceful_lake', name: 'Peaceful Mountain Lake', kind: 'video', poster: require('../assets/backgrounds/posters/vid-peaceful-lake.jpg'), asset: 'alba/video/mixkit-peaceful-lake.mp4', creditId: 'mixkit-4249' },
+  { id: 'motion_vid_mountain_peaks', name: 'Alpine Peaks & Clouds', kind: 'video', poster: require('../assets/backgrounds/posters/vid-mountain-peaks.jpg'), asset: 'alba/video/mixkit-mountain-peaks.mp4', creditId: 'mixkit-1215' },
+  { id: 'motion_vid_forest_stream', name: 'Forest Stream Flow', kind: 'video', poster: require('../assets/backgrounds/posters/vid-forest-stream.jpg'), asset: 'alba/video/mixkit-forest-stream.mp4', creditId: 'mixkit-1205' },
+  { id: 'motion_vid_tropical_waterfall', name: 'Tropical Cascade Surge', kind: 'video', poster: require('../assets/backgrounds/posters/vid-tropical-waterfall.jpg'), asset: 'alba/video/mixkit-tropical-waterfall.mp4', creditId: 'mixkit-46384' },
+  { id: 'motion_vid_starry_galaxy', name: 'Cosmic Nebula Stars', kind: 'video', poster: require('../assets/backgrounds/posters/vid-starry-galaxy.jpg'), asset: 'alba/video/mixkit-starry-galaxy.mp4', creditId: 'mixkit-25081' },
+  { id: 'motion_vid_calm_river', name: 'Serene River Bend', kind: 'video', poster: require('../assets/backgrounds/posters/vid-calm-river.jpg'), asset: 'alba/video/mixkit-calm-river.mp4', creditId: 'mixkit-1218' },
+  { id: 'motion_vid_ocean_tide', name: 'Ocean Shoreline Surf', kind: 'video', poster: require('../assets/backgrounds/posters/vid-ocean-tide.jpg'), asset: 'alba/video/mixkit-ocean-tide.mp4', creditId: 'mixkit-1186' },
+  { id: 'motion_vid_windy_pines', name: 'Windy Pine Forest', kind: 'video', poster: require('../assets/backgrounds/posters/vid-windy-pines.jpg'), asset: 'alba/video/mixkit-windy-pines.mp4', creditId: 'mixkit-1206' },
+  { id: 'motion_vid_abstract_particles', name: 'Abstract Ambient Glow', kind: 'video', poster: require('../assets/backgrounds/posters/vid-abstract-particles.jpg'), asset: 'alba/video/mixkit-abstract-particles.mp4', creditId: 'mixkit-31562' },
+  { id: 'motion_vid_dusk_skyline', name: 'Dusk City Skyline', kind: 'video', poster: require('../assets/backgrounds/posters/vid-dusk-skyline.jpg'), asset: 'alba/video/mixkit-dusk-skyline.mp4', creditId: 'mixkit-41375' },
 ];
 
-export function findMotionMedia(id: string | undefined) {
+export function findMotionMedia(id: string | undefined): MotionItem | undefined {
   if (!id) return undefined;
   return MOTION_MEDIA.find(item => item.id === id);
 }
