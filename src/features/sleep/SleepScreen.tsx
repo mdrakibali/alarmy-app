@@ -192,10 +192,19 @@ export function SleepScreen() {
 
   useEffect(() => {
     let alive = true;
-    let busy = false;
+    // Check initial status on mount once
+    NativeAlarm.getSleepMusicStatus()
+      .then(status => {
+        if (alive && status) {
+          setIsPlaying(Boolean(status.isPlaying));
+          setCurrentPlayingId(status.currentSoundId);
+        }
+      })
+      .catch(() => {});
+
+    // Only sync if actively playing
     const interval = setInterval(async () => {
-      if (busy || Date.now() - lastActionAt.current < 4000) return;
-      busy = true;
+      if (!isPlayingRef.current || Date.now() - lastActionAt.current < 3000) return;
       try {
         const status = await NativeAlarm.getSleepMusicStatus();
         if (alive && status) {
@@ -206,11 +215,9 @@ export function SleepScreen() {
             setCurrentPlayingId(status.currentSoundId);
           }
         }
-      } catch {
-      } finally {
-        busy = false;
-      }
-    }, 2000);
+      } catch {}
+    }, 3000);
+
     return () => {
       alive = false;
       clearInterval(interval);

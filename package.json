@@ -11,7 +11,9 @@
     "build:apk": "cd android && ./gradlew assembleRelease && cd ..",
     "clean": "adb shell pm clear com.alarmyclone && cd android && ./gradlew clean && cd ..",
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "^9.3.0",

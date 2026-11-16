@@ -1076,8 +1076,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 style={{ width: '100%', height: '100%' }}
                 isActive={registeringCode}
                 barcodeFormats={['qr-code', 'ean-13', 'ean-8', 'code-128', 'upc-a']}
-                onBarcodeScanned={codes => {
-                  const value = codes.find(code => code.rawValue)?.rawValue;
+                onBarcodeScanned={(codes: any[]) => {
+                  const value = codes.find((code: any) => code.rawValue)?.rawValue;
                   if (!value) return;
                   patch({ barcodeValue: value.trim() });
                   setRegisteringCode(false);

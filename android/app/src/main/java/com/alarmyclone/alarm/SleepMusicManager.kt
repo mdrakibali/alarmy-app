@@ -13,6 +13,8 @@ object SleepMusicManager {
     private const val TAG = "SleepMusicManager"
 
     private var mediaPlayer: MediaPlayer? = null
+    @Volatile
+    private var isPrepared: Boolean = false
     private val audioExecutor = Executors.newSingleThreadExecutor()
     private var handler = Handler(Looper.getMainLooper())
     private var timerRunnable: Runnable? = null
@@ -27,6 +29,7 @@ object SleepMusicManager {
     var timerRemainingSeconds: Int = 0
         private set
 
+    @Synchronized
     fun play(
         context: Context,
         soundId: String,
@@ -37,6 +40,7 @@ object SleepMusicManager {
         try {
             stop()
 
+            isPrepared = false
             currentSoundId = soundId
             currentVolume = volume.coerceIn(0.0f, 1.0f)
 
@@ -60,6 +64,7 @@ object SleepMusicManager {
                 setVolume(currentVolume, currentVolume)
                 setOnPreparedListener { mp ->
                     try {
+                        isPrepared = true
                         mp.start()
                     } catch (e: Exception) {
                         Log.e(TAG, "Error starting player after prepare", e)
@@ -115,7 +120,9 @@ object SleepMusicManager {
         return false
     }
 
+    @Synchronized
     fun stop() {
+        isPrepared = false
         try {
             clearTimer()
             clearFade()
@@ -123,11 +130,14 @@ object SleepMusicManager {
             val playerToRelease = mediaPlayer
             mediaPlayer = null
             if (playerToRelease != null) {
+                try {
+                    if (playerToRelease.isPlaying) {
+                        playerToRelease.stop()
+                    }
+                } catch (_: Exception) {}
                 audioExecutor.execute {
                     try {
                         playerToRelease.reset()
-                    } catch (_: Exception) {}
-                    try {
                         playerToRelease.release()
                     } catch (_: Exception) {}
                 }
@@ -145,7 +155,9 @@ object SleepMusicManager {
     fun setVolume(volume: Float) {
         currentVolume = volume.coerceIn(0.0f, 1.0f)
         try {
-            mediaPlayer?.setVolume(currentVolume, currentVolume)
+            if (isPrepared) {
+                mediaPlayer?.setVolume(currentVolume, currentVolume)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting volume", e)
         }
@@ -153,24 +165,28 @@ object SleepMusicManager {
 
     fun seekTo(positionMs: Int) {
         try {
-            mediaPlayer?.seekTo(positionMs)
+            if (isPrepared) {
+                mediaPlayer?.seekTo(positionMs)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error seeking", e)
         }
     }
 
     fun getDuration(): Int {
+        if (!isPrepared) return 0
         return try {
             mediaPlayer?.duration ?: 0
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             0
         }
     }
 
     fun getCurrentPosition(): Int {
+        if (!isPrepared) return 0
         return try {
             mediaPlayer?.currentPosition ?: 0
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             0
         }
     }

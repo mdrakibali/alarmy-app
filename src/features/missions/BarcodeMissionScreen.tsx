@@ -167,8 +167,8 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
               style={{ width: '100%', height: '100%' }}
               isActive
               barcodeFormats={['qr-code', 'ean-13', 'ean-8', 'code-128', 'upc-a', 'upc-e']}
-              onBarcodeScanned={codes => {
-                const value = codes.find(code => code.rawValue)?.rawValue;
+              onBarcodeScanned={(codes: any[]) => {
+                const value = codes.find((code: any) => code.rawValue)?.rawValue;
                 if (value) acceptValue(value, false);
               }}
               onError={() => setErrorMsg('Barcode scanner could not read the camera.')}
@@ -178,7 +178,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
             <TextRecognitionCamera
               style={{ width: '100%', height: '100%' }}
               isActive
-              onTextRecognized={result => {
+              onTextRecognized={(result: any) => {
                 if (result.text) acceptValue(result.text, true);
               }}
               onError={() => setErrorMsg('Text recognition could not read the camera.')}
