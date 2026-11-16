@@ -4,6 +4,7 @@ export type TabParamList = {
   Alarm: undefined;
   Sleep: undefined;
   Morning: undefined;
+  Report: undefined;
   Settings: undefined;
 };
 
@@ -17,6 +18,7 @@ export type RootStackParamList = {
     wallpaper: string;
     soundId: string;
     mission: MissionType;
+    missions?: MissionType[];
   };
   AlarmPreview: {
     hour: number;
@@ -24,6 +26,7 @@ export type RootStackParamList = {
     wallpaper: string;
     soundId: string;
     mission: MissionType;
+    missions?: MissionType[];
   };
   AlarmEdit: { id?: string } | undefined;
   AlarmRinging: { id?: string } | undefined;

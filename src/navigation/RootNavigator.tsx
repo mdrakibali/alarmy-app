@@ -74,6 +74,7 @@ function CustomBottomTabBar({
           | 'alarm'
           | 'sleep'
           | 'morning'
+          | 'report'
           | 'settings';
 
         return (
@@ -118,6 +119,7 @@ function Tabs() {
       <Tab.Screen name="Alarm" component={AlarmListScreen} />
       <Tab.Screen name="Sleep" component={SleepScreen} />
       <Tab.Screen name="Morning" component={MorningScreen} />
+      <Tab.Screen name="Report" component={ReportScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );

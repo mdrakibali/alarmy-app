@@ -58,7 +58,8 @@ function generatePreviewProblem(): PreviewMathProblem {
 
 export function AlarmPreviewScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
-  const { hour, minute, wallpaper, soundId, mission } = route.params;
+  const { hour, minute, wallpaper, soundId, mission, missions: missionsParam } = route.params;
+  const missionsList = missionsParam && missionsParam.length > 0 ? missionsParam : [mission];
 
   const addAlarm = useAlarmStore(s => s.addAlarm);
   const [mathProblem, setMathProblem] = useState<PreviewMathProblem>(() =>
@@ -154,7 +155,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
       volume: 1.0,
       vibrate: true,
       snooze: { enabled: true, intervalMin: 5, maxCount: 3 },
-      missions: [mission],
+      missions: missionsList,
       wallpaper,
     });
 

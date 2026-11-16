@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +19,7 @@ import type { MissionType } from '../alarm/types';
 import { MOTION_MEDIA, type MotionItem } from '@/data/motionMedia';
 import { ALARM_SOUND_ITEMS } from '@/data/alarmSounds';
 import { useThemeStore } from '@/storage/themeStore';
+import { formatTime } from '../alarm/format';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WelcomeWizard'>;
 
@@ -61,54 +63,64 @@ const MISSIONS: { id: MissionType; title: string; desc: string; icon: string }[]
 ];
 
 interface WallpaperCardProps {
-  id: string;
-  source: number;
+  item: MotionItem;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (item: MotionItem) => void;
 }
 
 const WallpaperCard = React.memo(
   function WallpaperCardComponent({
-    id,
-    source,
+    item,
     isSelected,
     onSelect,
   }: WallpaperCardProps) {
     return (
       <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => onSelect(id)}
+        activeOpacity={0.85}
+        onPress={() => onSelect(item)}
         style={{
           borderColor: isSelected ? '#1652E6' : '#E2E8F0',
           borderWidth: 2,
         }}
-        className="w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative bg-white"
+        className="w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative bg-white shadow-xs"
       >
         <Image
           pointerEvents="none"
-          source={source}
+          source={item.poster}
           fadeDuration={0}
           resizeMethod="resize"
           resizeMode="cover"
           className="absolute inset-0 w-full h-full"
         />
 
-        {/* Top Right Check Badge */}
-        <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
+        {/* Top Right Check / Preview Badge */}
+        <View pointerEvents="none" className="w-full flex-row justify-between p-2.5 z-10">
+          <View className="px-2 py-0.5 rounded-full bg-black/60">
+            <Text className="text-white text-[9px] font-black uppercase">
+              {item.kind}
+            </Text>
+          </View>
           {isSelected ? (
-            <View className="h-7 w-7 rounded-full bg-primary border-2 border-white items-center justify-center">
+            <View className="h-6 w-6 rounded-full bg-primary border-2 border-white items-center justify-center">
               <Text className="text-white text-xs font-black">✓</Text>
             </View>
           ) : (
             <View className="h-6 w-6 rounded-full bg-black/40 border border-white/60 items-center justify-center">
-              <Text className="text-white/60 text-[10px]">○</Text>
+              <Text className="text-white/80 text-[10px]">👁️</Text>
             </View>
           )}
+        </View>
+
+        {/* Name footer */}
+        <View pointerEvents="none" className="w-full p-2 bg-gradient-to-t from-black/80 to-transparent">
+          <Text className="text-white text-xs font-bold text-center" numberOfLines={1}>
+            {item.name}
+          </Text>
         </View>
       </TouchableOpacity>
     );
   },
-  (prev, next) => prev.isSelected === next.isSelected && prev.id === next.id,
+  (prev, next) => prev.isSelected === next.isSelected && prev.item.id === next.item.id,
 );
 
 export function WelcomeWizardScreen({ navigation }: Props) {
@@ -119,8 +131,9 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   const [selectedHour, setSelectedHour] = useState(7);
   const [selectedMinute, setSelectedMinute] = useState(0);
   const [selectedWallpaper, setSelectedWallpaper] = useState(MOTION_MEDIA[0].id);
+  const [previewWallpaper, setPreviewWallpaper] = useState<MotionItem | null>(null);
   const [selectedSound, setSelectedSound] = useState('alarm_gentle_morning');
-  const [selectedMission, setSelectedMission] = useState<MissionType>('shake');
+  const [selectedMissions, setSelectedMissions] = useState<MissionType[]>(['shake']);
 
   // Stop audio preview on unmount
   useEffect(() => {
@@ -134,27 +147,50 @@ export function WelcomeWizardScreen({ navigation }: Props) {
     NativeAlarm.previewSound(soundId).catch(() => {});
   };
   
-  const handleWallpaperSelect = useCallback((id: string) => {
-    setSelectedWallpaper(prev => (prev === id ? prev : id));
+  const handleWallpaperSelect = useCallback((item: MotionItem) => {
+    setSelectedWallpaper(item.id);
+    setPreviewWallpaper(item);
   }, []);
+
+  const handleConfirmPreview = () => {
+    if (previewWallpaper) {
+      useThemeStore.getState().setBackground('alarm', previewWallpaper.id);
+      useThemeStore.getState().setBackground('ringing', previewWallpaper.id);
+      setSelectedWallpaper(previewWallpaper.id);
+    }
+    setPreviewWallpaper(null);
+    setStep(3); // Advance directly to Step 3 (Sound selector) matching Alarmy 1.7 -> 1.8
+  };
+
+  const handleToggleMission = (id: MissionType) => {
+    setSelectedMissions(curr => {
+      if (curr.includes(id)) {
+        if (curr.length === 1) return curr; // Keep at least one
+        return curr.filter(m => m !== id);
+      }
+      if (curr.length >= 5) return curr; // Maximum 5 chained missions
+      return [...curr, id];
+    });
+  };
 
   const handleNext = () => {
     NativeAlarm.stopSoundPreview().catch(() => {});
     if (step === 2) {
-      // Commit chosen wallpaper to theme store only when advancing past step 2
       useThemeStore.getState().setBackground('alarm', selectedWallpaper);
+      useThemeStore.getState().setBackground('ringing', selectedWallpaper);
     }
     if (step < 4) {
       setStep(prev => ((prev + 1) as 1 | 2 | 3 | 4));
     } else {
-      // Step 4 complete: Navigate to Permission Screen as requested!
+      // Step 4 complete: Navigate to Permission Screen
       navigation.navigate('Permission', {
         hour: selectedHour,
         minute: selectedMinute,
         wallpaper: selectedWallpaper,
         soundId: selectedSound,
-        mission: selectedMission,
-      });
+        mission: selectedMissions[0],
+        missions: selectedMissions,
+      } as any);
     }
   };
 
@@ -169,14 +205,15 @@ export function WelcomeWizardScreen({ navigation }: Props) {
   const renderWallpaperItem = useCallback(
     ({ item }: { item: MotionItem }) => (
       <WallpaperCard
-        id={item.id}
-        source={item.poster}
+        item={item}
         isSelected={selectedWallpaper === item.id}
         onSelect={handleWallpaperSelect}
       />
     ),
     [selectedWallpaper, handleWallpaperSelect],
   );
+
+  const { time: previewTime } = formatTime(selectedHour, selectedMinute);
 
   return (
     <View className="flex-1 bg-background">
@@ -329,47 +366,54 @@ export function WelcomeWizardScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* STEP 4: MISSIONS */}
+        {/* STEP 4: MISSIONS (Multiple Chained Missions) */}
         {step === 4 && (
           <View className="py-2">
-            <Text className="text-slate-500 text-xs font-semibold mb-4 text-center">
-              Alba ensures you never oversleep by requiring a wake-up mission
+            <Text className="text-slate-500 text-xs font-semibold mb-2 text-center">
+              Select 1 to 5 wake-up missions to build your sequence ({selectedMissions.length}/5 selected)
             </Text>
 
             {MISSIONS.map(m => {
-              const isSelected = selectedMission === m.id;
+              const missionIndex = selectedMissions.indexOf(m.id);
+              const isSelected = missionIndex !== -1;
               return (
                 <Pressable
                   key={m.id}
-                  onPress={() => setSelectedMission(m.id)}
-                  className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
+                  onPress={() => handleToggleMission(m.id)}
+                  className={`p-5 rounded-3xl mb-3 border-2 shadow-xs ${
                     isSelected
                       ? 'bg-ice border-primary'
                       : 'bg-white border-slate-100'
                   }`}
                 >
                   <View pointerEvents="none" className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
+                    <View className="flex-row items-center flex-1 pr-2">
                       <Text className="text-3xl mr-3">{m.icon}</Text>
-                      <Text className="text-lg font-black text-slate-900">
-                        {m.title}
-                      </Text>
+                      <View className="flex-1">
+                        <Text className="text-base font-black text-slate-900">
+                          {m.title}
+                        </Text>
+                        <Text className="text-xs text-slate-500 font-medium leading-relaxed mt-0.5">
+                          {m.desc}
+                        </Text>
+                      </View>
                     </View>
                     <View
-                      className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
+                      className={`h-7 px-2.5 rounded-full items-center justify-center border-2 ${
                         isSelected
                           ? 'border-primary bg-primary'
-                          : 'border-slate-300'
+                          : 'border-slate-300 bg-transparent'
                       }`}
                     >
-                      {isSelected && (
-                        <View className="h-2 w-2 rounded-full bg-white" />
+                      {isSelected ? (
+                        <Text className="text-white text-xs font-black">
+                          {missionIndex + 1}
+                        </Text>
+                      ) : (
+                        <Text className="text-slate-400 text-xs font-black">+</Text>
                       )}
                     </View>
                   </View>
-                  <Text pointerEvents="none" className="text-xs text-slate-500 font-medium leading-relaxed pl-10">
-                    {m.desc}
-                  </Text>
                 </Pressable>
               );
             })}
@@ -377,6 +421,90 @@ export function WelcomeWizardScreen({ navigation }: Props) {
         )}
       </ScrollView>
       )}
+
+      {/* Full-Screen Wallpaper Preview Modal (Alarmy 1.7 Flow) */}
+      <Modal
+        visible={previewWallpaper !== null}
+        animationType="fade"
+        transparent={false}
+        onRequestClose={() => setPreviewWallpaper(null)}
+      >
+        {previewWallpaper && (
+          <View className="flex-1 bg-black">
+            <Image
+              source={previewWallpaper.poster}
+              className="absolute inset-0 w-full h-full"
+              resizeMode="cover"
+            />
+            <View className="absolute inset-0 bg-black/25" pointerEvents="none" />
+
+            {/* Top Bar with Back Chevron */}
+            <View
+              style={{ paddingTop: Math.max(insets.top, 16) }}
+              className="px-5 flex-row items-center justify-between z-20"
+            >
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setPreviewWallpaper(null)}
+                className="h-10 w-10 rounded-full bg-black/40 items-center justify-center border border-white/20"
+              >
+                <Text className="text-white text-lg font-black">‹</Text>
+              </TouchableOpacity>
+              <View className="px-3 py-1 rounded-full bg-black/40 border border-white/20">
+                <Text className="text-white text-xs font-bold uppercase tracking-wider">
+                  {previewWallpaper.name}
+                </Text>
+              </View>
+              <View className="w-10" />
+            </View>
+
+            {/* Alarmy-Style Live Clock and Date (1.7 Background Preview) */}
+            <View className="items-center mt-12 z-10 px-4">
+              <Text className="text-white/80 font-bold text-sm tracking-wide">
+                {new Date().toLocaleDateString(undefined, {
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'short',
+                })}
+              </Text>
+              <Text
+                style={{
+                  textShadowColor: 'rgba(0, 0, 0, 0.45)',
+                  textShadowOffset: { width: 0, height: 2 },
+                  textShadowRadius: 8,
+                }}
+                className="text-white font-black text-7xl mt-1 tracking-tight"
+              >
+                {previewTime}
+              </Text>
+            </View>
+
+            <View className="flex-1" />
+
+            {/* Bottom Audio Indicator & Next Button */}
+            <View style={{ paddingBottom: insets.bottom + 20 }} className="px-5 z-20">
+              <View className="items-center mb-4">
+                <View className="flex-row items-center bg-black/50 border border-white/20 rounded-full px-4 py-1.5">
+                  <Text className="text-white text-xs mr-2">ılıl</Text>
+                  <Text className="text-white text-xs font-semibold">
+                    Alarm rings with video sound
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handleConfirmPreview}
+                className="w-full bg-primary py-4 rounded-2xl items-center shadow-lg active:bg-primary-dark"
+              >
+                <Text className="text-white text-base font-black tracking-wide">
+                  Next
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </Modal>
 
       {/* Bottom Button with Safe Area */}
       <View

@@ -87,6 +87,7 @@ export function PermissionScreen({ navigation, route }: Props) {
       wallpaper: params.wallpaper,
       soundId: params.soundId,
       mission: params.mission,
+      missions: params.missions,
     });
   };
 
