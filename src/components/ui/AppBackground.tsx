@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import LottieView from 'lottie-react-native';
 
 const MutedLoopVideo = requireNativeComponent<{
   src: string;
@@ -18,6 +19,7 @@ import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { findAlbaBackground } from '@/data/albaBackgrounds';
 import { findMotionMedia } from '@/data/motionMedia';
+import { findLottieMedia } from '@/data/lottieMedia';
 import { NativeAlarm } from '@/native/AlarmModule';
 import { BackgroundTarget, useThemeStore } from '@/storage/themeStore';
 
@@ -63,6 +65,7 @@ export function AppBackground({
 
   const alba = findAlbaBackground(activeId);
   const motion = findMotionMedia(activeId);
+  const lottie = findLottieMedia(activeId);
   const [gifUri, setGifUri] = React.useState<string | null>(null);
   const [videoUri, setVideoUri] = React.useState<string | null>(null);
   const fileVideo =
@@ -146,6 +149,17 @@ export function AppBackground({
             src={videoUri}
             muted={videoMuted}
             style={[StyleSheet.absoluteFill, { opacity: brightness }]}
+          />
+        </View>
+      ) : null}
+      {lottie ? (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <LottieView
+            source={lottie.source}
+            autoPlay
+            loop
+            style={[StyleSheet.absoluteFill, { opacity: brightness }]}
+            resizeMode="cover"
           />
         </View>
       ) : null}

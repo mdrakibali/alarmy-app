@@ -13,18 +13,21 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ALBA_BACKGROUNDS, AlbaGroup } from '@/data/albaBackgrounds';
 import { MOTION_MEDIA } from '@/data/motionMedia';
+import { LOTTIE_MEDIA } from '@/data/lottieMedia';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
 import { useAppInsets } from '@/utils/safeArea';
+import LottieView from 'lottie-react-native';
 
-type GroupId = AlbaGroup | 'Motion' | 'Video' | 'Custom' | 'Favorites';
+type GroupId = AlbaGroup | 'Video' | 'Lottie' | 'Motion' | 'Custom' | 'Favorites';
 
 const GROUPS: GroupId[] = [
-  'Motion',
   'Video',
+  'Lottie',
+  'Motion',
   'Nature',
   'Mountains',
   'Flowers',
@@ -41,13 +44,15 @@ const Card = React.memo(function WallpaperCard({
   name,
   selected,
   source,
+  lottieSource,
   badge,
   onPress,
 }: {
   id: string;
   name: string;
   selected: boolean;
-  source: number | { uri: string };
+  source?: number | { uri: string };
+  lottieSource?: any;
   badge?: string;
   onPress: (id: string) => void;
 }) {
@@ -55,17 +60,27 @@ const Card = React.memo(function WallpaperCard({
     <Pressable
       onPress={() => onPress(id)}
       style={{ width: '48%', height: 224, marginBottom: 16 }}
-      className={`rounded-3xl overflow-hidden border-2 ${
+      className={`rounded-3xl overflow-hidden border-2 bg-slate-900 ${
         selected ? 'border-primary' : 'border-slate-200'
       }`}
     >
-      <Image
-        pointerEvents="none"
-        source={source}
-        resizeMethod="resize"
-        resizeMode="cover"
-        className="absolute inset-0 w-full h-full"
-      />
+      {lottieSource ? (
+        <LottieView
+          source={lottieSource}
+          autoPlay
+          loop
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          resizeMode="cover"
+        />
+      ) : source ? (
+        <Image
+          pointerEvents="none"
+          source={source}
+          resizeMethod="resize"
+          resizeMode="cover"
+          className="absolute inset-0 w-full h-full"
+        />
+      ) : null}
       {badge ? (
         <View pointerEvents="none" className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/70">
           <Text className="text-[10px] font-black text-white">{badge}</Text>
@@ -133,6 +148,14 @@ export function WallpaperGalleryScreen() {
     }
     if (selectedGroup === 'Motion') return motionOf('gif');
     if (selectedGroup === 'Video') return motionOf('video');
+    if (selectedGroup === 'Lottie') {
+      return LOTTIE_MEDIA.filter(item => matches(item.name)).map(item => ({
+        id: item.id,
+        name: item.name,
+        lottieSource: item.source,
+        badge: 'LOTTIE',
+      }));
+    }
     return ALBA_BACKGROUNDS.filter(item => item.group === selectedGroup && matches(item.name)).map(item => ({
       id: item.id,
       name: item.name,
@@ -166,13 +189,25 @@ export function WallpaperGalleryScreen() {
   }, [navigation, pickForAlarm]);
 
   const renderItem = useCallback(
-    ({ item }: { item: { id: string; name: string; source: number | { uri: string }; badge?: string; custom?: boolean } }) => {
+    ({
+      item,
+    }: {
+      item: {
+        id: string;
+        name: string;
+        source?: number | { uri: string };
+        lottieSource?: any;
+        badge?: string;
+        custom?: boolean;
+      };
+    }) => {
       return (
         <Card
           id={item.id}
           name={item.name}
           selected={currentAlarmBg === item.id}
           source={item.source}
+          lottieSource={item.lottieSource}
           badge={item.badge}
           onPress={onPress}
         />

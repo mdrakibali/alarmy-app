@@ -7,6 +7,7 @@ import {
   PermissionsAndroid,
   Platform,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   TextInput,
@@ -20,6 +21,9 @@ import { WheelTimePicker } from '@/components/ui/WheelTimePicker';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { ALBA_BACKGROUNDS, findAlbaBackground } from '@/data/albaBackgrounds';
 import { findMotionMedia, MOTION_MEDIA } from '@/data/motionMedia';
+import LottieView from 'lottie-react-native';
+import { findLottieMedia, LOTTIE_MEDIA } from '@/data/lottieMedia';
+import { ALARM_SOUND_ITEMS, findAlarmSoundItem } from '@/data/alarmSounds';
 import { OFFLINE_PACK } from '@/data/offlinePack';
 import { takeWallpaperPick } from '@/features/wallpaper/wallpaperPick';
 import { NativeAlarm } from '@/native/AlarmModule';
@@ -28,7 +32,7 @@ import { useThemeStore } from '@/storage/themeStore';
 import { useToast } from '@/components/ui/AppToast';
 import { CustomConfirmModal } from '@/components/ui/CustomConfirmModal';
 import { useAlarmStore } from './alarmStore';
-import { Check, ChevronRight, Play, Plus, Square, Trash2, X } from 'lucide-react-native';
+import { Check, ChevronRight, Music, Play, Plus, Search, Square, Trash2, Volume2, X } from 'lucide-react-native';
 import {
   MISSION_DETAILS,
   SNOOZE_COUNTS,
@@ -43,15 +47,37 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AlarmEdit'>;
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+const SOUND_CATEGORIES = [
+  'All',
+  'Gentle Morning',
+  'Acoustic Guitar',
+  'Flute & Instrumental',
+  'Soft Piano',
+  'Vintage Clock',
+  'Meditation & Relaxing',
+  'Energetic Wake Up',
+  'Nature & Birds',
+  'Forest & Wildlife',
+  'Ocean & Waterfall',
+  'Rain & Thunder',
+  'Digital Alarm',
+  'Classic Bell',
+  'Cinematic',
+  'Ambient & Space',
+  'Loud & Urgent',
+];
+
 const QUICK_BASE_WALLPAPERS = [
-  ...ALBA_BACKGROUNDS.map(w => ({ id: w.id, name: w.name, source: w.source })),
-  ...MOTION_MEDIA.map(w => ({ id: w.id, name: w.name, source: w.poster })),
+  ...LOTTIE_MEDIA.map(w => ({ id: w.id, name: w.name, source: undefined, lottieSource: w.source })),
+  ...ALBA_BACKGROUNDS.map(w => ({ id: w.id, name: w.name, source: w.source, lottieSource: undefined })),
+  ...MOTION_MEDIA.map(w => ({ id: w.id, name: w.name, source: w.poster, lottieSource: undefined })),
 ];
 
 interface QuickWallpaperCardProps {
   id: string;
   name: string;
   source: any;
+  lottieSource?: any;
   isSelected: boolean;
   onSelect: (id: string) => void;
 }
@@ -61,6 +87,7 @@ const QuickWallpaperCard = React.memo(
     id,
     name,
     source,
+    lottieSource,
     isSelected,
     onSelect,
   }: QuickWallpaperCardProps) {
@@ -73,16 +100,26 @@ const QuickWallpaperCard = React.memo(
           borderColor: isSelected ? '#1652E6' : '#E2E8F0',
           borderWidth: 2,
         }}
-        className="w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative bg-slate-100"
+        className="w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative bg-slate-900"
       >
-        <Image
-          pointerEvents="none"
-          source={source}
-          fadeDuration={0}
-          resizeMethod="resize"
-          resizeMode="cover"
-          className="absolute inset-0 w-full h-full"
-        />
+        {lottieSource ? (
+          <LottieView
+            source={lottieSource}
+            autoPlay
+            loop
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+        ) : source ? (
+          <Image
+            pointerEvents="none"
+            source={source}
+            fadeDuration={0}
+            resizeMethod="resize"
+            resizeMode="cover"
+            className="absolute inset-0 w-full h-full"
+          />
+        ) : null}
         {/* Selected Badge */}
         <View pointerEvents="none" className="w-full flex-row justify-end p-1.5 z-10">
           {isSelected && (
@@ -99,7 +136,7 @@ const QuickWallpaperCard = React.memo(
             }`}
             numberOfLines={1}
           >
-            ♪ {name}
+            {lottieSource ? '✨ ' : ''}{name}
           </Text>
         </View>
       </TouchableOpacity>
@@ -366,13 +403,17 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
   const alarmBackground = useThemeStore(s => s.alarmBackground);
   const selectedVisualId = draft.wallpaper || alarmBackground;
+  const lottieVisual = findLottieMedia(selectedVisualId);
   const albaVisual = findAlbaBackground(selectedVisualId);
   const motionVisual = findMotionMedia(selectedVisualId);
   const legacyVisual = WALLPAPERS.find(w => w.id === selectedVisualId);
   const currentWallpaper = {
-    name: motionVisual?.name ?? albaVisual?.name ?? legacyVisual?.name ?? 'Wallpaper',
-    category: motionVisual ? (motionVisual.kind === 'gif' ? 'Motion' : 'Video') : albaVisual?.group ?? legacyVisual?.category ?? 'Nature',
+    name: lottieVisual?.name ?? motionVisual?.name ?? albaVisual?.name ?? legacyVisual?.name ?? 'Wallpaper',
+    category: lottieVisual ? 'Lottie' : motionVisual ? (motionVisual.kind === 'gif' ? 'Motion' : 'Video') : albaVisual?.group ?? legacyVisual?.category ?? 'Nature',
   };
+
+  const [selectedSoundCategory, setSelectedSoundCategory] = useState<string>('All');
+  const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
 
   // Stop preview on unmount
   useEffect(() => {
@@ -474,14 +515,14 @@ export function AlarmEditScreen({ navigation, route }: Props) {
 
   const toggleSoundPreview = (soundId?: string, forcePlay = false) => {
     const targetId = soundId || draft.soundId;
-    if (isPlayingSound && !forcePlay) {
+    if (previewingSoundId === targetId && isPlayingSound && !forcePlay) {
       NativeAlarm.stopSoundPreview().catch(() => {});
       setIsPlayingSound(false);
+      setPreviewingSoundId(null);
     } else {
       setIsPlayingSound(true);
+      setPreviewingSoundId(targetId);
       NativeAlarm.previewSound(targetId).catch(() => {});
-      // Auto reset playing state after 3.5 seconds
-      setTimeout(() => setIsPlayingSound(false), 3500);
     }
   };
 
@@ -798,6 +839,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 id={w.id}
                 name={w.name}
                 source={w.source}
+                lottieSource={(w as any).lottieSource}
                 isSelected={currentSelectedWallpaper === w.id}
                 onSelect={handleSelectWallpaper}
               />
@@ -829,18 +871,34 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             />
           </View>
 
+          {/* Import custom device audio */}
           <TouchableOpacity
+            activeOpacity={0.8}
             onPress={async () => {
               const uri = await NativeAlarm.pickLocalAudio();
-              if (uri) patch({ soundId: uri });
+              if (uri) {
+                patch({ soundId: uri });
+                toggleSoundPreview(uri, true);
+              }
             }}
-            className="mb-3"
+            className="flex-row items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 mb-3"
           >
-            <Text className="text-sm font-bold text-primary">
-              {draft.soundId.startsWith('content://') || draft.soundId.startsWith('file://')
-                ? 'Custom sound selected'
-                : 'Import a custom sound'}
-            </Text>
+            <View className="flex-row items-center flex-1 pr-2">
+              <View className="h-8 w-8 rounded-xl bg-primary/10 items-center justify-center mr-2.5">
+                <Music size={16} color="#1652E6" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs font-black text-slate-800" numberOfLines={1}>
+                  {draft.soundId.startsWith('content://') || draft.soundId.startsWith('file://')
+                    ? 'Custom Phone Audio Selected'
+                    : 'Custom Sound from Phone'}
+                </Text>
+                <Text className="text-[10px] text-slate-400 font-medium">
+                  Import MP3, audio recordings or music
+                </Text>
+              </View>
+            </View>
+            <Text className="text-xs font-black text-primary">Browse</Text>
           </TouchableOpacity>
 
           {/* Sound selection row with Audio Preview */}
@@ -848,7 +906,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => toggleSoundPreview()}
-              className={`h-9 w-9 rounded-full items-center justify-center mr-3 ${
+              className={`h-10 w-10 rounded-full items-center justify-center mr-3 ${
                 isPlayingSound ? 'bg-secondary' : 'bg-primary'
               }`}
             >
@@ -864,83 +922,197 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               onPress={() => setShowSoundPicker(prev => !prev)}
               className="flex-1 flex-row items-center justify-between"
             >
-              <View>
-                <Text className="text-sm font-bold text-slate-800">
-                  {SOUND_OPTIONS.find(s => s.id === draft.soundId)?.label ||
+              <View className="flex-1 pr-2">
+                <Text className="text-sm font-black text-slate-800" numberOfLines={1}>
+                  {findAlarmSoundItem(draft.soundId)?.title ||
+                    SOUND_OPTIONS.find(s => s.id === draft.soundId)?.label ||
                     downloadedSounds.find(s => s.path === draft.soundId)?.title ||
                     (draft.soundId.startsWith('file://') ? 'Downloaded sound' : 'Default Alarm')}
                 </Text>
                 <Text className="text-[11px] text-slate-400 font-medium">
-                  {isPlayingSound ? 'Playing audio preview...' : 'Tap ▶ to test sound'}
+                  {isPlayingSound ? 'Playing preview... tap to stop' : 'Tap ▶ to test • Tap to change sound'}
                 </Text>
               </View>
-              <Text className="text-xs font-bold text-slate-400">
-                {showSoundPicker ? '▲' : '▼'}
-              </Text>
+              <View className="px-2 py-1 rounded-lg bg-slate-200/70">
+                <Text className="text-[10px] font-black text-slate-600">
+                  {showSoundPicker ? 'CLOSE ▲' : 'BROWSE ▼'}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
 
           {/* Sound options expansion */}
           {showSoundPicker && (
-            <View className="mb-3 px-1">
-              <TextInput
-                value={soundQuery}
-                onChangeText={setSoundQuery}
-                placeholder="Search sounds"
-                placeholderTextColor="#556889"
-                className="bg-background border border-slate-200 rounded-xl px-3 py-2 mb-2 text-sm text-navy"
-              />
-              {SOUND_OPTIONS.filter(opt =>
-                opt.label.toLowerCase().includes(soundQuery.trim().toLowerCase()),
-              ).map(opt => (
-                <TouchableOpacity
-                  key={opt.id}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    patch({ soundId: opt.id });
-                    setShowSoundPicker(false);
-                    toggleSoundPreview(opt.id, true);
-                  }}
-                  className={`flex-row items-center justify-between py-2.5 px-3 rounded-xl mb-1 ${
-                    draft.soundId === opt.id ? 'bg-ice' : ''
-                  }`}
-                >
-                  <View className="flex-row items-center">
-                    <Text className="text-lg mr-2.5">{opt.icon}</Text>
-                    <Text
-                      className={`text-sm ${
-                        draft.soundId === opt.id
-                          ? 'font-bold text-primary'
-                          : 'font-medium text-slate-700'
-                      }`}
-                    >
-                      {opt.label}
-                    </Text>
-                  </View>
-                  {draft.soundId === opt.id && (
-                    <Text className="text-primary font-bold text-xs">✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-              {downloadedSounds
-                .filter(opt => opt.title.toLowerCase().includes(soundQuery.trim().toLowerCase()))
-                .map(opt => (
+            <View className="mb-3 p-3 bg-slate-50/80 rounded-2xl border border-slate-200">
+              {/* Search bar */}
+              <View className="flex-row items-center bg-white border border-slate-200 rounded-xl px-3 py-2 mb-2.5">
+                <Search size={14} color="#94A3B8" className="mr-2" />
+                <TextInput
+                  value={soundQuery}
+                  onChangeText={setSoundQuery}
+                  placeholder="Search 50+ sounds by name or category..."
+                  placeholderTextColor="#94A3B8"
+                  className="flex-1 text-xs text-navy p-0 font-medium"
+                />
+                {soundQuery ? (
+                  <TouchableOpacity onPress={() => setSoundQuery('')}>
+                    <X size={14} color="#94A3B8" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              {/* Horizontal Category Chips */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mb-2.5 -mx-1 px-1"
+              >
+                {SOUND_CATEGORIES.map(cat => (
                   <TouchableOpacity
-                    key={opt.path}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      patch({ soundId: opt.path });
-                      setShowSoundPicker(false);
-                      toggleSoundPreview(opt.path, true);
-                    }}
-                    className={`flex-row items-center justify-between py-2.5 px-3 rounded-xl mb-1 ${
-                      draft.soundId === opt.path ? 'bg-ice' : ''
+                    key={cat}
+                    onPress={() => setSelectedSoundCategory(cat)}
+                    className={`mr-1.5 px-3 py-1.5 rounded-full border ${
+                      selectedSoundCategory === cat
+                        ? 'bg-primary border-primary'
+                        : 'bg-white border-slate-200'
                     }`}
                   >
-                    <Text className="text-sm font-medium text-slate-700">{opt.title}</Text>
-                    {draft.soundId === opt.path ? <Text className="text-primary font-bold text-xs">✓</Text> : null}
+                    <Text
+                      className={`text-[11px] font-bold ${
+                        selectedSoundCategory === cat ? 'text-white' : 'text-slate-600'
+                      }`}
+                    >
+                      {cat}
+                    </Text>
                   </TouchableOpacity>
                 ))}
+              </ScrollView>
+
+              {/* Sound list */}
+              <ScrollView
+                nestedScrollEnabled
+                style={{ maxHeight: 340 }}
+                showsVerticalScrollIndicator={true}
+              >
+                {ALARM_SOUND_ITEMS.filter(s => {
+                  const matchCat =
+                    selectedSoundCategory === 'All' || s.category === selectedSoundCategory;
+                  const q = soundQuery.trim().toLowerCase();
+                  const matchQ =
+                    !q ||
+                    s.title.toLowerCase().includes(q) ||
+                    s.description.toLowerCase().includes(q) ||
+                    s.category.toLowerCase().includes(q);
+                  return matchCat && matchQ;
+                }).map(s => {
+                  const isSelected = draft.soundId === s.id;
+                  const isThisPlaying = isPlayingSound && previewingSoundId === s.id;
+                  return (
+                    <TouchableOpacity
+                      key={s.id}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        patch({ soundId: s.id });
+                        NativeAlarm.triggerHapticTick();
+                        toggleSoundPreview(s.id, true);
+                      }}
+                      className={`flex-row items-center justify-between p-2.5 rounded-xl mb-1.5 border ${
+                        isSelected
+                          ? 'bg-blue-50/80 border-primary/40'
+                          : 'bg-white border-slate-100'
+                      }`}
+                    >
+                      <View className="flex-row items-center flex-1 pr-2">
+                        {/* Play/Stop button for this sound */}
+                        <TouchableOpacity
+                          onPress={e => {
+                            e.stopPropagation();
+                            toggleSoundPreview(s.id);
+                          }}
+                          className={`h-7 w-7 rounded-full items-center justify-center mr-2.5 ${
+                            isThisPlaying ? 'bg-secondary' : 'bg-slate-100'
+                          }`}
+                        >
+                          {isThisPlaying ? (
+                            <Square size={10} color="#FFFFFF" fill="#FFFFFF" />
+                          ) : (
+                            <Play size={10} color="#64748B" fill="#64748B" />
+                          )}
+                        </TouchableOpacity>
+
+                        <Text className="text-base mr-2">{s.icon}</Text>
+                        <View className="flex-1">
+                          <View className="flex-row items-center flex-wrap">
+                            <Text
+                              className={`text-xs mr-2 ${
+                                isSelected ? 'font-black text-primary' : 'font-bold text-slate-800'
+                              }`}
+                            >
+                              {s.title}
+                            </Text>
+                            <View className="px-1.5 py-0.5 rounded bg-slate-100">
+                              <Text className="text-[9px] font-semibold text-slate-500">
+                                {s.category}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text
+                            className="text-[10px] text-slate-400 mt-0.5"
+                            numberOfLines={1}
+                          >
+                            {s.description}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {isSelected ? (
+                        <View className="h-5 w-5 rounded-full bg-primary items-center justify-center">
+                          <Check size={12} color="#FFFFFF" />
+                        </View>
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {/* Downloaded / custom local sounds if any */}
+                {downloadedSounds
+                  .filter(opt =>
+                    opt.title.toLowerCase().includes(soundQuery.trim().toLowerCase()),
+                  )
+                  .map(opt => {
+                    const isSelected = draft.soundId === opt.path;
+                    return (
+                      <TouchableOpacity
+                        key={opt.path}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          patch({ soundId: opt.path });
+                          NativeAlarm.triggerHapticTick();
+                          toggleSoundPreview(opt.path, true);
+                        }}
+                        className={`flex-row items-center justify-between p-2.5 rounded-xl mb-1.5 border ${
+                          isSelected
+                            ? 'bg-blue-50/80 border-primary/40'
+                            : 'bg-white border-slate-100'
+                        }`}
+                      >
+                        <View className="flex-row items-center flex-1 pr-2">
+                          <View className="h-7 w-7 rounded-full bg-slate-100 items-center justify-center mr-2.5">
+                            <Music size={12} color="#64748B" />
+                          </View>
+                          <Text className="text-xs font-bold text-slate-700 flex-1" numberOfLines={1}>
+                            {opt.title}
+                          </Text>
+                        </View>
+                        {isSelected ? (
+                          <View className="h-5 w-5 rounded-full bg-primary items-center justify-center">
+                            <Check size={12} color="#FFFFFF" />
+                          </View>
+                        ) : null}
+                      </TouchableOpacity>
+                    );
+                  })}
+              </ScrollView>
             </View>
           )}
 

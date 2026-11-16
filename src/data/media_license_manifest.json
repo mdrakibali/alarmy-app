@@ -1,0 +1,393 @@
+{
+  "summary": {
+    "total_audio_assets": 84,
+    "alarm_sounds": 61,
+    "sleep_sounds": 23,
+    "total_background_videos": 21,
+    "total_lottie_animations": 10,
+    "total_motion_gifs": 68,
+    "total_still_wallpapers": 23,
+    "license_standards": [
+      "CC0 1.0 Universal",
+      "Mixkit Free License (App Bundling Permitted)",
+      "MIT License",
+      "Pexels Free License"
+    ]
+  },
+  "categories": {
+    "Gentle Morning Alarm": [
+      "alarm_gentle_morning.mp3",
+      "alarm_golden_harp_arpeggio.mp3",
+      "alarm_morning_carillon_chime.mp3",
+      "alarm_soft_wake.mp3",
+      "alarm_morning_breeze.mp3",
+      "alarm_mix_morning.wav"
+    ],
+    "Acoustic Guitar": [
+      "alarm_acoustic_guitar_strum.mp3",
+      "alarm_acoustic_guitar_morning.mp3"
+    ],
+    "Flute & Instrumental": [
+      "alarm_zen_bamboo_flute.mp3",
+      "alarm_celtic_tin_whistle.mp3"
+    ],
+    "Soft Piano": [
+      "alarm_piano_medley.mp3",
+      "alarm_peaceful_keys.mp3",
+      "alarm_mellow_harmony.mp3",
+      "alarm_piano.wav",
+      "sleep_soft_piano.mp3",
+      "sleep_piano.wav"
+    ],
+    "Vintage Clock": [
+      "alarm_vintage_grandfather_clock.mp3",
+      "alarm_antique_pendulum_clock.mp3",
+      "alarm_classic_clock.mp3"
+    ],
+    "Meditation & Relaxing": [
+      "alarm_tibetan_singing_bowl.mp3",
+      "alarm_temple_bell_chime.mp3",
+      "sleep_ambient_calm.mp3",
+      "sleep_ambient.wav",
+      "sleep_meditation.wav",
+      "sleep_relaxation.wav"
+    ],
+    "Energetic Wake Up": [
+      "alarm_marimba_sunshine.mp3",
+      "alarm_electronic_pulse.mp3",
+      "alarm_synth_alert.mp3",
+      "alarm_techno_riser.mp3",
+      "alarm_electronic.wav"
+    ],
+    "Nature & Birds": [
+      "alarm_spring_birds_chirp.mp3",
+      "alarm_morning_birds.mp3",
+      "alarm_birds.wav",
+      "sleep_forest_birds.mp3",
+      "sleep_mix_forest_birds.wav"
+    ],
+    "Forest & Wildlife": [
+      "alarm_forest_dawn.mp3",
+      "alarm_rooster_crow.mp3",
+      "alarm_rooster.wav",
+      "alarm_mix_rooster.wav",
+      "sleep_forest.wav"
+    ],
+    "Ocean & Waterfall": [
+      "alarm_mountain_waterfall.mp3",
+      "sleep_ocean_surf.mp3",
+      "sleep_ocean.wav",
+      "sleep_mix_sea_waves_with_birds_loop.wav"
+    ],
+    "Rain & Thunder": [
+      "alarm_distant_thunder_roll.mp3",
+      "sleep_rain_gentle.mp3",
+      "sleep_rain.wav",
+      "sleep_mix_light_rain_loop.wav",
+      "sleep_mix_rain_and_thunder_storm.wav",
+      "sleep_thunderstorm.wav"
+    ],
+    "Digital Alarm": [
+      "alarm_digital_buzzer.mp3",
+      "alarm_digital_beeps.mp3",
+      "alarm_arcade_bleep.mp3",
+      "alarm_radar_ping.mp3",
+      "alarm_digital.wav",
+      "alarm_mix_digital.wav",
+      "alarm_mix_beep.wav"
+    ],
+    "Classic Bell": [
+      "alarm_service_bell.mp3",
+      "alarm_ship_bell.mp3",
+      "alarm_bell.wav",
+      "alarm_classic.wav",
+      "alarm_mix_classic.wav",
+      "alarm_mix_tone.wav",
+      "alarm_mix_short.wav"
+    ],
+    "Cinematic Sounds": [
+      "alarm_cinematic_horn.mp3",
+      "alarm_epic_countdown.mp3",
+      "alarm_space_transit.mp3"
+    ],
+    "Ambient & Space": [
+      "alarm_analog_synth_rise.mp3",
+      "alarm_mix_space.wav",
+      "sleep_breeze_wind.mp3",
+      "sleep_wind.wav",
+      "sleep_fireplace.wav",
+      "sleep_pinknoise.wav",
+      "sleep_brownnoise.wav",
+      "sleep_whitenoise.wav"
+    ],
+    "Loud & Urgent": [
+      "alarm_facility_alert.mp3",
+      "alarm_police_siren.mp3",
+      "alarm_fire_bell.mp3",
+      "alarm_extreme_danger.mp3",
+      "alarm_siren.wav",
+      "alarm_emergency.wav",
+      "alarm_mix_siren.wav",
+      "alarm_mix_facility.wav"
+    ]
+  },
+  "videos": [
+    {
+      "id": "motion_vid_sunrise_horizon",
+      "file": "mixkit-sunrise-horizon.mp4",
+      "category": "Beautiful Sunrise",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/6734/"
+    },
+    {
+      "id": "motion_vid_sunset_beach",
+      "file": "mixkit-sunset-beach.mp4",
+      "category": "Sunset & Golden Hour",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/2168/"
+    },
+    {
+      "id": "motion_vid_sunset_sea",
+      "file": "mixkit-sunset-sea.mp4",
+      "category": "Sunset & Golden Hour",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/4119/"
+    },
+    {
+      "id": "motion_vid_peaceful_lake",
+      "file": "mixkit-peaceful-lake.mp4",
+      "category": "Peaceful Lakes",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/4249/"
+    },
+    {
+      "id": "motion_vid_mountain_peaks",
+      "file": "mixkit-mountain-peaks.mp4",
+      "category": "Mountain Landscapes",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/1215/"
+    },
+    {
+      "id": "motion_vid_forest_stream",
+      "file": "mixkit-forest-stream.mp4",
+      "category": "Forest & Nature",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/1205/"
+    },
+    {
+      "id": "motion_vid_tropical_waterfall",
+      "file": "mixkit-tropical-waterfall.mp4",
+      "category": "Waterfalls",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/46384/"
+    },
+    {
+      "id": "motion_vid_starry_galaxy",
+      "file": "mixkit-starry-galaxy.mp4",
+      "category": "Starry Night",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/25081/"
+    },
+    {
+      "id": "motion_vid_calm_river",
+      "file": "mixkit-calm-river.mp4",
+      "category": "Forest & Nature",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/1218/"
+    },
+    {
+      "id": "motion_vid_ocean_tide",
+      "file": "mixkit-ocean-tide.mp4",
+      "category": "Ocean Waves",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/1186/"
+    },
+    {
+      "id": "motion_vid_windy_pines",
+      "file": "mixkit-windy-pines.mp4",
+      "category": "Forest & Nature",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/1206/"
+    },
+    {
+      "id": "motion_vid_abstract_particles",
+      "file": "mixkit-abstract-particles.mp4",
+      "category": "Abstract Ambient Backgrounds",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/31562/"
+    },
+    {
+      "id": "motion_vid_dusk_skyline",
+      "file": "mixkit-dusk-skyline.mp4",
+      "category": "City Night",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/41375/"
+    },
+    {
+      "id": "motion_vid_city_night",
+      "file": "mixkit-city-night.mp4",
+      "category": "City Night",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/49845/"
+    },
+    {
+      "id": "motion_vid_clouds",
+      "file": "mixkit-clouds-meadow.mp4",
+      "category": "Clouds & Sky",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/4070/"
+    },
+    {
+      "id": "motion_vid_fireplace",
+      "file": "mixkit-fireplace.mp4",
+      "category": "Abstract Ambient Backgrounds",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/52284/"
+    },
+    {
+      "id": "motion_vid_forest_falls",
+      "file": "mixkit-forest-waterfall.mp4",
+      "category": "Forest & Nature",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/2213/"
+    },
+    {
+      "id": "motion_vid_moon",
+      "file": "mixkit-night-moon.mp4",
+      "category": "Starry Night",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/4433/"
+    },
+    {
+      "id": "motion_vid_rain_lake",
+      "file": "mixkit-rain-lake.mp4",
+      "category": "Rainy Window",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/18312/"
+    },
+    {
+      "id": "motion_vid_space",
+      "file": "mixkit-space-stars.mp4",
+      "category": "Starry Night",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/1610/"
+    },
+    {
+      "id": "motion_vid_waterfall",
+      "file": "mixkit-waterfall.mp4",
+      "category": "Waterfalls",
+      "resolution": "720p",
+      "license": "Mixkit Free License",
+      "source": "https://mixkit.co/free-stock-video/572/"
+    }
+  ],
+  "lottie_animations": [
+    {
+      "id": "lottie_sunrise_cycle",
+      "file": "lottie_sunrise_cycle.json",
+      "category": "Animated Sunrise",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_thunder_rain",
+      "file": "lottie_thunder_rain.json",
+      "category": "Falling Rain & Thunder",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_nature_breeze",
+      "file": "lottie_nature_breeze.json",
+      "category": "Animated Nature & Breeze",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_misty_clouds",
+      "file": "lottie_misty_clouds.json",
+      "category": "Moving Clouds",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_flying_birds",
+      "file": "lottie_flying_birds.json",
+      "category": "Animated Nature Birds",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_starry_galaxy",
+      "file": "lottie_starry_galaxy.json",
+      "category": "Stars & Galaxy",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_firefly_particles",
+      "file": "lottie_firefly_particles.json",
+      "category": "Floating Particles / Fireflies",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_winter_snowfall",
+      "file": "lottie_winter_snowfall.json",
+      "category": "Snowfall & Winter",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_abstract_gradient",
+      "file": "lottie_abstract_gradient.json",
+      "category": "Calm Abstract Gradient",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    },
+    {
+      "id": "lottie_water_ripple",
+      "file": "lottie_water_ripple.json",
+      "category": "Ocean Waves & Ripple",
+      "license": "MIT License",
+      "source": "https://github.com/xvrh/lottie-flutter"
+    }
+  ],
+  "excluded_assets_report": [
+    {
+      "platform": "Pixabay API / Direct Download",
+      "reason": "Automated requests blocked with HTTP 403 / Cloudflare bot protection. Excluded to avoid automated scraping policy violations.",
+      "compliance": "Passed"
+    },
+    {
+      "platform": "Zapsplat.com",
+      "reason": "Standard Free account prohibits direct redistribution inside binary mobile application packages without a commercial developer subscription.",
+      "compliance": "Excluded per strict licensing compliance rule"
+    },
+    {
+      "platform": "Commercial Copyrighted Tracks",
+      "reason": "Any popular radio / commercial streaming music tracks were strictly excluded in compliance with user license constraints.",
+      "compliance": "Passed"
+    }
+  ]
+}

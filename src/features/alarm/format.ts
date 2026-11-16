@@ -82,32 +82,88 @@ export const MISSION_DETAILS: Record<
 };
 
 export const SOUND_OPTIONS = [
-  { id: 'alarm_gentle_morning', label: 'Gentle Morning Chime', icon: '☀️' },
-  { id: 'alarm_cinematic_horn', label: 'Cinematic Horn Rise', icon: '🎺' },
-  { id: 'alarm_epic_countdown', label: 'Epic Countdown Alert', icon: '🎬' },
-  { id: 'alarm_space_transit', label: 'Space Station Alert', icon: '🚀' },
+  // Gentle Morning
+  { id: 'alarm_gentle_morning', label: 'Gentle Morning Glockenspiel', icon: '☀️' },
+  { id: 'alarm_golden_harp_arpeggio', label: 'Golden Harp Dawn Arpeggio', icon: '✨' },
+  { id: 'alarm_morning_carillon_chime', label: 'Morning Carillon Chime', icon: '🔔' },
   { id: 'alarm_soft_wake', label: 'Soft Ambient Wake', icon: '🌸' },
-  { id: 'alarm_morning_breeze', label: 'Morning Breeze Melody', icon: '🍃' },
-  { id: 'alarm_piano_medley', label: 'Acoustic Piano Chords', icon: '🎹' },
+  { id: 'alarm_morning_breeze', label: 'Morning Breeze Flute', icon: '🍃' },
+
+  // Acoustic Guitar
+  { id: 'alarm_acoustic_guitar_strum', label: 'Acoustic Guitar Strum', icon: '🎸' },
+  { id: 'alarm_acoustic_guitar_morning', label: 'Warm Morning Fingerpicking', icon: '🎶' },
+
+  // Flute & Instrumental
+  { id: 'alarm_zen_bamboo_flute', label: 'Zen Bamboo Flute', icon: '🎋' },
+  { id: 'alarm_celtic_tin_whistle', label: 'Celtic Dawn Whistle', icon: '☘️' },
+
+  // Soft Piano
+  { id: 'alarm_piano_medley', label: 'Acoustic Grand Piano Chords', icon: '🎹' },
   { id: 'alarm_peaceful_keys', label: 'Peaceful Sunrise Keys', icon: '🎼' },
   { id: 'alarm_mellow_harmony', label: 'Mellow Piano Echo', icon: '✨' },
+  { id: 'alarm_piano', label: 'Classical Solitude Piano', icon: '🎹' },
+
+  // Vintage Clock
+  { id: 'alarm_vintage_grandfather_clock', label: 'Grandfather Clock Westminster', icon: '🕰️' },
+  { id: 'alarm_antique_pendulum_clock', label: 'Antique Pendulum Clock', icon: '⏳' },
+  { id: 'alarm_classic_clock', label: 'Classic Twin Bell Ring', icon: '🔔' },
+
+  // Meditation & Relaxing
+  { id: 'alarm_tibetan_singing_bowl', label: 'Tibetan Singing Bowl', icon: '🧘' },
+  { id: 'alarm_temple_bell_chime', label: 'Zen Temple Bell Chime', icon: '🎐' },
+
+  // Energetic Wake Up
+  { id: 'alarm_marimba_sunshine', label: 'Sunny Morning Marimba', icon: '🪵' },
+  { id: 'alarm_electronic_pulse', label: 'Electronic Beat Alarm', icon: '⚡' },
+  { id: 'alarm_synth_alert', label: 'Synth Wave Horizon', icon: '🎧' },
+  { id: 'alarm_techno_riser', label: 'Cyber Riser Siren', icon: '🤖' },
+
+  // Nature & Birds
+  { id: 'alarm_spring_birds_chirp', label: 'Spring Meadow Birds', icon: '🐦' },
+  { id: 'alarm_morning_birds', label: 'Singing Garden Birds', icon: '🐤' },
+  { id: 'alarm_birds', label: 'Woodland Songbirds', icon: '🌲' },
+
+  // Forest & Wildlife
+  { id: 'alarm_forest_dawn', label: 'Forest Dawn Chorus', icon: '🌲' },
+  { id: 'alarm_rooster_crow', label: 'Rooster Morning Crow', icon: '🐓' },
+  { id: 'alarm_rooster', label: 'Farmyard Rooster Call', icon: '🐔' },
+
+  // Ocean & Waterfall
+  { id: 'alarm_mountain_waterfall', label: 'Mountain Waterfall Surge', icon: '🌊' },
+
+  // Rain & Thunder
+  { id: 'alarm_distant_thunder_roll', label: 'Distant Thunder Roll', icon: '⛈️' },
+
+  // Digital Alarm
   { id: 'alarm_digital_buzzer', label: 'Digital Clock Buzzer', icon: '⏰' },
   { id: 'alarm_digital_beeps', label: 'Fast Digital Beeps', icon: '📟' },
   { id: 'alarm_arcade_bleep', label: 'Retro 8-Bit Wakeup', icon: '🕹️' },
   { id: 'alarm_radar_ping', label: 'Futuristic Radar Ping', icon: '📡' },
-  { id: 'alarm_electronic_pulse', label: 'Electronic Beat Alarm', icon: '⚡' },
-  { id: 'alarm_synth_alert', label: 'Synth Wave Alarm', icon: '🎧' },
-  { id: 'alarm_techno_riser', label: 'Cyber Riser Siren', icon: '🤖' },
-  { id: 'alarm_rooster_crow', label: 'Rooster Morning Crow', icon: '🐓' },
-  { id: 'alarm_morning_birds', label: 'Singing Garden Birds', icon: '🐦' },
-  { id: 'alarm_forest_dawn', label: 'Forest Dawn Chorus', icon: '🌲' },
+  { id: 'alarm_digital', label: 'Digital Watch Beep', icon: '⌚' },
+
+  // Classic Bell
+  { id: 'alarm_service_bell', label: 'Brass Desk Bell', icon: '🛎️' },
+  { id: 'alarm_ship_bell', label: 'Nautical Bell Strike', icon: '⚓' },
+  { id: 'alarm_bell', label: 'School Brass Bell', icon: '🔔' },
+  { id: 'alarm_classic', label: 'Traditional Alarm Ring', icon: '⏰' },
+
+  // Cinematic
+  { id: 'alarm_cinematic_horn', label: 'Cinematic Horn Rise', icon: '🎺' },
+  { id: 'alarm_epic_countdown', label: 'Epic Countdown Alert', icon: '🎬' },
+  { id: 'alarm_space_transit', label: 'Space Station Airlock', icon: '🚀' },
+
+  // Ambient & Space
+  { id: 'alarm_analog_synth_rise', label: 'Cosmic Synth Orbit', icon: '🌌' },
+
+  // Loud & Urgent
   { id: 'alarm_facility_alert', label: 'Industrial Facility Siren', icon: '🚨' },
   { id: 'alarm_police_siren', label: 'Emergency Warning Siren', icon: '🚒' },
   { id: 'alarm_fire_bell', label: 'Loud Fire Alarm Horn', icon: '🔥' },
   { id: 'alarm_extreme_danger', label: 'Heavy Duty Klaxon', icon: '⚡' },
-  { id: 'alarm_classic_clock', label: 'Classic Twin Bell Ring', icon: '🔔' },
-  { id: 'alarm_service_bell', label: 'Brass Desk Bell', icon: '🛎️' },
-  { id: 'alarm_ship_bell', label: 'Nautical Bell Strike', icon: '⚓' },
+  { id: 'alarm_siren', label: 'Rapid Alert Siren', icon: '🚨' },
+  { id: 'alarm_emergency', label: 'Emergency Alarm Tone', icon: '⚠️' },
+
+  // Mix entries for backwards compatibility
   { id: 'alarm_mix_classic', label: 'Mix Classic Alarm', icon: '🔔' },
   { id: 'alarm_mix_digital', label: 'Mix Digital Buzzer', icon: '📟' },
   { id: 'alarm_mix_morning', label: 'Mix Morning Clock', icon: '⏰' },
@@ -118,12 +174,7 @@ export const SOUND_OPTIONS = [
   { id: 'alarm_mix_space', label: 'Mix Space Alarm', icon: '🚀' },
   { id: 'alarm_mix_facility', label: 'Mix Facility Alarm', icon: '🏭' },
   { id: 'alarm_mix_rooster', label: 'Mix Rooster', icon: '🐓' },
-  { id: 'alarm_classic', label: 'Classic Alarm', icon: '⏰' },
-  { id: 'alarm_digital', label: 'Digital Watch', icon: '⌚' },
-  { id: 'alarm_rooster', label: 'Rooster Crow', icon: '🐓' },
-  { id: 'alarm_birds', label: 'Forest Birds', icon: '🐦' },
   { id: 'alarm_gentle', label: 'Gentle Morning', icon: '🍃' },
-  { id: 'alarm_piano', label: 'Warm Piano', icon: '🎹' },
   { id: 'alarm_electronic', label: 'Electronic Beat', icon: '🎵' },
   { id: 'cats', label: 'Dancing Cat (Video Sound)', icon: '🐱' },
   { id: 'illit', label: "[ILLIT] You're Under Arrest", icon: '✨' },

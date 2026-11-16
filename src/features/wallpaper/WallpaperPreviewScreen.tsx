@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import LottieView from 'lottie-react-native';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { findAlbaBackground } from '@/data/albaBackgrounds';
 import { findMotionMedia } from '@/data/motionMedia';
+import { findLottieMedia } from '@/data/lottieMedia';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { useThemeStore } from '@/storage/themeStore';
@@ -17,6 +19,7 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
   const insets = useAppInsets();
   const toast = useToast();
   const { wallpaperId, pickForAlarm } = route.params;
+  const lottie = findLottieMedia(wallpaperId);
   const alba = findAlbaBackground(wallpaperId);
   const motion = findMotionMedia(wallpaperId);
   const wallpaper = WALLPAPERS.find(w => w.id === wallpaperId);
@@ -27,7 +30,7 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
     : gifUri
       ? { uri: gifUri }
       : motion?.poster ?? alba?.source ?? wallpaper?.source;
-  const name = motion?.name ?? alba?.name ?? wallpaper?.name ?? 'Custom photo';
+  const name = lottie?.name ?? motion?.name ?? alba?.name ?? wallpaper?.name ?? 'Custom photo';
 
   const favorites = useThemeStore(s => s.favorites);
   const toggleFavorite = useThemeStore(s => s.toggleFavorite);
@@ -80,7 +83,7 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
     navigation.goBack();
   };
 
-  if (!source) {
+  if (!source && !lottie) {
     return (
       <View className="flex-1 bg-navy-dark items-center justify-center px-6">
         <Text className="text-white font-bold">This wallpaper is missing.</Text>
@@ -93,7 +96,17 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
 
   return (
     <View className="flex-1 bg-black">
-      <Image source={source} className="absolute inset-0 w-full h-full" resizeMode="cover" />
+      {lottie ? (
+        <LottieView
+          source={lottie.source}
+          autoPlay
+          loop
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        />
+      ) : source ? (
+        <Image source={source} className="absolute inset-0 w-full h-full" resizeMode="cover" />
+      ) : null}
       <View className="absolute inset-0 bg-black/25" pointerEvents="none" />
       <View
         style={{ paddingTop: Math.max(insets.top, 16) }}
@@ -169,6 +182,11 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
               {gifUri ? 'Loop is playing' : 'Play silent loop'}
             </Text>
           </TouchableOpacity>
+        ) : null}
+        {lottie ? (
+          <View className="self-start mt-3 px-3 py-1.5 rounded-full bg-white/20">
+            <Text className="text-white text-xs font-bold">Lottie vector loop is playing</Text>
+          </View>
         ) : null}
         {wallpaper?.soundId ? (
           <TouchableOpacity
