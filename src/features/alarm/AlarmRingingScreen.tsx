@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useAlarmStore } from './alarmStore';
-import { formatAlarmyClock, formatAlarmyDate, formatTime } from './format';
+import { formatAlbaClock, formatAlbaDate, formatTime } from './format';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AlarmRinging'>;
 
@@ -151,8 +151,8 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
 
   const hasMission = missions.length > 0;
   const snoozeMaxCount = alarmFromStore?.snooze.maxCount ?? 3;
-  const formattedDate = formatAlarmyDate(currentTime);
-  const formattedClock = formatAlarmyClock(currentTime);
+  const formattedDate = formatAlbaDate(currentTime);
+  const formattedClock = formatAlbaClock(currentTime);
 
   const displayLabel = label || 'Wake up early';
   const hasEmoji = /\p{Extended_Pictographic}/u.test(displayLabel);
@@ -167,7 +167,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
         }}
         className="flex-1 justify-between px-6"
       >
-        {/* Top Header: Date, Huge Alarmy Clock, and Emoji Label Pill (Image 2 format) */}
+        {/* Top Header: Date, Huge Alba Clock, and Emoji Label Pill (Image 2 format) */}
         <View className="items-center mt-2">
           {/* Top Date */}
           <Text
@@ -177,7 +177,7 @@ export function AlarmRingingScreen({ navigation, route }: Props) {
             {formattedDate}
           </Text>
 
-          {/* Huge Alarmy Clock */}
+          {/* Huge Alba Clock */}
           <Text
             style={styles.clockShadow}
             className="text-white text-[94px] font-black tracking-tight text-center leading-none mt-1 mb-2"

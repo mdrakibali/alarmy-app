@@ -1,4 +1,4 @@
-# ALBA (ALARMYCLONE) — KNOWN ANDROID LIMITATIONS & PLATFORM CONSTRAINTS
+# ALBA — KNOWN ANDROID LIMITATIONS & PLATFORM CONSTRAINTS
 
 **Author**: Senior Android Systems & Native Architect  
 **Date**: November 16, 2026  
@@ -14,12 +14,12 @@
 - **Remediation**: This is an intentional security boundary of the Android OS. The app will only resume receiving alarms once the user manually opens Alba from the launcher. No application (including Alarmy, Google Clock, or WhatsApp) can bypass this.
 
 ### 1.2 Android 12+ (API 31+) & Android 14+ (API 34+) Exact Alarms
-- **Android Rule**: Starting in Android 12, apps using `AlarmManager.setExactAndAllowWhileIdle()` or `setAlarmClock()` require the user or system to grant `SCHEDULE_EXACT_ALARM`. Starting in Android 14, this permission can be revoked by the user at runtime.
-- **Handling in Alba**: Alba implements `NativeAlarm.canScheduleExactAlarms()` and `openExactAlarmSettings()`, surfacing a dedicated preflight card in `PermissionScreen` and `SettingsScreen`.
+- **Android Rule**: Starting in Android 12, apps using `AlarmManager.setExactAndAllowWhileIdle` or `setAlarmClock` require the user or system to grant `SCHEDULE_EXACT_ALARM`. Starting in Android 14, this permission can be revoked by the user at runtime.
+- **Handling in Alba**: Alba implements `NativeAlarm.canScheduleExactAlarms` and `openExactAlarmSettings`, surfacing a dedicated preflight card in `PermissionScreen` and `SettingsScreen`.
 
 ### 1.3 Full-Screen Intent Over Lock Screen (Android 10+)
 - **Android Rule**: Background activity starts are blocked on Android 10+ unless the app posts a notification with high priority and a `fullScreenIntent` or holds `SYSTEM_ALERT_WINDOW` (`canDrawOverlays`).
-- **Handling in Alba**: `AlarmReceiver` and `AlarmService` combine `NotificationCompat.Builder.setFullScreenIntent()` with `setShowWhenLocked(true)` and `setTurnScreenOn(true)` in `MainActivity` and `CameraMissionActivity`.
+- **Handling in Alba**: `AlarmReceiver` and `AlarmService` combine `NotificationCompat.Builder.setFullScreenIntent` with `setShowWhenLocked(true)` and `setTurnScreenOn(true)` in `MainActivity` and `CameraMissionActivity`.
 
 ---
 
@@ -61,7 +61,7 @@ Different hardware manufacturers modify AOSP to enforce aggressive battery optim
 
 ### 3.1 Step Counter Sensor (`Sensor.TYPE_STEP_DETECTOR`)
 - **Limitation**: Budget Android chipsets (e.g. MediaTek Helio G35/G85, low-end Unisoc) often omit the hardware Step Detector ASIC to reduce manufacturing cost.
-- **Handling in Alba**: Alba implements a graceful fallback. If `NativeAlarm.startStepCounter()` returns `false` or emits `onStepUnavailable`, `StepMissionScreen` informs the user and activates manual fallback stepping, preventing users from being locked out of alarm dismissal.
+- **Handling in Alba**: Alba implements a graceful fallback. If `NativeAlarm.startStepCounter` returns `false` or emits `onStepUnavailable`, `StepMissionScreen` informs the user and activates manual fallback stepping, preventing users from being locked out of alarm dismissal.
 
 ### 3.2 Low-Light Camera Recognition (MLKit Pose & Photo Match)
 - **Limitation**: In dark bedrooms during early morning hours, MLKit Pose Detection may struggle to detect body joints (hips, knees, ankles) due to image underexposure.

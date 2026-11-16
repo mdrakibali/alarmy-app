@@ -117,7 +117,7 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
         )}
       </View>
 
-      {/* Alarmy-Style Clock & Date Live Overlay (1.7 Background Preview) */}
+      {/* Alba-Style Clock & Date Live Overlay (1.7 Background Preview) */}
       <View className="items-center mt-6 z-10 px-4">
         <Text className="text-white/80 font-bold text-sm tracking-wide">
           {new Date().toLocaleDateString(undefined, {

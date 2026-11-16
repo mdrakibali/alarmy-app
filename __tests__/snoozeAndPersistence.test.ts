@@ -90,7 +90,7 @@ describe('Phase 1: Snooze Dismissal & Storage Hydration', () => {
         stepTarget: 25,
         squatTarget: 10,
         shakeTarget: 15,
-        photoReferencePath: '/data/user/0/com.alarmyclone/missions/ref.jpg',
+        photoReferencePath: '/data/user/0/com.alba/missions/ref.jpg',
         photoMatchThreshold: 75,
         barcodeValue: '890103038294',
         wallpaper: 'morning_sun',
@@ -111,7 +111,7 @@ describe('Phase 1: Snooze Dismissal & Storage Hydration', () => {
     expect(alarms[0].id).toBe('native-1');
     expect(alarms[0].stepTarget).toBe(25);
     expect(alarms[0].squatTarget).toBe(10);
-    expect(alarms[0].photoReferencePath).toBe('/data/user/0/com.alarmyclone/missions/ref.jpg');
+    expect(alarms[0].photoReferencePath).toBe('/data/user/0/com.alba/missions/ref.jpg');
     expect(alarms[0].barcodeValue).toBe('890103038294');
     expect(alarms[0].mathCount).toBe(3);
     expect(alarms[0].mathDifficulty).toBe('hard');

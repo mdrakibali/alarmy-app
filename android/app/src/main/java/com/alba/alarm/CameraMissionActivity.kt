@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.Manifest
 import android.content.Context

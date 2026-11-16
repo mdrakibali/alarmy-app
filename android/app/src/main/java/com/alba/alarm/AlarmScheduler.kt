@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.app.AlarmManager
 import android.app.NotificationChannel
@@ -9,16 +9,16 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.alarmyclone.MainActivity
-import com.alarmyclone.R
+import com.alba.MainActivity
+import com.alba.R
 import java.util.Calendar
 
 object AlarmScheduler {
     private const val TAG = "AlarmScheduler"
     const val EXTRA_ALARM_ID = "extra_alarm_id"
     const val SNOOZE_NOTIFICATION_ID = 1002
-    const val SNOOZE_CHANNEL_ID = "alarmy_snooze_channel"
-    const val ACTION_OPEN_SNOOZE = "com.alarmyclone.OPEN_SNOOZE"
+    const val SNOOZE_CHANNEL_ID = "alba_snooze_channel"
+    const val ACTION_OPEN_SNOOZE = "com.alba.OPEN_SNOOZE"
     const val EXTRA_SNOOZE_TRIGGER_MS = "snoozeTriggerMs"
     const val EXTRA_SNOOZE_INTERVAL = "snoozeInterval"
 

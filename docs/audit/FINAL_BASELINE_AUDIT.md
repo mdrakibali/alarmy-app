@@ -1,8 +1,8 @@
-# FINAL BASELINE AUDIT — ALBA (`AlarmyClone`)
+# FINAL BASELINE AUDIT — ALBA (`Alba`)
 
 **Audit Date:** November 16, 2026  
 **Auditor:** Senior React Native Architect, Senior Android/Kotlin Engineer  
-**Target Package:** `com.alarmyclone` / App: `Alba`  
+**Target Package:** `com.alba` / App: `Alba`  
 **Baseline State:** TypeScript clean (0 errors), Jest test suite passing (26/26 passed), Metro bundle successful.
 
 ---
@@ -15,7 +15,7 @@
 - **Style System:** NativeWind v4 (Tailwind CSS) with custom theme support in `themeStore.ts`.
 
 ### 1.2 Android Native Layer (Kotlin, Android SDK 34)
-- **Alarm Scheduling:** Uses `AlarmManager.setAlarmClock()`, which bypasses Android deep Doze mode and App Standby Buckets.
+- **Alarm Scheduling:** Uses `AlarmManager.setAlarmClock`, which bypasses Android deep Doze mode and App Standby Buckets.
 - **Foreground Service:** `AlarmService.kt` runs as `mediaPlayback` with `MediaPlayer` routed to `AudioAttributes.USAGE_ALARM` with crescendo volume ramping.
 - **WakeLock Management:** `AlarmReceiver.kt` acquires a partial wake lock with a 3-minute timeout.
 - **Persistence:** Direct SQLite helper `AlarmDatabase.kt` storing JSON payloads in `alba_alarms.db`.
@@ -30,12 +30,12 @@
 
 | Defect ID | Severity | Component | Root Cause & Evidence | Proposed Resolution |
 |---|---|---|---|---|
-| **DEF-01** | **CRITICAL** | Snooze Dismissal | `SnoozeCountdownScreen.tsx:79` calls `NativeAlarm.cancelAlarm(alarmId)`, which invokes `AlarmStorage.removeAlarm()`, permanently deleting repeating alarms from SQLite. | Add `NativeAlarm.dismissSnooze(alarmId)`: resets snooze and reschedules next occurrence for repeating alarms; toggles `enabled = false` for one-time alarms without deletion. |
+| **DEF-01** | **CRITICAL** | Snooze Dismissal | `SnoozeCountdownScreen.tsx:79` calls `NativeAlarm.cancelAlarm(alarmId)`, which invokes `AlarmStorage.removeAlarm`, permanently deleting repeating alarms from SQLite. | Add `NativeAlarm.dismissSnooze(alarmId)`: resets snooze and reschedules next occurrence for repeating alarms; toggles `enabled = false` for one-time alarms without deletion. |
 | **DEF-02** | **CRITICAL** | Native Persistence | `AlarmModule.kt:107-124` & `AlarmModel.kt` drop mission configuration targets (`stepTarget`, `squatTarget`, `shakeTarget`, `photoReferencePath`, `barcodeValue`, `wallpaper`, etc.). SQLite loses these fields on reboot. | Expand `AlarmModel.kt` to serialize all mission targets into the SQLite JSON payload; update `scheduleAlarm` in `AlarmModule.kt`. |
 | **DEF-03** | **CRITICAL** | Photo Mission Trapping | `AlarmEditScreen.tsx:434` allows saving Photo mission without reference photo. `PhotoMissionScreen.tsx:95` rejects captures if reference is missing, trapping user during alarm. | Enforce mandatory reference photo capture in `AlarmEditScreen.tsx` before allowing save. In `PhotoMissionScreen.tsx`, provide fallback guidance instead of locking. |
 | **DEF-04** | **CRITICAL** | Barcode Scanner Disconnect | `BarcodeMissionScreen.tsx:167-177` embeds mock component `CameraScanner.tsx` (laser animation + test button) instead of calling `CameraMissionActivity.kt` native MLKit scanner. | Wire `BarcodeMissionScreen.tsx` and `AlarmEditScreen.tsx` to `NativeAlarm.openCameraMission({ mode: 'barcode' })` using real CameraX MLKit. |
-| **DEF-05** | **HIGH** | Storage Hydration Deficit | `alarmStore.ts:122-137` only maps over existing `s.alarms`. If MMKV is wiped, SQLite contains alarms but UI shows empty list because `listAlarms()` only returned 5 properties. | Expand `listAlarms()` in `AlarmModule.kt` to return full alarm models, and update `syncFromNative()` in `alarmStore.ts` to hydrate MMKV directly from SQLite when empty. |
-| **DEF-06** | **HIGH** | Cold-Start Snooze Intent Loss | `MainActivity.kt:51-63` fires `sendEvent("onOpenSnooze")` in `onCreate()` before React Native JS engine has mounted `App.tsx`. The event is dropped. | Cache initial snooze intent in `MainActivity.companion` and expose `NativeAlarm.getInitialSnoozeIntent()` for `App.tsx` to query upon mount. |
+| **DEF-05** | **HIGH** | Storage Hydration Deficit | `alarmStore.ts:122-137` only maps over existing `s.alarms`. If MMKV is wiped, SQLite contains alarms but UI shows empty list because `listAlarms` only returned 5 properties. | Expand `listAlarms` in `AlarmModule.kt` to return full alarm models, and update `syncFromNative` in `alarmStore.ts` to hydrate MMKV directly from SQLite when empty. |
+| **DEF-06** | **HIGH** | Cold-Start Snooze Intent Loss | `MainActivity.kt:51-63` fires `sendEvent("onOpenSnooze")` in `onCreate` before React Native JS engine has mounted `App.tsx`. The event is dropped. | Cache initial snooze intent in `MainActivity.companion` and expose `NativeAlarm.getInitialSnoozeIntent` for `App.tsx` to query upon mount. |
 | **DEF-07** | **HIGH** | Mission Setup Gaps | `AlarmEditScreen.tsx` has no configuration for Math problem count/difficulty, Memory pairs, or Typing phrases. | Implement dedicated sub-configuration modals in `AlarmEditScreen.tsx` for Math, Memory, and Typing missions. |
 | **DEF-08** | **HIGH** | Unsaved Changes in Edit | `AlarmEditScreen.tsx:496` exits immediately on back press without checking if user modified time, label, sound, or missions. | Implement dirty state tracking and prompt "Discard Unsaved Changes?" confirmation dialog. |
 | **DEF-09** | **MEDIUM** | WakeLock Concurrency | `AlarmReceiver.kt:16` holds a single static `wakeLock` variable. Overwritten if multiple alarms fire concurrently. | Use synchronized token map or unique wake locks per alarm trigger. |

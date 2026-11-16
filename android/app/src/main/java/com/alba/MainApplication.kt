@@ -1,7 +1,7 @@
-package com.alarmyclone
+package com.alba
 
 import android.app.Application
-import com.alarmyclone.alarm.AlarmPackage
+import com.alba.alarm.AlarmPackage
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost

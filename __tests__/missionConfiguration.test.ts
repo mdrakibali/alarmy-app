@@ -30,7 +30,7 @@ describe('Alarm Mission Configuration & Native Persistence', () => {
       vibrate: true,
       snooze: { enabled: true, intervalMin: 5, maxCount: 2 },
       missions: ['photo', 'qr', 'math', 'memory', 'typing', 'squat', 'step', 'shake'],
-      photoReferencePath: '/data/user/0/com.alarmyclone/files/reference_sink.jpg',
+      photoReferencePath: '/data/user/0/com.alba/files/reference_sink.jpg',
       photoMatchThreshold: 75,
       barcodeValue: '8801234567890',
       mathCount: 5,
@@ -49,7 +49,7 @@ describe('Alarm Mission Configuration & Native Persistence', () => {
     expect(alarms.length).toBe(1);
     const created = alarms[0];
     expect(created.id).toBeDefined();
-    expect(created.photoReferencePath).toBe('/data/user/0/com.alarmyclone/files/reference_sink.jpg');
+    expect(created.photoReferencePath).toBe('/data/user/0/com.alba/files/reference_sink.jpg');
     expect(created.photoMatchThreshold).toBe(75);
     expect(created.barcodeValue).toBe('8801234567890');
     expect(created.mathCount).toBe(5);
@@ -63,7 +63,7 @@ describe('Alarm Mission Configuration & Native Persistence', () => {
     // Verify NativeAlarm was invoked with all fields
     expect(NativeAlarm.scheduleAlarm).toHaveBeenCalledTimes(1);
     const scheduled = (NativeAlarm.scheduleAlarm as jest.Mock).mock.calls[0][0];
-    expect(scheduled.photoReferencePath).toBe('/data/user/0/com.alarmyclone/files/reference_sink.jpg');
+    expect(scheduled.photoReferencePath).toBe('/data/user/0/com.alba/files/reference_sink.jpg');
     expect(scheduled.barcodeValue).toBe('8801234567890');
     expect(scheduled.mathCount).toBe(5);
     expect(scheduled.squatTarget).toBe(5);

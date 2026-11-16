@@ -5,7 +5,7 @@ import { findMotionMedia } from '@/data/motionMedia';
 import { WALLPAPERS } from '@/data/wallpapers';
 import { wallpaperThumb } from '@/data/wallpaperThumbs';
 import { useAlarmStore } from '@/features/alarm/alarmStore';
-import { formatAlarmyDate, formatTime } from '@/features/alarm/format';
+import { formatAlbaDate, formatTime } from '@/features/alarm/format';
 import { NativeAlarm } from '@/native/AlarmModule';
 import type { RootStackParamList } from '@/navigation/types';
 import { storage } from '@/storage/mmkv';
@@ -75,7 +75,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
   const [snoozeToast, setSnoozeToast] = useState(false);
 
   const { time, period } = formatTime(hour, minute);
-  const formattedDate = formatAlarmyDate(new Date());
+  const formattedDate = formatAlbaDate(new Date());
 
   useEffect(() => {
     // Start audio preview simulation
@@ -216,7 +216,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
         pointerEvents="none"
       />
 
-      {/* Screen Foreground Content formatted exactly like Alarmy Lock Screen (Image 2) */}
+      {/* Screen Foreground Content formatted exactly like Alba Lock Screen (Image 2) */}
       <View
         className="flex-1 justify-between px-6"
         style={{
@@ -224,7 +224,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
           paddingBottom: Math.max(insets.bottom, 20) + 12,
         }}
       >
-        {/* Top Header: Date, Huge Alarmy Clock, and Emoji Label Pill (Image 2 format) */}
+        {/* Top Header: Date, Huge Alba Clock, and Emoji Label Pill (Image 2 format) */}
         <View className="items-center mt-2">
           {/* Top Date: e.g. November 15 Sun */}
           <Text
@@ -234,7 +234,7 @@ export function AlarmPreviewScreen({ navigation, route }: Props) {
             {formattedDate}
           </Text>
 
-          {/* Huge Alarmy Clock */}
+          {/* Huge Alba Clock */}
           <Text
             style={styles.clockShadow}
             className="text-white text-[94px] font-black tracking-tight text-center leading-none mt-1 mb-2"

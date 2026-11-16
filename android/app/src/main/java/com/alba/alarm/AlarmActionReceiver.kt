@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -7,9 +7,9 @@ import android.util.Log
 
 class AlarmActionReceiver : BroadcastReceiver() {
     companion object {
-        const val ACTION_DISMISS = "com.alarmyclone.ACTION_DISMISS"
-        const val ACTION_SNOOZE = "com.alarmyclone.ACTION_SNOOZE"
-        const val ACTION_DISMISS_SNOOZE = "com.alarmyclone.ACTION_DISMISS_SNOOZE"
+        const val ACTION_DISMISS = "com.alba.ACTION_DISMISS"
+        const val ACTION_SNOOZE = "com.alba.ACTION_SNOOZE"
+        const val ACTION_DISMISS_SNOOZE = "com.alba.ACTION_DISMISS_SNOOZE"
         private const val TAG = "AlarmActionReceiver"
     }
 

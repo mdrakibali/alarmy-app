@@ -1,4 +1,4 @@
-package com.alarmyclone
+package com.alba
 
 import android.app.KeyguardManager
 import android.content.Context
@@ -56,9 +56,9 @@ class MainActivity : ReactActivity() {
   }
 
   private fun handleIntent(intent: Intent?) {
-    if (intent?.action == com.alarmyclone.alarm.AlarmScheduler.ACTION_OPEN_SNOOZE) {
-      val alarmId = intent.getStringExtra(com.alarmyclone.alarm.AlarmScheduler.EXTRA_ALARM_ID)
-      val intervalMin = intent.getIntExtra(com.alarmyclone.alarm.AlarmScheduler.EXTRA_SNOOZE_INTERVAL, 5)
+    if (intent?.action == com.alba.alarm.AlarmScheduler.ACTION_OPEN_SNOOZE) {
+      val alarmId = intent.getStringExtra(com.alba.alarm.AlarmScheduler.EXTRA_ALARM_ID)
+      val intervalMin = intent.getIntExtra(com.alba.alarm.AlarmScheduler.EXTRA_SNOOZE_INTERVAL, 5)
       if (alarmId != null) {
         pendingSnoozeAlarmId = alarmId
         pendingSnoozeIntervalMin = intervalMin
@@ -66,7 +66,7 @@ class MainActivity : ReactActivity() {
           putString("alarmId", alarmId)
           putInt("intervalMin", intervalMin)
         }
-        com.alarmyclone.alarm.AlarmModule.instance?.sendEvent("onOpenSnooze", map)
+        com.alba.alarm.AlarmModule.instance?.sendEvent("onOpenSnooze", map)
       }
     }
   }

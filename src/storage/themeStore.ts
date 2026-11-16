@@ -30,7 +30,7 @@ interface ThemeState {
   resetTheme: () => void;
 }
 
-const STORAGE_KEY = 'alarmy_theme_settings';
+const STORAGE_KEY = 'alba_theme_settings';
 
 const defaultState = {
   homeBackground: 'kpop_wonhee',

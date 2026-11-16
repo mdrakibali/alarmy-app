@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -22,8 +22,8 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.alarmyclone.MainActivity
-import com.alarmyclone.R
+import com.alba.MainActivity
+import com.alba.R
 
 class AlarmService : Service() {
     companion object {

@@ -1,4 +1,4 @@
-# MASTER TESTING MATRIX — ALBA (`AlarmyClone`)
+# MASTER TESTING MATRIX — ALBA (`Alba`)
 
 **Status:** Testing Framework & Verification Protocol  
 **Verification Methodologies:**
@@ -18,7 +18,7 @@
 | **TST-01** | Snooze | `SnoozeCountdownScreen` & Native | Dismissing snooze stops audio, cancels snooze notification, and DOES NOT delete repeating alarms from SQLite. | `AUTO-JEST` & `STATIC-CODE` | Pending Phase 1 |
 | **TST-02** | Snooze | `SnoozeCountdownScreen` & Native | Dismissing snooze on a one-time alarm toggles `enabled = false` in SQLite and MMKV without deleting the record. | `AUTO-JEST` & `STATIC-CODE` | Pending Phase 1 |
 | **TST-03** | Persistence | `AlarmModel.kt` & SQLite | Serializing alarm with all mission targets (`stepTarget`, `squatTarget`, `shakeTarget`, `photoReferencePath`, `barcodeValue`, `wallpaper`) persists to SQLite and survives `BootReceiver` restore. | `AUTO-JEST` & `STATIC-CODE` | Pending Phase 1 |
-| **TST-04** | Hydration | `alarmStore.ts` & `AlarmModule.kt` | When MMKV is cleared, `syncFromNative()` queries SQLite and reconstructs all alarms in MMKV without loss of properties. | `AUTO-JEST` & `STATIC-CODE` | Pending Phase 1 |
+| **TST-04** | Hydration | `alarmStore.ts` & `AlarmModule.kt` | When MMKV is cleared, `syncFromNative` queries SQLite and reconstructs all alarms in MMKV without loss of properties. | `AUTO-JEST` & `STATIC-CODE` | Pending Phase 1 |
 | **TST-05** | Intent Routing | `MainActivity.kt` & `App.tsx` | Cold-starting app from snooze notification caches intent in native and routes directly to `SnoozeCountdownScreen`. | `STATIC-CODE` | Pending Phase 1 |
 | **TST-06** | WakeLock | `AlarmReceiver.kt` | Multiple concurrent alarms acquire distinct wake locks without releasing each other prematurely. | `STATIC-CODE` | Pending Phase 1 |
 | **TST-07** | Validation | `AlarmEditScreen.tsx` | Saving an alarm with Photo mission is blocked if no reference photo has been registered. | `AUTO-JEST` & `STATIC-CODE` | Pending Phase 2 |

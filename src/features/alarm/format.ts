@@ -125,7 +125,7 @@ export function formatTime(hour: number, minute: number) {
   return { time: `${h}:${m}`, period };
 }
 
-export function formatAlarmyDate(date: Date = new Date()): string {
+export function formatAlbaDate(date: Date = new Date()): string {
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December',
@@ -133,12 +133,14 @@ export function formatAlarmyDate(date: Date = new Date()): string {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return `${months[date.getMonth()]} ${date.getDate()} ${days[date.getDay()]}`;
 }
+export const formatAlarmyDate = formatAlbaDate;
 
-export function formatAlarmyClock(date: Date = new Date()): string {
+export function formatAlbaClock(date: Date = new Date()): string {
   const h = date.getHours() % 12 || 12;
   const m = String(date.getMinutes()).padStart(2, '0');
   return `${h}:${m}`;
 }
+export const formatAlarmyClock = formatAlbaClock;
 
 export function formatRepeat(days: number[]) {
   if (days.length === 0) {

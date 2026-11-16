@@ -1,4 +1,4 @@
-# ALBA (ALARMYCLONE) — FINAL BUG RESOLUTION REPORT
+# ALBA — FINAL BUG RESOLUTION REPORT
 
 **Author**: Software Quality Assurance & Systems Engineering Team  
 **Date**: November 16, 2026  
@@ -32,13 +32,13 @@
 - **Symptoms**: When an alarm with specific targets (e.g. 5 math problems, Hard difficulty, 8 memory pairs, 20 steps, 5 squats, 30 shakes) was saved, the alarm triggered with hardcoded defaults.
 - **Root Cause**: `AlarmModel.kt` lacked JSON serialization and deserialization for mission-specific fields, and `AlarmModule.kt` did not serialize them when writing to SQLite.
 - **Resolution**:
-  - Added `photoReferencePath`, `photoMatchThreshold`, `barcodeValue`, `stepTarget`, `squatTarget`, `shakeTarget`, `wallpaper`, `mathCount`, `mathDifficulty`, `memoryPairs`, and `typingPhrase` to `AlarmModel.kt` `toJsonObject()` and `fromJsonObject()`.
-  - Updated `AlarmModule.kt` `scheduleAlarm()` and `listAlarms()` to serialize/deserialize all parameters.
+  - Added `photoReferencePath`, `photoMatchThreshold`, `barcodeValue`, `stepTarget`, `squatTarget`, `shakeTarget`, `wallpaper`, `mathCount`, `mathDifficulty`, `memoryPairs`, and `typingPhrase` to `AlarmModel.kt` `toJsonObject` and `fromJsonObject`.
+  - Updated `AlarmModule.kt` `scheduleAlarm` and `listAlarms` to serialize/deserialize all parameters.
   - Added unit test in `__tests__/missionConfiguration.test.ts`.
 
 ### BUG-02: Photo Mission Allowed Saving Without Reference
 - **Symptoms**: Users could select Photo mission and save an alarm without registering a photo, causing the ringing screen to either crash or trap the user with an unmatchable photo.
-- **Root Cause**: `save()` in `AlarmEditScreen.tsx` lacked validation for required mission references.
+- **Root Cause**: `save` in `AlarmEditScreen.tsx` lacked validation for required mission references.
 - **Resolution**:
   - Added pre-save validation guard blocking alarm save if `missions.includes('photo')` and `!photoReferencePath`.
   - Added emergency fallback button in `PhotoMissionScreen.tsx` to handle corrupt or deleted files safely.
@@ -47,24 +47,24 @@
 - **Symptoms**: Barcode mission rendered a mock component `<CodeScanner>` that did not connect to physical camera hardware.
 - **Root Cause**: `vision-camera` had been uninstalled or stubbed, and `BarcodeMissionScreen` was never hooked up to the working MLKit barcode engine inside `CameraMissionActivity.kt`.
 - **Resolution**:
-  - Replaced `<CodeScanner>` with `NativeAlarm.openCameraMission({ mode: 'barcode' })`, which opens `CameraMissionActivity` and detects physical barcodes via Google ML Kit `BarcodeScanning.getClient()`.
+  - Replaced `<CodeScanner>` with `NativeAlarm.openCameraMission({ mode: 'barcode' })`, which opens `CameraMissionActivity` and detects physical barcodes via Google ML Kit `BarcodeScanning.getClient`.
   - Added manual barcode entry and validation matching against `registeredCode`.
 
 ### BUG-05: Snooze Dismissal Permanently Deleted Repeating Alarms
 - **Symptoms**: When an alarm rang, user tapped Snooze, and subsequently tapped "Dismiss Snooze", the alarm was permanently purged from the database, disappearing forever.
-- **Root Cause**: Both `SnoozeCountdownScreen` and `AlarmActionReceiver` called `AlarmScheduler.cancel()`, which executed `DELETE FROM alarms WHERE id = ?`.
+- **Root Cause**: Both `SnoozeCountdownScreen` and `AlarmActionReceiver` called `AlarmScheduler.cancel`, which executed `DELETE FROM alarms WHERE id = ?`.
 - **Resolution**:
-  - Implemented `AlarmScheduler.dismissSnooze()` in Kotlin:
-    - For repeating alarms: calculates next active day and schedules standard `AlarmManager.setAlarmClock()`, canceling the snooze alarm notification while leaving repeating alarm intact.
+  - Implemented `AlarmScheduler.dismissSnooze` in Kotlin:
+    - For repeating alarms: calculates next active day and schedules standard `AlarmManager.setAlarmClock`, canceling the snooze alarm notification while leaving repeating alarm intact.
     - For one-time alarms: marks `enabled = false` in SQLite without deleting the record.
-  - Implemented `NativeAlarm.dismissSnooze()` and `useAlarmStore.dismissSnooze(id)`.
+  - Implemented `NativeAlarm.dismissSnooze` and `useAlarmStore.dismissSnooze(id)`.
   - Verified with automated test in `__tests__/snoozeAndPersistence.test.ts`.
 
 ### BUG-06: MMKV / SQLite Desynchronization
 - **Symptoms**: If MMKV was cleared (e.g. storage cleanup, app update, cache reset), all saved alarms disappeared from the React Native UI even though SQLite still contained them.
 - **Root Cause**: `useAlarmStore` only read from MMKV on startup and never queried native SQLite.
 - **Resolution**:
-  - Enhanced `syncFromNative()` in `alarmStore.ts` to call `NativeAlarm.listAlarms()` and populate MMKV whenever MMKV is empty.
+  - Enhanced `syncFromNative` in `alarmStore.ts` to call `NativeAlarm.listAlarms` and populate MMKV whenever MMKV is empty.
   - Verified with automated test in `__tests__/snoozeAndPersistence.test.ts`.
 
 ### BUG-07: Missing Physical Activity Permission Preflight
@@ -77,7 +77,7 @@
 - **Symptoms**: User could skip morning squats by tapping `⚡ +1 Squat (Test)` directly inside the camera overlay.
 - **Root Cause**: Development debug button was left in `CameraMissionActivity.kt`.
 - **Resolution**:
-  - Removed `testButton` from `CameraMissionActivity.kt` `bindSquat()`.
+  - Removed `testButton` from `CameraMissionActivity.kt` `bindSquat`.
   - Removed fake simulator test buttons from `ShakeMissionScreen.tsx`, `StepMissionScreen.tsx`, and `SquatMissionScreen.tsx`.
 
 ### BUG-09: Single Static WakeLock Race Condition
@@ -97,10 +97,10 @@
 
 ### BUG-11: Cold-Start Snooze Intent Dropped
 - **Symptoms**: When tapping the "Alba is Snoozing" notification while the app was killed, the app opened to the home screen instead of the SnoozeCountdownScreen.
-- **Root Cause**: React Native bridge was not yet registered when Android's `onCreate()` / `onNewIntent()` fired.
+- **Root Cause**: React Native bridge was not yet registered when Android's `onCreate` / `onNewIntent` fired.
 - **Resolution**:
   - Cached `pendingSnoozeAlarmId` and `pendingSnoozeIntervalMin` in `MainActivity.kt`.
-  - Added `NativeAlarm.getInitialSnoozeIntent()` consumed upon React Native mount in `App.tsx`.
+  - Added `NativeAlarm.getInitialSnoozeIntent` consumed upon React Native mount in `App.tsx`.
 
 ### BUG-12: Unsaved Alarm Edits Discarded Without Warning
 - **Symptoms**: Users spent time configuring an alarm and accidentally swiped or hit the back button; all edits were lost without warning.

@@ -1,4 +1,4 @@
-# MASTER IMPLEMENTATION ROADMAP — ALBA (`AlarmyClone`)
+# MASTER IMPLEMENTATION ROADMAP — ALBA (`Alba`)
 
 **Status:** Autonomous Execution in Progress  
 **Phases Covered:** Phase 1 through Phase 12
@@ -9,11 +9,11 @@
 
 ### 🟢 Phase 1: Alarm Reliability & Persistence
 - **Package 1.1:** Add `NativeAlarm.dismissSnooze(alarmId)` in Kotlin and React Native.
-- **Package 1.2:** Update `SnoozeCountdownScreen.tsx` to call `dismissSnooze()` instead of destructive `cancelAlarm()`.
+- **Package 1.2:** Update `SnoozeCountdownScreen.tsx` to call `dismissSnooze` instead of destructive `cancelAlarm`.
 - **Package 1.3:** Expand native `AlarmModel.kt` with all mission target fields (`photoReferencePath`, `barcodeValue`, `stepTarget`, `squatTarget`, `shakeTarget`, `wallpaper`, `mathCount`, `mathDifficulty`, `memoryPairs`, `typingPhrase`, `photoMatchThreshold`).
-- **Package 1.4:** Expand `scheduleAlarm()` and `listAlarms()` in `AlarmModule.kt` to serialize/deserialize all fields.
-- **Package 1.5:** Update `syncFromNative()` in `alarmStore.ts` to hydrate MMKV directly from SQLite when MMKV is empty.
-- **Package 1.6:** Implement initial intent caching in `MainActivity.kt` and `getInitialSnoozeIntent()` in `AlarmModule.kt` / `App.tsx`.
+- **Package 1.4:** Expand `scheduleAlarm` and `listAlarms` in `AlarmModule.kt` to serialize/deserialize all fields.
+- **Package 1.5:** Update `syncFromNative` in `alarmStore.ts` to hydrate MMKV directly from SQLite when MMKV is empty.
+- **Package 1.6:** Implement initial intent caching in `MainActivity.kt` and `getInitialSnoozeIntent` in `AlarmModule.kt` / `App.tsx`.
 - **Package 1.7:** Concurrency-safe WakeLock management in `AlarmReceiver.kt`.
 
 ### 🟢 Phase 2: Alarm Creation, Editing & Configuration

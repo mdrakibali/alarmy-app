@@ -1,4 +1,4 @@
-# ALBA (ALARMYCLONE) — REMAINING ISSUES & HARDWARE VERIFICATION ROADMAP
+# ALBA — REMAINING ISSUES & HARDWARE VERIFICATION ROADMAP
 
 **Author**: Senior Software Systems Auditor & Quality Assurance Specialist  
 **Date**: November 16, 2026  

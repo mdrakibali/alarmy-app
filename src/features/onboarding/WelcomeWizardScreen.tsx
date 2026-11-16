@@ -159,7 +159,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       setSelectedWallpaper(previewWallpaper.id);
     }
     setPreviewWallpaper(null);
-    setStep(3); // Advance directly to Step 3 (Sound selector) matching Alarmy 1.7 -> 1.8
+    setStep(3); // Advance directly to Step 3 (Sound selector) matching Alba 1.7 -> 1.8
   };
 
   const handleToggleMission = (id: MissionType) => {
@@ -422,7 +422,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       </ScrollView>
       )}
 
-      {/* Full-Screen Wallpaper Preview Modal (Alarmy 1.7 Flow) */}
+      {/* Full-Screen Wallpaper Preview Modal (Alba 1.7 Flow) */}
       <Modal
         visible={previewWallpaper !== null}
         animationType="fade"
@@ -458,7 +458,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
               <View className="w-10" />
             </View>
 
-            {/* Alarmy-Style Live Clock and Date (1.7 Background Preview) */}
+            {/* Alba-Style Live Clock and Date (1.7 Background Preview) */}
             <View className="items-center mt-12 z-10 px-4">
               <Text className="text-white/80 font-bold text-sm tracking-wide">
                 {new Date().toLocaleDateString(undefined, {

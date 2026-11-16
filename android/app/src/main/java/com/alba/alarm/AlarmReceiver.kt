@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -6,12 +6,12 @@ import android.content.Intent
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.alarmyclone.MainActivity
+import com.alba.MainActivity
 
 class AlarmReceiver : BroadcastReceiver() {
     companion object {
-        const val ACTION_ALARM_TRIGGER = "com.alarmyclone.ALARM_TRIGGER"
-        const val ACTION_ALARM_RINGING = "com.alarmyclone.ALARM_RINGING"
+        const val ACTION_ALARM_TRIGGER = "com.alba.ALARM_TRIGGER"
+        const val ACTION_ALARM_RINGING = "com.alba.ALARM_RINGING"
         private const val TAG = "AlarmReceiver"
         private val activeWakeLocks = java.util.concurrent.ConcurrentHashMap<String, PowerManager.WakeLock>()
 
@@ -49,7 +49,7 @@ class AlarmReceiver : BroadcastReceiver() {
             try {
                 val wl = pm.newWakeLock(
                     PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                    "AlarmyClone:AlarmReceiver:$alarmId"
+                    "Alba:AlarmReceiver:$alarmId"
                 ).apply {
                     setReferenceCounted(false)
                     acquire(3 * 60 * 1000L /* 3 minutes timeout */)

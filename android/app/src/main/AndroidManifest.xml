@@ -45,7 +45,7 @@
         android:name=".alarm.AlarmReceiver"
         android:exported="false">
         <intent-filter>
-            <action android:name="com.alarmyclone.ALARM_TRIGGER" />
+            <action android:name="com.alba.ALARM_TRIGGER" />
         </intent-filter>
       </receiver>
 
@@ -68,8 +68,8 @@
         android:name=".alarm.AlarmActionReceiver"
         android:exported="false">
         <intent-filter>
-            <action android:name="com.alarmyclone.ACTION_DISMISS" />
-            <action android:name="com.alarmyclone.ACTION_SNOOZE" />
+            <action android:name="com.alba.ACTION_DISMISS" />
+            <action android:name="com.alba.ACTION_SNOOZE" />
         </intent-filter>
       </receiver>
 

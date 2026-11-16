@@ -1,8 +1,8 @@
-# ALBA (ALARMYCLONE) — FINAL IMPLEMENTATION REPORT
+# ALBA — FINAL IMPLEMENTATION REPORT
 
 **Author**: Senior React Native Architect & Android Systems Engineer  
 **Date**: November 16, 2026  
-**Package**: `com.alarmyclone`  
+**Package**: `com.alba`  
 **Target Platform**: Android (API 26–35)  
 **Status**: Implementation & Automated Verification Complete  
 
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-This report documents the comprehensive architectural remediation, native Kotlin module enhancements, mission engine fixes, and React Native state synchronization executed across the Alba (`AlarmyClone`) codebase.
+This report documents the comprehensive architectural remediation, native Kotlin module enhancements, mission engine fixes, and React Native state synchronization executed across the Alba (`Alba`) codebase.
 
 Prior to these fixes, the application suffered from critical architectural vulnerabilities:
 1. Snooze dismissal permanently deleted repeating alarms from native SQLite storage.
@@ -40,7 +40,7 @@ All core subsystems have been overhauled, verified with unit tests (36 passing t
   - `typingPhrase: String?`
   - Backward compatibility: Preserves existing records in SQLite without requiring destructive schema drops.
 - **Snooze Dismissal Separation (`AlarmScheduler.kt` & `AlarmActionReceiver.kt`)**:
-  - `dismissSnooze()` recalculates next wall-clock occurrence for repeating alarms and cancels the snooze notification without touching the scheduled repetition.
+  - `dismissSnooze` recalculates next wall-clock occurrence for repeating alarms and cancels the snooze notification without touching the scheduled repetition.
   - One-time alarms are updated to `enabled = false` in SQLite, keeping the historical record intact.
 - **Concurrent WakeLock Lifecycle (`AlarmReceiver.kt` & `AlarmService.kt`)**:
   - Migrated from a single static `WakeLock` to `ConcurrentHashMap<String, PowerManager.WakeLock>` indexed by `alarmId`.
@@ -51,7 +51,7 @@ All core subsystems have been overhauled, verified with unit tests (36 passing t
 
 ### 2.2 React Native State & Storage Synchronization
 - **SQLite Hydration (`alarmStore.ts`)**:
-  - Implemented `syncFromNative()` which queries native SQLite through `NativeAlarm.listAlarms()` if MMKV is empty, restoring all alarms automatically.
+  - Implemented `syncFromNative` which queries native SQLite through `NativeAlarm.listAlarms` if MMKV is empty, restoring all alarms automatically.
   - Added `dismissSnooze(id)` to update in-memory state and MMKV safely.
 - **Active Mission Session Store (`activeMissionStore.ts`)**:
   - Implemented `useActiveMissionStore` with MMKV persistence for:
@@ -59,8 +59,8 @@ All core subsystems have been overhauled, verified with unit tests (36 passing t
     - `activeMissionIndex`
     - `completedMissions: string[]`
     - `currentSubProgress: number`
-  - `startSession()` preserves in-flight progress if called again for the same active alarm.
-  - `updateSubProgress()` saves intra-mission counters (e.g. 15/30 shakes, 2/5 squats).
+  - `startSession` preserves in-flight progress if called again for the same active alarm.
+  - `updateSubProgress` saves intra-mission counters (e.g. 15/30 shakes, 2/5 squats).
 
 ### 2.3 Mission Screen Hardening & Real Hardware Execution
 - **Photo Mission (`PhotoMissionScreen.tsx`)**:
@@ -73,7 +73,7 @@ All core subsystems have been overhauled, verified with unit tests (36 passing t
   - Wired question count and sub-progress restoration from `activeMissionStore`.
 - **Shake Mission (`ShakeMissionScreen.tsx`)**:
   - Removed dev test bypass button from production screen.
-  - Connected accelerometer sensor to `useActiveMissionStore.updateSubProgress()`.
+  - Connected accelerometer sensor to `useActiveMissionStore.updateSubProgress`.
 - **Step Mission (`StepMissionScreen.tsx`)**:
   - Added physical activity permission preflight.
   - Removed fake cheat button; restricted manual step fallback exclusively to devices lacking hardware step sensors.
@@ -124,14 +124,14 @@ All core subsystems have been overhauled, verified with unit tests (36 passing t
 ## 4. Modified Source Files Index
 
 ### Android Native Layer:
-1. `android/app/src/main/java/com/alarmyclone/alarm/AlarmModel.kt`
-2. `android/app/src/main/java/com/alarmyclone/alarm/AlarmScheduler.kt`
-3. `android/app/src/main/java/com/alarmyclone/alarm/AlarmActionReceiver.kt`
-4. `android/app/src/main/java/com/alarmyclone/alarm/AlarmReceiver.kt`
-5. `android/app/src/main/java/com/alarmyclone/alarm/AlarmService.kt`
-6. `android/app/src/main/java/com/alarmyclone/alarm/AlarmModule.kt`
-7. `android/app/src/main/java/com/alarmyclone/alarm/CameraMissionActivity.kt`
-8. `android/app/src/main/java/com/alarmyclone/MainActivity.kt`
+1. `android/app/src/main/java/com/alba/alarm/AlarmModel.kt`
+2. `android/app/src/main/java/com/alba/alarm/AlarmScheduler.kt`
+3. `android/app/src/main/java/com/alba/alarm/AlarmActionReceiver.kt`
+4. `android/app/src/main/java/com/alba/alarm/AlarmReceiver.kt`
+5. `android/app/src/main/java/com/alba/alarm/AlarmService.kt`
+6. `android/app/src/main/java/com/alba/alarm/AlarmModule.kt`
+7. `android/app/src/main/java/com/alba/alarm/CameraMissionActivity.kt`
+8. `android/app/src/main/java/com/alba/MainActivity.kt`
 
 ### React Native Core & Features Layer:
 9. `src/features/alarm/types.ts`

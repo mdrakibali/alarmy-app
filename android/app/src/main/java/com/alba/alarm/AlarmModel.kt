@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import org.json.JSONArray
 import org.json.JSONObject

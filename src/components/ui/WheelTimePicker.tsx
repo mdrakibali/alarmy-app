@@ -197,7 +197,7 @@ export const WheelTimePicker = React.memo(
 
   return (
     <View className="relative w-full h-[220px] flex-row items-center justify-center overflow-hidden my-1">
-      {/* Center highlight rounded pill across all columns (iOS / Alarmy Style) */}
+      {/* Center highlight rounded pill across all columns (iOS / Alba Style) */}
       <View
         pointerEvents="none"
         className="absolute top-[88px] left-4 right-4 h-[50px] rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-xs"

@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.view.View
 import com.facebook.react.ReactPackage

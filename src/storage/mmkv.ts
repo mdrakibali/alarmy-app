@@ -1,7 +1,7 @@
 import { createMMKV } from 'react-native-mmkv';
 import type { StateStorage } from 'zustand/middleware';
 
-export const storage = createMMKV({ id: 'alarmy-clone' });
+export const storage = createMMKV({ id: 'alba' });
 
 /** zustand `persist` adapter backed by MMKV */
 export const zustandStorage: StateStorage = {

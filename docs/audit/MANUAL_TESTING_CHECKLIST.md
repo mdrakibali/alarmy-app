@@ -1,4 +1,4 @@
-# ALBA (ALARMYCLONE) — MANUAL TESTING CHECKLIST & QA TEST SCRIPT
+# ALBA — MANUAL TESTING CHECKLIST & QA TEST SCRIPT
 
 **Author**: Senior Mobile QA Automation Engineer  
 **Date**: November 16, 2026  
@@ -12,13 +12,13 @@
 - [ ] Device connected via USB (`adb devices`) or running in Android Studio emulator.
 - [ ] Battery Optimization disabled for Alba:
   ```bash
-  adb shell dumpsys deviceidle whitelist +com.alarmyclone
+  adb shell dumpsys deviceidle whitelist +com.alba
   ```
 - [ ] Notification and Exact Alarm permissions granted:
   ```bash
-  adb shell pm grant com.alarmyclone android.permission.POST_NOTIFICATIONS
-  adb shell pm grant com.alarmyclone android.permission.CAMERA
-  adb shell pm grant com.alarmyclone android.permission.ACTIVITY_RECOGNITION
+  adb shell pm grant com.alba android.permission.POST_NOTIFICATIONS
+  adb shell pm grant com.alba android.permission.CAMERA
+  adb shell pm grant com.alba android.permission.ACTIVITY_RECOGNITION
   ```
 
 ---
@@ -73,7 +73,7 @@ Verify that snooze dismissal on a repeating alarm never deletes the alarm from t
    - **Expected Result**: Snooze notification is dismissed. Alarm remains **ENABLED** in the alarm list with next scheduled occurrence for the next active repeating day.
    - Query SQLite to confirm record is preserved:
      ```bash
-     adb shell "run-as com.alarmyclone sqlite3 databases/alarms.db 'SELECT id, enabled, repeatDays FROM alarms;'"
+     adb shell "run-as com.alba sqlite3 databases/alarms.db 'SELECT id, enabled, repeatDays FROM alarms;'"
      ```
 
 ---
@@ -87,7 +87,7 @@ Verify that multi-mission sequences progress sequentially and retain sub-progres
 2. **Mission 1 (Math)**:
    - Solve problem 1 of 3.
    - Solve problem 2 of 3.
-   - Force close the app (`adb shell am force-stop com.alarmyclone`).
+   - Force close the app (`adb shell am force-stop com.alba`).
 3. **Progress Resumption**:
    - Alarm service automatically restores / user taps ringing notification.
    - **Expected Result**: App opens Math Mission with progress restored to Problem 3 of 3 (not problem 1).
@@ -141,6 +141,6 @@ Verify alarms reschedule across full device reboot.
    `BootReceiver: Rescheduled 2 active alarms after boot.`
 5. Confirm via AlarmManager dumpsys:
    ```bash
-   adb shell dumpsys alarm | grep com.alarmyclone
+   adb shell dumpsys alarm | grep com.alba
    ```
 

@@ -1,4 +1,4 @@
-package com.alarmyclone.alarm
+package com.alba.alarm
 
 import android.app.Activity
 import android.content.Context
@@ -172,11 +172,11 @@ class AlarmModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun getInitialSnoozeIntent(promise: Promise) {
         try {
-            val alarmId = com.alarmyclone.MainActivity.pendingSnoozeAlarmId
-            val intervalMin = com.alarmyclone.MainActivity.pendingSnoozeIntervalMin
+            val alarmId = com.alba.MainActivity.pendingSnoozeAlarmId
+            val intervalMin = com.alba.MainActivity.pendingSnoozeIntervalMin
             if (alarmId != null) {
                 // Clear after single consumption
-                com.alarmyclone.MainActivity.pendingSnoozeAlarmId = null
+                com.alba.MainActivity.pendingSnoozeAlarmId = null
                 val map = Arguments.createMap()
                 map.putString("alarmId", alarmId)
                 map.putInt("intervalMin", intervalMin)
