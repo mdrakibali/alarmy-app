@@ -21,10 +21,10 @@ export function daypartFor(date: Date): Daypart {
 }
 
 const COPY: Record<Daypart, { title: string; sky: [string, string]; accent: string }> = {
-  morning: { title: 'Good Morning', sky: ['#F6E2B3', '#8FB7C9'], accent: '#E2A938' },
-  afternoon: { title: 'Good Afternoon', sky: ['#8EC5E8', '#F4F7F2'], accent: '#E2A938' },
-  evening: { title: 'Good Evening', sky: ['#F3B183', '#8C5A73'], accent: '#E2A938' },
-  night: { title: 'Good Night', sky: ['#0D1612', '#1A2E22'], accent: '#E2A938' },
+  morning: { title: 'Good Morning', sky: ['#FFE7BA', '#8FB7C9'], accent: '#FF7A00' },
+  afternoon: { title: 'Good Afternoon', sky: ['#8EC5E8', '#F4F7F2'], accent: '#FF9500' },
+  evening: { title: 'Good Evening', sky: ['#F3B183', '#725088'], accent: '#FF7A00' },
+  night: { title: 'Good Night', sky: ['#060E22', '#0A194E'], accent: '#FFB800' },
 };
 
 export function DaypartHeader({
@@ -94,8 +94,8 @@ export function DaypartHeader({
             <Circle cx={part === 'evening' ? 250 : 78} cy={part === 'evening' ? 78 : 52} r="18" fill={theme.accent} />
           )}
           {part === 'morning' ? <Birds /> : null}
-          <Path d="M0 118 C70 96 120 132 180 118 C240 104 290 138 360 112 V168 H0 Z" fill="#6B8F71" />
-          <Path d="M0 136 C80 120 150 150 230 134 C290 124 330 146 360 138 V168 H0 Z" fill="#1A2E22" />
+          <Path d="M0 118 C70 96 120 132 180 118 C240 104 290 138 360 112 V168 H0 Z" fill="#2563EB" />
+          <Path d="M0 136 C80 120 150 150 230 134 C290 124 330 146 360 138 V168 H0 Z" fill="#08173E" />
         </Svg>
         <Animated.View
           pointerEvents="none"

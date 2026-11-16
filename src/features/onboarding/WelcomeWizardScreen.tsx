@@ -79,7 +79,7 @@ const WallpaperCard = React.memo(
         activeOpacity={0.8}
         onPress={() => onSelect(id)}
         style={{
-          borderColor: isSelected ? '#4E7D5B' : '#E2E8F0',
+          borderColor: isSelected ? '#1652E6' : '#E2E8F0',
           borderWidth: 2,
         }}
         className="w-[48%] h-52 mb-4 rounded-3xl overflow-hidden justify-between items-center relative bg-white"
@@ -96,7 +96,7 @@ const WallpaperCard = React.memo(
         {/* Top Right Check Badge */}
         <View pointerEvents="none" className="w-full flex-row justify-end p-2.5 z-10">
           {isSelected ? (
-            <View className="h-7 w-7 rounded-full bg-[#4E7D5B] border-2 border-white items-center justify-center">
+            <View className="h-7 w-7 rounded-full bg-[#1652E6] border-2 border-white items-center justify-center">
               <Text className="text-white text-xs font-black">✓</Text>
             </View>
           ) : (
@@ -198,7 +198,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
           <View className="flex-row items-center flex-1 mr-4">
             <View className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <View
-                className="h-full bg-[#4E7D5B] rounded-full"
+                className="h-full bg-[#1652E6] rounded-full"
                 style={{ width: `${(step / 4) * 100}%` }}
               />
             </View>
@@ -291,7 +291,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   onPress={() => handleSoundSelect(s.id)}
                   className={`flex-row items-center justify-between p-4 rounded-2xl mb-3 border shadow-xs ${
                     isSelected
-                      ? 'bg-[#EBF3ED] border-[#6B8F71]/40'
+                      ? 'bg-[#EEF4FF] border-[#1652E6]/30'
                       : 'bg-white border-slate-100'
                   }`}
                 >
@@ -300,7 +300,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     <View className="flex-1">
                       <Text
                         className={`text-sm font-bold ${
-                          isSelected ? 'text-[#4E7D5B]' : 'text-slate-800'
+                          isSelected ? 'text-[#1652E6]' : 'text-slate-800'
                         }`}
                       >
                         {s.title}
@@ -315,7 +315,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     pointerEvents="none"
                     className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                       isSelected
-                        ? 'border-[#4E7D5B] bg-[#4E7D5B]'
+                        ? 'border-[#1652E6] bg-[#1652E6]'
                         : 'border-slate-300'
                     }`}
                   >
@@ -344,7 +344,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                   onPress={() => setSelectedMission(m.id)}
                   className={`p-5 rounded-3xl mb-4 border-2 shadow-xs ${
                     isSelected
-                      ? 'bg-[#EBF3ED] border-[#4E7D5B]'
+                      ? 'bg-[#EEF4FF] border-[#1652E6]'
                       : 'bg-white border-slate-100'
                   }`}
                 >
@@ -358,7 +358,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
                     <View
                       className={`h-6 w-6 rounded-full items-center justify-center border-2 ${
                         isSelected
-                          ? 'border-[#4E7D5B] bg-[#4E7D5B]'
+                          ? 'border-[#1652E6] bg-[#1652E6]'
                           : 'border-slate-300'
                       }`}
                     >
@@ -385,7 +385,7 @@ export function WelcomeWizardScreen({ navigation }: Props) {
       >
         <Pressable
           onPress={handleNext}
-          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
+          className="w-full bg-[#1652E6] py-4 rounded-2xl items-center shadow-md active:bg-[#0B45C4]"
         >
           <Text className="text-white text-base font-black tracking-wide">
             {step === 4 ? 'Next: Required Permissions 🔐' : 'Next'}

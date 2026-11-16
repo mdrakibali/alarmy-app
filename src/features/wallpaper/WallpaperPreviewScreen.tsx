@@ -80,10 +80,10 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
 
   if (!source) {
     return (
-      <View className="flex-1 bg-[#0D1612] items-center justify-center px-6">
+      <View className="flex-1 bg-[#060E22] items-center justify-center px-6">
         <Text className="text-white font-bold">This wallpaper is missing.</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4">
-          <Text className="text-[#E2A938]">Go back</Text>
+          <Text className="text-[#FF7A00]">Go back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -154,11 +154,11 @@ export function WallpaperPreviewScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         ) : null}
         {pickForAlarm ? (
-          <TouchableOpacity onPress={handleUseForAlarm} className="mt-4 bg-[#6B8F71] py-4 rounded-2xl items-center">
+          <TouchableOpacity onPress={handleUseForAlarm} className="mt-4 bg-[#1652E6] py-4 rounded-2xl items-center active:bg-[#0B45C4]">
             <Text className="text-white font-black">Use for this alarm</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={applyRinging} className="mt-4 bg-[#6B8F71] py-4 rounded-2xl items-center">
+          <TouchableOpacity onPress={applyRinging} className="mt-4 bg-[#1652E6] py-4 rounded-2xl items-center active:bg-[#0B45C4]">
             <Text className="text-white font-black">Use as ringing background</Text>
           </TouchableOpacity>
         )}

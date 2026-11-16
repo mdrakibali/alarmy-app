@@ -98,18 +98,18 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-2">
-          <View className="px-3.5 py-1 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30 mb-1">
-            <Text className="text-[#4E7D5B] font-extrabold tracking-wider uppercase text-xs">
+          <View className="px-3.5 py-1 rounded-full bg-[#EEF4FF] border border-[#1652E6]/25 mb-1">
+            <Text className="text-[#1652E6] font-extrabold tracking-wider uppercase text-xs">
               Shake Wake-up Mission 📱
             </Text>
           </View>
-          <Text className="text-[#5E7166] font-semibold text-sm mt-1">
+          <Text className="text-[#556889] font-semibold text-sm mt-1">
             Shake your phone vigorously!
           </Text>
 
           <View className="w-64 bg-slate-200 h-2.5 rounded-full mt-4 overflow-hidden">
             <View
-              className="bg-[#4E7D5B] h-full rounded-full"
+              className="bg-[#1652E6] h-full rounded-full"
               style={{ width: `${progress}%` }}
             />
           </View>
@@ -117,11 +117,11 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
 
         {/* Middle Shake Visual */}
         <View className="items-center justify-center my-8">
-          <View className="h-64 w-64 rounded-full bg-white border-4 border-[#6B8F71] items-center justify-center shadow-2xl">
-            <Text className="text-6xl font-black text-[#1A2E22]">
+          <View className="h-64 w-64 rounded-full bg-white border-4 border-[#1652E6] items-center justify-center shadow-2xl">
+            <Text className="text-6xl font-black text-[#08173E]">
               {shakesLeft}
             </Text>
-            <Text className="text-xs font-black tracking-wider text-[#6B8F71] mt-2">
+            <Text className="text-xs font-black tracking-wider text-[#1652E6] mt-2">
               SHAKES LEFT
             </Text>
             <Text className="text-xs text-slate-400 mt-1">
@@ -132,7 +132,7 @@ export function ShakeMissionScreen({ navigation, route }: Props) {
 
         {/* Bottom helper */}
         <View className="w-full items-center">
-          <Text className="text-[#5E7166] text-center text-sm font-medium mb-4">
+          <Text className="text-[#556889] text-center text-sm font-medium mb-4">
             Only the accelerometer counts. Tapping the screen does nothing.
           </Text>
         </View>

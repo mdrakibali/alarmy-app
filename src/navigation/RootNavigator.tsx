@@ -50,7 +50,7 @@ function CustomBottomTabBar({
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
-        const color = isFocused ? '#1A2E22' : '#94A3B8';
+        const color = isFocused ? '#08173E' : '#94A3B8';
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
@@ -93,7 +93,7 @@ function CustomBottomTabBar({
             />
             <Text
               className={`text-[11px] font-bold mt-1 ${
-                isFocused ? 'text-[#1A2E22]' : 'text-slate-400'
+                isFocused ? 'text-[#08173E]' : 'text-slate-400'
               }`}
             >
               {typeof label === 'string' ? label : route.name}

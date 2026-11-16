@@ -67,7 +67,7 @@ const QuickWallpaperCard = React.memo(
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         onPress={() => onSelect(id)}
         style={{
-          borderColor: isSelected ? '#4E7D5B' : '#E2E8F0',
+          borderColor: isSelected ? '#1652E6' : '#E2E8F0',
           borderWidth: 2,
         }}
         className="w-24 h-36 mr-3 rounded-2xl overflow-hidden justify-between items-center relative bg-slate-100"
@@ -83,7 +83,7 @@ const QuickWallpaperCard = React.memo(
         {/* Selected Badge */}
         <View pointerEvents="none" className="w-full flex-row justify-end p-1.5 z-10">
           {isSelected && (
-            <View className="h-5 w-5 rounded-full bg-[#4E7D5B] items-center justify-center">
+            <View className="h-5 w-5 rounded-full bg-[#1652E6] items-center justify-center">
               <Text className="text-white text-[9px] font-black">✓</Text>
             </View>
           )}
@@ -92,7 +92,7 @@ const QuickWallpaperCard = React.memo(
         <View pointerEvents="none" className="w-full py-1.5 px-1 bg-black/60 z-10">
           <Text
             className={`text-[10px] font-bold text-center ${
-              isSelected ? 'text-[#E2A938]' : 'text-white'
+              isSelected ? 'text-[#FF7A00]' : 'text-white'
             }`}
             numberOfLines={1}
           >
@@ -201,8 +201,8 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
                 <View
                   key={missionKey}
                   style={{
-                    backgroundColor: count > 0 ? '#EBF3ED' : '#FFFFFF',
-                    borderColor: count > 0 ? '#6B8F71' : '#F1F5F9',
+                    backgroundColor: count > 0 ? '#EEF4FF' : '#FFFFFF',
+                    borderColor: count > 0 ? '#1652E6' : '#F1F5F9',
                     borderWidth: 1.5,
                   }}
                   className="flex-row items-center justify-between p-4 rounded-2xl mb-2.5"
@@ -251,7 +251,7 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       disabled={!canAddMore}
                       className={`px-3.5 py-1.5 rounded-full ${
-                        canAddMore ? 'bg-[#4E7D5B]' : 'bg-slate-300'
+                        canAddMore ? 'bg-[#1652E6]' : 'bg-slate-300'
                       }`}
                     >
                       <Text className="text-white text-xs font-black">
@@ -269,7 +269,7 @@ const MissionPickerModal = React.memo(function MissionPickerModalComponent({
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleDone}
-              className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center"
+              className="w-full bg-[#1652E6] py-4 rounded-2xl items-center shadow-md active:bg-[#0B45C4]"
             >
               <Text className="text-white text-base font-black tracking-wide">
                 Done ({localMissions.length}/5 Missions Added) ✓
@@ -585,7 +585,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               <View
                 className={`h-4 w-4 rounded items-center justify-center mr-1.5 border ${
                   isDaily
-                    ? 'bg-[#4E7D5B] border-[#4E7D5B]'
+                    ? 'bg-[#1652E6] border-[#1652E6]'
                     : 'border-slate-300 bg-white'
                 }`}
               >
@@ -608,13 +608,13 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   onPress={() => toggleDay(index)}
                   className={`h-11 w-11 items-center justify-center rounded-2xl border ${
                     selected
-                      ? 'bg-[#EBF3ED] border-[#6B8F71]/40'
+                      ? 'bg-[#EEF4FF] border-[#1652E6]/30'
                       : 'bg-slate-100 border-slate-100'
                   }`}
                 >
                   <Text
                     className={`text-sm font-bold ${
-                      selected ? 'text-[#4E7D5B]' : 'text-slate-500'
+                      selected ? 'text-[#1652E6]' : 'text-slate-500'
                     }`}
                   >
                     {dayLabel}
@@ -695,9 +695,9 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => navigation.navigate('WallpaperGallery', { pickForAlarm: true })}
-              className="py-1 px-3 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30"
+              className="py-1 px-3 rounded-full bg-[#EEF4FF] border border-[#1652E6]/25"
             >
-              <Text className="text-xs font-bold text-[#4E7D5B]">
+              <Text className="text-xs font-bold text-[#1652E6]">
                 Browse All
               </Text>
             </TouchableOpacity>
@@ -711,7 +711,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             }}
             className="mb-2"
           >
-            <Text className="text-xs font-bold text-[#5E7166]">Import an MP4 wallpaper</Text>
+            <Text className="text-xs font-bold text-[#556889]">Import an MP4 wallpaper</Text>
           </TouchableOpacity>
 
           {/* Quick Horizontal Carousel of Wallpapers with Live Selection */}
@@ -746,7 +746,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
             }}
             className="mb-3"
           >
-            <Text className="text-sm font-bold text-[#6B8F71]">
+            <Text className="text-sm font-bold text-[#1652E6]">
               {draft.soundId.startsWith('content://') || draft.soundId.startsWith('file://')
                 ? 'Custom sound selected'
                 : 'Import a custom sound'}
@@ -759,7 +759,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               activeOpacity={0.8}
               onPress={() => toggleSoundPreview()}
               className={`h-9 w-9 rounded-full items-center justify-center mr-3 ${
-                isPlayingSound ? 'bg-amber-600' : 'bg-[#4E7D5B]'
+                isPlayingSound ? 'bg-[#FF7A00]' : 'bg-[#1652E6]'
               }`}
             >
               <Text className="text-white text-xs font-black">
@@ -795,8 +795,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 value={soundQuery}
                 onChangeText={setSoundQuery}
                 placeholder="Search sounds"
-                placeholderTextColor="#5E7166"
-                className="bg-[#FBFBF9] border border-slate-200 rounded-xl px-3 py-2 mb-2 text-sm text-[#1A2E22]"
+                placeholderTextColor="#556889"
+                className="bg-[#F8FAFC] border border-slate-200 rounded-xl px-3 py-2 mb-2 text-sm text-[#08173E]"
               />
               {SOUND_OPTIONS.filter(opt =>
                 opt.label.toLowerCase().includes(soundQuery.trim().toLowerCase()),
@@ -863,7 +863,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   activeOpacity={0.8}
                   onPress={() => patch({ volume: vol })}
                   className={`flex-1 py-1.5 mx-1 items-center rounded-lg ${
-                    draft.volume === vol ? 'bg-[#4E7D5B]' : 'bg-slate-100'
+                    draft.volume === vol ? 'bg-[#1652E6]' : 'bg-slate-100'
                   }`}
                 >
                   <Text
@@ -883,14 +883,14 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               onPress={() => patch({ vibrate: !draft.vibrate })}
               className={`flex-row items-center ml-2 px-2.5 py-1.5 rounded-lg border ${
                 draft.vibrate
-                  ? 'bg-[#EBF3ED] border-[#6B8F71]/40'
+                  ? 'bg-[#EEF4FF] border-[#1652E6]/30'
                   : 'bg-slate-100 border-slate-100'
               }`}
             >
               <Text className="text-xs mr-1">📳</Text>
               <Text
                 className={`text-xs font-bold ${
-                  draft.vibrate ? 'text-[#4E7D5B]' : 'text-slate-400'
+                  draft.vibrate ? 'text-[#1652E6]' : 'text-slate-400'
                 }`}
               >
                 {draft.vibrate ? 'ON' : 'OFF'}
@@ -900,17 +900,17 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         </View>
 
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
-          <Text className="text-sm font-bold text-[#1A2E22]">Gradual volume</Text>
+          <Text className="text-sm font-bold text-[#08173E]">Gradual volume</Text>
           <TouchableOpacity
             onPress={() => patch({ gentleWakeup: !(draft.gentleWakeup ?? true) })}
-            className="mt-2 self-start px-3 py-2 rounded-full bg-[#FBFBF9] border border-[#6B8F71]"
+            className="mt-2 self-start px-3 py-2 rounded-full bg-[#F8FAFC] border border-[#1652E6]/40"
           >
-            <Text className="text-xs font-bold text-[#1A2E22]">
+            <Text className="text-xs font-bold text-[#08173E]">
               {(draft.gentleWakeup ?? true) ? 'Crescendo on' : 'Crescendo off'}
             </Text>
           </TouchableOpacity>
-          <Text className="text-sm font-bold text-[#1A2E22] mt-4">Wake Up Check</Text>
-          <Text className="text-xs text-[#5E7166] mt-1">
+          <Text className="text-sm font-bold text-[#08173E] mt-4">Wake Up Check</Text>
+          <Text className="text-xs text-[#556889] mt-1">
             After you dismiss, Alba rings again to see if you are still up.
           </Text>
           <View className="flex-row mt-2">
@@ -919,10 +919,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 key={mins}
                 onPress={() => patch({ wakeUpCheckMin: mins })}
                 className={`mr-2 px-3 py-2 rounded-full border ${
-                  (draft.wakeUpCheckMin ?? 0) === mins ? 'bg-[#1A2E22]' : 'bg-white border-slate-200'
+                  (draft.wakeUpCheckMin ?? 0) === mins ? 'bg-[#08173E]' : 'bg-white border-slate-200'
                 }`}
               >
-                <Text className={`text-xs font-bold ${(draft.wakeUpCheckMin ?? 0) === mins ? 'text-white' : 'text-[#1A2E22]'}`}>
+                <Text className={`text-xs font-bold ${(draft.wakeUpCheckMin ?? 0) === mins ? 'text-white' : 'text-[#08173E]'}`}>
                   {mins === 0 ? 'Off' : `${mins} min`}
                 </Text>
               </TouchableOpacity>
@@ -960,7 +960,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                   onValueChange={enabled =>
                     patch({ snooze: { ...draft.snooze, enabled } })
                   }
-                  trackColor={{ false: '#E2E8F0', true: '#6B8F71' }}
+                  trackColor={{ false: '#E2E8F0', true: '#1652E6' }}
                   thumbColor="#FFFFFF"
                 />
               </View>
@@ -1047,7 +1047,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               }
             }}
           >
-            <Text className="text-sm font-bold text-[#1A2E22]">
+            <Text className="text-sm font-bold text-[#08173E]">
               {draft.photoReferencePath ? 'Reference photo saved. Tap to replace.' : 'Register reference photo'}
             </Text>
           </TouchableOpacity>
@@ -1057,10 +1057,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
                 key={value}
                 onPress={() => patch({ photoMatchThreshold: value })}
                 className={`mr-2 px-3 py-2 rounded-full border ${
-                  (draft.photoMatchThreshold ?? 72) === value ? 'bg-[#1A2E22]' : 'bg-white border-slate-200'
+                  (draft.photoMatchThreshold ?? 72) === value ? 'bg-[#08173E]' : 'bg-white border-slate-200'
                 }`}
               >
-                <Text className={`text-xs font-bold ${(draft.photoMatchThreshold ?? 72) === value ? 'text-white' : 'text-[#1A2E22]'}`}>
+                <Text className={`text-xs font-bold ${(draft.photoMatchThreshold ?? 72) === value ? 'text-white' : 'text-[#08173E]'}`}>
                   Match {value}%
                 </Text>
               </TouchableOpacity>
@@ -1070,10 +1070,10 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       ) : null}
       {draft.missions.includes('qr') ? (
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
-          <Text className="text-sm font-bold text-[#1A2E22]">
+          <Text className="text-sm font-bold text-[#08173E]">
             {draft.barcodeValue ? `Registered code: ${draft.barcodeValue}` : 'No QR or barcode registered'}
           </Text>
-          <Text className="text-xs text-[#5E7166] mt-1">
+          <Text className="text-xs text-[#556889] mt-1">
             Scan the real code during setup. Typed text is not saved.
           </Text>
           <TouchableOpacity
@@ -1084,7 +1084,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
               }
               setRegisteringCode(true);
             }}
-            className="mt-3 bg-[#6B8F71] py-3 rounded-2xl items-center"
+            className="mt-3 bg-[#1652E6] py-3 rounded-2xl items-center active:bg-[#0B45C4]"
           >
             <Text className="text-white font-bold">Scan code to register</Text>
           </TouchableOpacity>
@@ -1108,12 +1108,12 @@ export function AlarmEditScreen({ navigation, route }: Props) {
       ) : null}
       {draft.missions.includes('step') || draft.missions.includes('squat') ? (
         <View className="bg-white rounded-3xl p-4 mb-4 border border-slate-100">
-          <Text className="text-sm font-bold text-[#1A2E22] mb-2">Mission targets</Text>
+          <Text className="text-sm font-bold text-[#08173E] mb-2">Mission targets</Text>
           {draft.missions.includes('step') ? (
             <View className="flex-row mb-2">
               {[20, 30, 50].map(value => (
-                <TouchableOpacity key={value} onPress={() => patch({ stepTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-[#FBFBF9] border border-[#6B8F71]">
-                  <Text className="text-xs font-bold text-[#1A2E22]">{value} steps</Text>
+                <TouchableOpacity key={value} onPress={() => patch({ stepTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-[#F8FAFC] border border-[#1652E6]/40">
+                  <Text className="text-xs font-bold text-[#08173E]">{value} steps</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -1121,8 +1121,8 @@ export function AlarmEditScreen({ navigation, route }: Props) {
           {draft.missions.includes('squat') ? (
             <View className="flex-row">
               {[5, 10, 15].map(value => (
-                <TouchableOpacity key={value} onPress={() => patch({ squatTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-[#FBFBF9] border border-[#6B8F71]">
-                  <Text className="text-xs font-bold text-[#1A2E22]">{value} squats</Text>
+                <TouchableOpacity key={value} onPress={() => patch({ squatTarget: value })} className="mr-2 px-3 py-2 rounded-full bg-[#F8FAFC] border border-[#1652E6]/40">
+                  <Text className="text-xs font-bold text-[#08173E]">{value} squats</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -1138,7 +1138,7 @@ export function AlarmEditScreen({ navigation, route }: Props) {
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={save}
-          className="w-full bg-[#4E7D5B] py-4 rounded-2xl items-center shadow-md"
+          className="w-full bg-[#1652E6] py-4 rounded-2xl items-center shadow-md active:bg-[#0B45C4]"
         >
           <Text className="text-white text-base font-extrabold tracking-wide">
             Save

@@ -21,7 +21,7 @@ export function ReportScreen() {
   return (
     <Screen padded={false}>
       <ScrollView
-        className="flex-1 bg-[#FBFBF9]"
+        className="flex-1 bg-[#F8FAFC]"
         contentContainerClassName="px-5"
         contentContainerStyle={{
           paddingTop: insets.top + 10,
@@ -29,8 +29,8 @@ export function ReportScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-black text-[#1A2E22] tracking-tight">Report</Text>
-        <Text className="text-sm text-[#5E7166] mt-1">
+        <Text className="text-3xl font-black text-[#08173E] tracking-tight">Report</Text>
+        <Text className="text-sm text-[#556889] mt-1">
           Your weekly wake-up and consistency analysis
         </Text>
 
@@ -38,18 +38,18 @@ export function ReportScreen() {
         <View className="bg-white rounded-3xl p-6 mt-5 border border-slate-100 shadow-sm">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-[11px] font-black uppercase tracking-wider text-[#5E7166]">
+              <Text className="text-[11px] font-black uppercase tracking-wider text-[#556889]">
                 WAKE-UP SUCCESS RATE
               </Text>
-              <Text className="text-4xl font-black text-[#1A2E22] mt-1">
+              <Text className="text-4xl font-black text-[#08173E] mt-1">
                 {successRate}% 🚀
               </Text>
             </View>
-            <View className="h-14 w-14 rounded-full bg-[#EBF3ED] border border-[#6B8F71]/30 items-center justify-center">
+            <View className="h-14 w-14 rounded-full bg-[#EEF4FF] border border-[#1652E6]/20 items-center justify-center">
               <Text className="text-2xl">🏆</Text>
             </View>
           </View>
-          <Text className="text-xs text-[#5E7166] mt-3">
+          <Text className="text-xs text-[#556889] mt-3">
             You successfully woke up on time {onTimeCount} of your last {logs.length} alarms!
           </Text>
         </View>
@@ -57,14 +57,14 @@ export function ReportScreen() {
         {/* Weekly Bar Chart (Computed dynamically from real logs) */}
         <View className="bg-white rounded-3xl p-6 mt-4 border border-slate-100 shadow-sm">
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-base font-black text-[#1A2E22]">
+            <Text className="text-base font-black text-[#08173E]">
               Weekly Consistency (7 Days)
             </Text>
             <View className="flex-row items-center">
-              <View className="h-2 w-2 rounded-full bg-[#4E7D5B] mr-1.5" />
-              <Text className="text-[11px] text-[#5E7166] font-bold mr-3">On Time</Text>
+              <View className="h-2 w-2 rounded-full bg-[#1652E6] mr-1.5" />
+              <Text className="text-[11px] text-[#556889] font-bold mr-3">On Time</Text>
               <View className="h-2 w-2 rounded-full bg-rose-400 mr-1.5" />
-              <Text className="text-[11px] text-[#5E7166] font-bold">Late</Text>
+              <Text className="text-[11px] text-[#556889] font-bold">Late</Text>
             </View>
           </View>
 
@@ -74,12 +74,12 @@ export function ReportScreen() {
                 <View className="h-28 w-4 justify-end rounded-full bg-slate-100 overflow-hidden mb-2">
                   <View
                     className={`w-full rounded-full ${
-                      d.onTime ? 'bg-[#4E7D5B]' : 'bg-rose-400'
+                      d.onTime ? 'bg-[#1652E6]' : 'bg-rose-400'
                     }`}
                     style={{ height: d.height as any }}
                   />
                 </View>
-                <Text className="text-xs font-bold text-[#5E7166]">
+                <Text className="text-xs font-bold text-[#556889]">
                   {d.day}
                 </Text>
               </View>
@@ -89,20 +89,20 @@ export function ReportScreen() {
 
         {/* Dynamic Insights Card */}
         <View className="bg-white rounded-3xl p-5 mt-4 border border-slate-100 shadow-sm">
-          <Text className="text-xs font-black uppercase tracking-wider text-[#4E7D5B] mb-1">
+          <Text className="text-xs font-black uppercase tracking-wider text-[#1652E6] mb-1">
             KEY INSIGHT
           </Text>
-          <Text className="text-sm font-bold text-[#1A2E22]">
+          <Text className="text-sm font-bold text-[#08173E]">
             Average wake-up time: {avgWakeTime}
           </Text>
-          <Text className="text-xs text-[#5E7166] mt-1 leading-relaxed">
+          <Text className="text-xs text-[#556889] mt-1 leading-relaxed">
             Completing physical missions (Shake, Squat, Photo) reduces morning sleep inertia by 84%.
           </Text>
         </View>
 
         {/* Recent Wake-Up History List */}
         <View className="mt-5">
-          <Text className="text-base font-black text-[#1A2E22] mb-3 px-1">
+          <Text className="text-base font-black text-[#08173E] mb-3 px-1">
             Recent Alarm History
           </Text>
           {logs.slice(-4).reverse().map(l => (
@@ -111,26 +111,26 @@ export function ReportScreen() {
               className="bg-white rounded-2xl p-4 mb-2.5 border border-slate-100 flex-row items-center justify-between shadow-xs"
             >
               <View className="flex-row items-center flex-1 pr-3">
-                <View className="h-10 w-10 rounded-xl bg-[#EBF3ED] items-center justify-center mr-3">
+                <View className="h-10 w-10 rounded-xl bg-[#EEF4FF] items-center justify-center mr-3">
                   <Text className="text-lg">⏰</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-[#1A2E22]" numberOfLines={1}>
+                  <Text className="text-sm font-bold text-[#08173E]" numberOfLines={1}>
                     {l.label}
                   </Text>
-                  <Text className="text-xs text-[#5E7166] mt-0.5">
+                  <Text className="text-xs text-[#556889] mt-0.5">
                     Woke at {l.dismissedTime} • {l.snoozeCount > 0 ? `${l.snoozeCount} snoozes` : 'No snooze'}
                   </Text>
                 </View>
               </View>
               <View
                 className={`px-2.5 py-1 rounded-full ${
-                  l.onTime ? 'bg-[#EBF3ED]' : 'bg-rose-50'
+                  l.onTime ? 'bg-[#EEF4FF]' : 'bg-rose-50'
                 }`}
               >
                 <Text
                   className={`text-[11px] font-black ${
-                    l.onTime ? 'text-[#4E7D5B]' : 'text-rose-500'
+                    l.onTime ? 'text-[#1652E6]' : 'text-rose-500'
                   }`}
                 >
                   {l.onTime ? 'On Time ✓' : 'Delayed'}

@@ -87,28 +87,30 @@ export function SplashScreen({ navigation }: Props) {
           className="items-center justify-center p-6 rounded-3xl bg-white/90 border border-white/40 shadow-2xl backdrop-blur-md"
         >
           {/* Circular Logo Badge */}
-          <View className="w-40 h-40 rounded-full bg-slate-50 border border-slate-100 items-center justify-center shadow-md mb-5 relative overflow-hidden">
-            <View className="absolute inset-2 rounded-full bg-emerald-50/70" />
+          <View className="w-40 h-40 rounded-full bg-white border border-blue-100 items-center justify-center shadow-lg mb-5 relative overflow-hidden">
+            <View className="absolute inset-2 rounded-full bg-[#EEF4FF]/70" />
             <Image
-              source={require('@/assets/images/logo.png')}
-              className="w-28 h-28"
+              source={require('@/assets/logo/alba-smart-alarm-mark.png')}
+              className="w-32 h-32"
               resizeMode="contain"
             />
           </View>
 
           {/* App Title */}
-          <Text className="text-4xl font-black text-[#1A2E22] tracking-tight mb-1.5">
-            Alba
-          </Text>
-
-          {/* Tagline Badge */}
-          <View className="bg-[#EBF3ED] px-3.5 py-1 rounded-full border border-[#6B8F71]/30 mb-2.5">
-            <Text className="text-xs font-extrabold text-[#4E7D5B]">
-              Smart Wake-Up & Sleep ☀️
+          <View className="flex-row items-center mb-1.5">
+            <Text className="text-4xl font-black text-[#08173E] tracking-tight">
+              Alba
             </Text>
           </View>
 
-          <Text className="text-xs font-semibold text-[#5E7166] tracking-wide text-center">
+          {/* Tagline Badge */}
+          <View className="bg-[#EEF4FF] px-3.5 py-1 rounded-full border border-[#1652E6]/25 mb-2.5">
+            <Text className="text-xs font-black text-[#1652E6] tracking-wide">
+              Smart Alarm & Wake-Up ☀️
+            </Text>
+          </View>
+
+          <Text className="text-xs font-semibold text-[#556889] tracking-wide text-center">
             Unbeatable Morning Alarms • Gentle Routines
           </Text>
         </Animated.View>

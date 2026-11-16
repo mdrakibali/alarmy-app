@@ -25,7 +25,7 @@ export function TabVectorIcon({
       {name === 'settings' && <SettingsIcon focused={focused} />}
 
       {hasBadge && (
-        <View className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#4E7D5B] border border-white" />
+        <View className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#FF7A00] border border-white" />
       )}
     </View>
   );

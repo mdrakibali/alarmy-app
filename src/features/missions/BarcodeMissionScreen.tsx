@@ -231,7 +231,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
         <View className="w-full items-center">
           <Pressable
             onPress={() => openLens('barcode')}
-            className="w-full bg-[#6B8F71] py-4 rounded-2xl items-center mb-2"
+            className="w-full bg-[#1652E6] py-4 rounded-2xl items-center mb-2 active:bg-[#0B45C4]"
           >
             <Text className="text-white font-extrabold text-base">
               {lens === 'barcode' ? 'Scanning barcode' : 'Scan QR or barcode'}
@@ -239,7 +239,7 @@ export function BarcodeMissionScreen({ navigation, route }: Props) {
           </Pressable>
           <Pressable
             onPress={() => openLens('text')}
-            className="w-full bg-[#1A2E22] py-3 rounded-2xl items-center mb-2"
+            className="w-full bg-[#08173E] py-3 rounded-2xl items-center mb-2 active:bg-[#060E22]"
           >
             <Text className="text-white font-bold text-sm">
               {lens === 'text' ? 'Reading printed text' : 'Read printed text (OCR)'}

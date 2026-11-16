@@ -30,13 +30,13 @@ export function OfflineLibraryScreen() {
   }, [refresh]);
 
   return (
-    <View className="flex-1 bg-[#FBFBF9]">
+    <View className="flex-1 bg-[#F8FAFC]">
       <View style={{ paddingTop: Math.max(insets.top, 14) }} className="px-5 pb-3 bg-white border-b border-slate-100">
         <TouchableOpacity onPress={() => navigation.goBack()} className="h-10 w-10 rounded-full bg-slate-100 items-center justify-center">
           <Text className="text-slate-800 text-lg font-bold">←</Text>
         </TouchableOpacity>
-        <Text className="text-2xl font-black text-[#1A2E22] mt-3">Offline downloads</Text>
-        <Text className="text-xs text-[#5E7166] mt-1">
+        <Text className="text-2xl font-black text-[#08173E] mt-3">Offline downloads</Text>
+        <Text className="text-xs text-[#556889] mt-1">
           The built-in photos, loops, and sounds stay on the phone. These extras download once into the app’s private folder.
         </Text>
       </View>
@@ -48,14 +48,14 @@ export function OfflineLibraryScreen() {
           const ratio = event && event.total > 0 ? Math.min(1, event.received / event.total) : 0;
           return (
             <View key={item.id} className="bg-white rounded-3xl p-4 mb-3 border border-slate-100">
-              <Text className="text-base font-black text-[#1A2E22]">{item.title}</Text>
-              <Text className="text-[11px] text-[#5E7166] mt-1">
+              <Text className="text-base font-black text-[#08173E]">{item.title}</Text>
+              <Text className="text-[11px] text-[#556889] mt-1">
                 {item.kind === 'video' ? 'MP4' : 'Alarm sound'}
                 {saved ? ` · saved ${(saved.bytes / (1024 * 1024)).toFixed(1)} MB` : ' · not on this phone'}
               </Text>
               {running ? (
                 <View className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
-                  <View style={{ width: `${Math.round(ratio * 100)}%` }} className="h-2 bg-[#6B8F71]" />
+                  <View style={{ width: `${Math.round(ratio * 100)}%` }} className="h-2 bg-[#1652E6]" />
                 </View>
               ) : null}
               {event?.state === 'error' ? (
@@ -73,14 +73,14 @@ export function OfflineLibraryScreen() {
                     const path = await NativeAlarm.downloadOfflineMedia(item.id, item.url, item.fileName);
                     if (!path) setBusyId(null);
                   }}
-                  className="mr-2 px-3 py-2 rounded-xl bg-[#1A2E22]"
+                  className="mr-2 px-3 py-2 rounded-xl bg-[#08173E]"
                 >
                   <Text className="text-white text-xs font-bold">{saved ? 'Downloaded' : running ? 'Downloading' : 'Download'}</Text>
                 </TouchableOpacity>
                 {saved && item.kind === 'video' ? (
                   <TouchableOpacity
                     onPress={() => NativeAlarm.previewVideo(saved.path)}
-                    className="mr-2 px-3 py-2 rounded-xl bg-[#6B8F71]"
+                    className="mr-2 px-3 py-2 rounded-xl bg-[#1652E6]"
                   >
                     <Text className="text-white text-xs font-bold">Play muted</Text>
                   </TouchableOpacity>
@@ -93,7 +93,7 @@ export function OfflineLibraryScreen() {
                     }}
                     className="px-3 py-2 rounded-xl bg-slate-100"
                   >
-                    <Text className="text-xs font-bold text-[#1A2E22]">Delete</Text>
+                    <Text className="text-xs font-bold text-[#08173E]">Delete</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>

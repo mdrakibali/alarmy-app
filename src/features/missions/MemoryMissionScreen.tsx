@@ -160,8 +160,8 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
       >
         {/* Top Header */}
         <View className="items-center mt-3">
-          <View className="bg-[#EBF3ED] border border-[#6B8F71]/30 px-4 py-1.5 rounded-full mb-2">
-            <Text className="text-[#4E7D5B] font-extrabold text-xs uppercase tracking-wider">
+          <View className="bg-[#EEF4FF] border border-[#1652E6]/25 px-4 py-1.5 rounded-full mb-2">
+            <Text className="text-[#1652E6] font-extrabold text-xs uppercase tracking-wider">
               MEMORY MISSION 🧩
             </Text>
           </View>
@@ -185,7 +185,7 @@ export function MemoryMissionScreen({ navigation, route }: Props) {
                   card.isMatched
                     ? 'bg-emerald-50 border-emerald-400'
                     : showFace
-                    ? 'bg-white border-[#4E7D5B]'
+                    ? 'bg-white border-[#1652E6]'
                     : 'bg-slate-100 border-slate-200 active:bg-slate-200'
                 }`}
               >

@@ -62,14 +62,14 @@ export function AlarmListScreen() {
 
   return (
     <Screen padded={false}>
-      <View className="flex-1 bg-[#FBFBF9]">
+      <View className="flex-1 bg-[#F8FAFC]">
         <DaypartHeader now={new Date(nowTimestamp)} countdown={nextAlarmCountdown} />
         <Pressable
           onPress={() => navigation.navigate('AlarmEdit')}
           className="mx-4 mb-3 flex-row items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-100"
         >
           <View className="flex-row items-center flex-1">
-            <View className="mr-3 h-8 px-2 items-center justify-center rounded-lg bg-[#4E7D5B]">
+            <View className="mr-3 h-8 px-2.5 items-center justify-center rounded-lg bg-[#1652E6]">
               <Text className="text-xs font-black tracking-wider text-white">
                 NEW
               </Text>
@@ -78,7 +78,7 @@ export function AlarmListScreen() {
               <Text className="text-xs font-semibold text-slate-400">
                 Overslept AGAIN?
               </Text>
-              <Text className="text-sm font-bold text-[#1A2E22]">
+              <Text className="text-sm font-bold text-[#08173E]">
                 Try our new wake-up missions
               </Text>
             </View>
@@ -122,7 +122,7 @@ export function AlarmListScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add alarm"
             onPress={() => navigation.navigate('AlarmEdit')}
-            className="h-16 w-16 items-center justify-center rounded-full bg-[#6B8F71] shadow-2xl active:scale-95"
+            className="h-16 w-16 items-center justify-center rounded-full bg-[#FF7A00] shadow-2xl active:scale-95"
           >
             <Text className="text-3xl font-light text-white leading-none">
               +
@@ -171,7 +171,7 @@ function AlarmCard({
               <Text
                 key={index}
                 className={`mr-3 text-xs font-bold ${
-                  isSelected ? 'text-[#1A2E22] font-extrabold' : 'text-slate-300'
+                  isSelected ? 'text-[#08173E] font-extrabold' : 'text-slate-300'
                 }`}
               >
                 {dayLabel}
@@ -180,11 +180,11 @@ function AlarmCard({
           })}
         </View>
 
-        {/* Custom Alba Sage Switch */}
+        {/* Custom Alba Switch */}
         <Switch
           value={alarm.enabled}
           onValueChange={onToggle}
-          trackColor={{ false: '#E2E8F0', true: '#6B8F71' }}
+          trackColor={{ false: '#E2E8F0', true: '#1652E6' }}
           thumbColor="#FFFFFF"
         />
       </View>
@@ -237,11 +237,11 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </View>
       <Text className="text-lg font-bold text-slate-800">No alarms yet</Text>
       <Text className="mb-6 mt-1.5 text-center text-sm text-slate-500">
-        Tap the green button below to schedule your first smart alarm.
+        Tap the button below to schedule your first smart alarm.
       </Text>
       <Pressable
         onPress={onAdd}
-        className="rounded-2xl bg-[#4E7D5B] px-6 py-3.5 shadow-sm active:opacity-90"
+        className="rounded-2xl bg-[#1652E6] px-6 py-3.5 shadow-sm active:bg-[#0B45C4]"
       >
         <Text className="text-sm font-bold text-white">Create Alarm</Text>
       </Pressable>

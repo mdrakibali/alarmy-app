@@ -32,7 +32,7 @@ const TIMER_OPTIONS = [
   { label: '60m', minutes: 60 },
 ];
 
-function AnimatedEqualizer({ color = '#4E7D5B' }: { color?: string }) {
+function AnimatedEqualizer({ color = '#1652E6' }: { color?: string }) {
   const anim1 = useRef(new Animated.Value(0.4)).current;
   const anim2 = useRef(new Animated.Value(0.9)).current;
   const anim3 = useRef(new Animated.Value(0.55)).current;
@@ -100,9 +100,9 @@ const SleepSoundCard = React.memo(
         activeOpacity={0.8}
         onPress={() => onToggle(sound.id)}
         style={{
-          borderColor: isPlaying ? '#4E7D5B' : '#F1F5F9',
+          borderColor: isPlaying ? '#1652E6' : '#F1F5F9',
           borderWidth: 1.5,
-          backgroundColor: isPlaying ? '#EBF3ED' : '#FFFFFF',
+          backgroundColor: isPlaying ? '#EEF4FF' : '#FFFFFF',
         }}
         className="flex-row items-center justify-between p-4 rounded-2xl mb-2.5"
       >
@@ -111,14 +111,14 @@ const SleepSoundCard = React.memo(
             <View
               className={`h-12 w-12 rounded-2xl items-center justify-center border ${
                 isPlaying
-                  ? 'bg-white border-[#4E7D5B]'
+                  ? 'bg-white border-[#1652E6]'
                   : 'bg-slate-100 border-transparent'
               }`}
             >
               <Text className="text-2xl">{sound.icon}</Text>
             </View>
             {isPlaying && (
-              <View className="absolute -bottom-1 -right-1 bg-[#4E7D5B] rounded-full h-5 w-5 items-center justify-center border-2 border-white">
+              <View className="absolute -bottom-1 -right-1 bg-[#1652E6] rounded-full h-5 w-5 items-center justify-center border-2 border-white">
                 <Text className="text-[10px]">🔊</Text>
               </View>
             )}
@@ -127,13 +127,13 @@ const SleepSoundCard = React.memo(
             <View className="flex-row items-center mb-0.5">
               <Text
                 className={`text-sm font-extrabold ${
-                  isPlaying ? 'text-[#4E7D5B]' : 'text-slate-900'
+                  isPlaying ? 'text-[#1652E6]' : 'text-slate-900'
                 }`}
               >
                 {sound.title}
               </Text>
               {isPlaying ? (
-                <View className="ml-2 rounded-full bg-[#4E7D5B] px-2 py-0.5 flex-row items-center">
+                <View className="ml-2 rounded-full bg-[#1652E6] px-2 py-0.5 flex-row items-center">
                   <AnimatedEqualizer color="#FFFFFF" />
                   <Text className="text-[9px] font-black text-white ml-1 tracking-wider uppercase">
                     PLAYING
@@ -159,7 +159,7 @@ const SleepSoundCard = React.memo(
         {/* Direct Play / Stop Button on the Card */}
         <View
           className={`px-3.5 py-2 rounded-xl flex-row items-center ${
-            isPlaying ? 'bg-rose-500' : 'bg-[#4E7D5B]'
+            isPlaying ? 'bg-rose-500' : 'bg-[#1652E6]'
           }`}
         >
           <Text className="text-white text-xs font-black mr-1">
@@ -308,7 +308,7 @@ export function SleepScreen() {
                     onPress={() => handleTimerChange(opt.minutes)}
                     className={`px-2.5 py-1 rounded-lg ml-1.5 border ${
                       timerMinutes === opt.minutes
-                        ? 'bg-[#4E7D5B] border-[#4E7D5B]'
+                        ? 'bg-[#1652E6] border-[#1652E6]'
                         : 'bg-slate-100 border-slate-100'
                     }`}
                   >
@@ -336,7 +336,7 @@ export function SleepScreen() {
                     onPress={() => handleVolumeChange(vol)}
                     className={`px-3 py-1 rounded-lg ml-1.5 border ${
                       volume === vol
-                        ? 'bg-[#4E7D5B] border-[#4E7D5B]'
+                        ? 'bg-[#1652E6] border-[#1652E6]'
                         : 'bg-slate-100 border-slate-100'
                     }`}
                   >
@@ -357,8 +357,8 @@ export function SleepScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="Search sleep sounds"
-            placeholderTextColor="#5E7166"
-            className="bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3 text-sm text-[#1A2E22]"
+            placeholderTextColor="#556889"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3 text-sm text-[#08173E]"
           />
           {/* Category Filter Pills */}
           <ScrollView
@@ -374,7 +374,7 @@ export function SleepScreen() {
                 onPress={() => setSelectedCategory(cat)}
                 className={`mr-2 px-4 py-2 rounded-2xl border ${
                   selectedCategory === cat
-                    ? 'bg-[#1A2E22] border-[#1A2E22]'
+                    ? 'bg-[#08173E] border-[#08173E]'
                     : 'bg-white border-slate-200/80'
                 }`}
               >
@@ -454,7 +454,7 @@ export function SleepScreen() {
                   >
                     {activeSound.title}
                   </Text>
-                  <AnimatedEqualizer color="#E2A938" />
+                  <AnimatedEqualizer color="#FF7A00" />
                 </View>
                 <Text className="text-slate-400 text-[10px] font-semibold mt-0.5">
                   Playing now • {timerMinutes > 0 ? `Timer: ${timerMinutes}m` : 'Looping'}
