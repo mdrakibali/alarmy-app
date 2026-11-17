@@ -1,0 +1,11 @@
+.git
+node_modules
+android/app/build
+android/build
+android/.gradle
+android/.cxx
+ios/Pods
+ios/build
+docs
+.bundle
+
